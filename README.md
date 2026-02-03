@@ -27,24 +27,24 @@
 
 ---
 
-## Overview
+## 📖 Overview
 
 **DDMTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **60+ algorithms**, **180+ benchmark problems**, and powerful experiment tools for problem definition, algorithm development, and performance evaluation.
 
 Whether you're working on expensive black-box optimization, multi-objective optimization, or complex multi-task scenarios, DDMTOLab provides a flexible and extensible framework to accelerate your **research** and support real-world **applications**.
 
-## Features
+## ✨ Features
 
-- **Comprehensive Algorithms** - 60+ algorithms for expensive/inexpensive, single/multi-task, single/multi-objective optimization
-- **Rich Problem Suite** - 180+ benchmark problems and real-world applications
-- **Data-Driven Optimization** - Surrogate modelling (GP, BO) for expensive optimization
-- **Flexible Framework** - Simple API and intuitive workflow for rapid prototyping
-- **Fully Extensible** - Easy to add custom algorithms and problems
-- **Powerful Analysis Tools** - Built-in visualization and statistical analysis
-- **Parallel Computing** - Multi-core support for batch experiments
-- **Complete Documentation** - Comprehensive [documentation](https://jiangtaoshen.github.io/DDMTOLab/) and API reference
+- 🚀 **Comprehensive Algorithms** - 60+ algorithms for expensive/inexpensive, single/multi-task, single/multi-objective optimization
+- 📊 **Rich Problem Suite** - 180+ benchmark problems and real-world applications
+- 🤖 **Data-Driven Optimization** - Surrogate modelling (GP, BO) for expensive optimization
+- 🔧 **Flexible Framework** - Simple API and intuitive workflow for rapid prototyping
+- 🔌 **Fully Extensible** - Easy to add custom algorithms and problems
+- 📈 **Powerful Analysis Tools** - Built-in visualization and statistical analysis
+- ⚡ **Parallel Computing** - Multi-core support for batch experiments
+- 📝 **Complete Documentation** - Comprehensive [documentation](https://jiangtaoshen.github.io/DDMTOLab/) and API reference
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Installation
 
@@ -148,7 +148,7 @@ animation = create_optimization_animation(max_nfes=100, merge=2, title='BO vs MT
        width="100%">
 </p>
 
-## Key Components
+## 🎯 Key Components
 
 ### Algorithms (60+)
 
@@ -178,7 +178,7 @@ animation = create_optimization_animation(max_nfes=100, merge=2, title='BO vs MT
 - **Animation Generator**: Optimization process visualization
 - **Algorithm Utilities**: Reusable components (initialization, selection, operators)
 
-## Documentation
+## 📚 Documentation
 
 - [Installation Guide](https://jiangtaoshen.github.io/DDMTOLab/installation.html)
 - [Algorithms Reference](https://jiangtaoshen.github.io/DDMTOLab/algorithms.html)
@@ -187,7 +187,7 @@ animation = create_optimization_animation(max_nfes=100, merge=2, title='BO vs MT
 - [Demo Scripts](https://jiangtaoshen.github.io/DDMTOLab/demos.html)
 - [API Reference](https://jiangtaoshen.github.io/DDMTOLab/api.html)
 
-## Citation
+## 📄 Citation
 
 If you use DDMTOLab in your research, please cite:
 
@@ -200,21 +200,21 @@ If you use DDMTOLab in your research, please cite:
 }
 ```
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-## Contact
+## 📧 Contact
 
 - **Author**: Jiangtao Shen
 - **Email**: j.shen5@exeter.ac.uk
 - **Documentation**: [https://jiangtaoshen.github.io/DDMTOLab/](https://jiangtaoshen.github.io/DDMTOLab/)
 - **Issues**: [GitHub Issues](https://github.com/JiangtaoShen/DDMTOLab/issues)
 
-## License
+## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <p align="center">
-  Made with passion by <a href="https://github.com/JiangtaoShen">Jiangtao Shen</a>
+  Made with ❤️ by <a href="https://github.com/JiangtaoShen">Jiangtao Shen</a>
 </p>
