@@ -1,7 +1,7 @@
 # DDMTOLab
 
 <p align="center">
-  <img src="docs/source/_static/logo.svg" alt="DDMTOLab Logo" width="1000" height="400">
+  <img src="docs/source/_static/logo.svg" alt="DDMTOLab Logo" width="1000">
 </p>
 
 <p align="center">
