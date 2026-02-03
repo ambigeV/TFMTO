@@ -5,8 +5,7 @@ This module implements MSEA for better diversity preservation in multi-objective
 
 References
 ----------
-    [1] Tian, Ye, et al. "A multistage evolutionary algorithm for better diversity preservation in \
-        multiobjective optimization." IEEE Transactions on Systems, Man, and Cybernetics: Systems \
+    [1] Tian, Ye, et al. "A multistage evolutionary algorithm for better diversity preservation in multiobjective optimization." IEEE Transactions on Systems, Man, and Cybernetics: Systems \
         51.9 (2021): 5880-5894.
 
 Notes
@@ -50,8 +49,8 @@ class MSEA:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n=None, max_nfes=None, muc=20.0, mum=15.0, save_data=True, save_path='./TestData',
-                 name='MSEA_test', disable_tqdm=True):
+    def __init__(self, problem, n=None, max_nfes=None, muc=20.0, mum=15.0, save_data=True, save_path='./Data',
+                 name='MSEA', disable_tqdm=True):
         """
         Initialize MSEA algorithm.
 

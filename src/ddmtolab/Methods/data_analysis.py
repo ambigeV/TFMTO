@@ -23,6 +23,7 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple, Union, Callable
 from dataclasses import dataclass, field
+from matplotlib.ticker import FuncFormatter
 from enum import Enum
 
 import numpy as np
@@ -65,11 +66,12 @@ class StatisticType(Enum):
 # Default color palette for plots
 DEFAULT_COLORS = [
     '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+    '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff8c00'
 ]
 
 # Default markers for plots
-DEFAULT_MARKERS = ['o', 's', '^', 'v', 'D', 'p', '*', 'h', '<', '>']
+DEFAULT_MARKERS = ['o', 's', '^', 'v', 'D', 'p', '*', 'h', '<', '>', 'X', 'P', 'd', '8', 'H']
 
 
 # =============================================================================
@@ -190,6 +192,12 @@ class PlotConfig:
     show_nd : bool
         Whether to filter and show only non-dominated solutions.
         Default: True
+    merge_plots : bool
+        Whether to merge all plots into a single figure.
+        Default: False
+    merge_columns : int
+        Number of columns in merged plot layout.
+        Default: 3
     save_path : Path
         Directory path to save output figures.
     colors : List[str]
@@ -202,6 +210,8 @@ class PlotConfig:
     log_scale: bool = False
     show_pf: bool = True
     show_nd: bool = True
+    merge_plots: bool = False
+    merge_columns: int = 3
     save_path: Path = Path('./Results')
     colors: List[str] = field(default_factory=lambda: DEFAULT_COLORS.copy())
     markers: List[str] = field(default_factory=lambda: DEFAULT_MARKERS.copy())
@@ -757,13 +767,13 @@ class TableGenerator:
         direction = DataUtils.get_metric_direction(metric_name)
 
         # Generate data rows
-        rows, comparison_counts = self._generate_data_rows(all_best_values, algorithm_order, problems, direction)
+        rows, comparison_counts, algorithm_ranks = self._generate_data_rows(all_best_values, algorithm_order, problems, direction)
 
         # Generate and save table
         if self.config.table_format == TableFormat.EXCEL:
-            return self._generate_excel_table(rows, algorithm_order, comparison_counts, direction)
+            return self._generate_excel_table(rows, algorithm_order, comparison_counts, algorithm_ranks, direction)
         else:
-            return self._generate_latex_table(rows, algorithm_order, comparison_counts, direction)
+            return self._generate_latex_table(rows, algorithm_order, comparison_counts, algorithm_ranks, direction)
 
     def _generate_data_rows(
             self,
@@ -771,32 +781,21 @@ class TableGenerator:
             algorithm_order: List[str],
             problems: List[str],
             direction: OptimizationDirection
-    ) -> Tuple[List[Dict[str, Any]], Dict[str, ComparisonCounts]]:
+    ) -> Tuple[List[Dict[str, Any]], Dict[str, ComparisonCounts], Dict[str, List[int]]]:
         """
-        Generate table rows with formatted metric values and statistical comparisons.
-
-        Parameters
-        ----------
-        all_best_values : Dict
-            Best metric values dictionary.
-        algorithm_order : List[str]
-            Algorithm display order.
-        problems : List[str]
-            List of problem names.
-        direction : OptimizationDirection
-            Optimization direction.
-
+        ...
         Returns
         -------
-        Tuple[List[Dict[str, Any]], Dict[str, ComparisonCounts]]
-            Tuple of (rows, comparison_counts).
+        Tuple[List[Dict[str, Any]], Dict[str, ComparisonCounts], Dict[str, List[int]]]
+            Tuple of (rows, comparison_counts, algorithm_ranks).
+            algorithm_ranks[algo] = List[int]
         """
         base_algo = algorithm_order[-1]
         rows = []
         comparison_counts = {algo: ComparisonCounts() for algo in algorithm_order[:-1]}
+        algorithm_ranks = {algo: [] for algo in algorithm_order}
 
         for prob in problems:
-            # Get the number of tasks of the problem
             first_algo = algorithm_order[0]
             first_run = list(all_best_values[first_algo][prob].keys())[0]
             num_tasks = len(all_best_values[first_algo][prob][first_run])
@@ -804,7 +803,8 @@ class TableGenerator:
             for task_idx in range(num_tasks):
                 row = {'Problem': prob, 'Task': task_idx + 1}
 
-                # Collect baseline data
+                algo_stat_values = {}
+
                 base_data = StatisticsCalculator.collect_task_data(
                     all_best_values, base_algo, prob, task_idx
                 )
@@ -818,6 +818,8 @@ class TableGenerator:
                         algo_data, self.config.statistic_type
                     )
 
+                    algo_stat_values[algo] = stat_value
+
                     symbol = ''
                     if self.config.rank_sum_test and algo != base_algo:
                         result = StatisticsCalculator.perform_rank_sum_test(
@@ -826,7 +828,6 @@ class TableGenerator:
                         )
                         symbol = result.symbol
 
-                        # Update comparison counts
                         if algo in comparison_counts:
                             if symbol == '+':
                                 comparison_counts[algo].plus += 1
@@ -838,9 +839,57 @@ class TableGenerator:
                     cell_content = self._format_cell_content(stat_value, std_value, symbol)
                     row[algo] = cell_content
 
+                row_ranks = self._calculate_row_ranks(algo_stat_values, direction)
+                for algo, rank in row_ranks.items():
+                    algorithm_ranks[algo].append(rank)
+
                 rows.append(row)
 
-        return rows, comparison_counts
+        return rows, comparison_counts, algorithm_ranks
+
+    def _calculate_row_ranks(
+            self,
+            algo_values: Dict[str, float],
+            direction: OptimizationDirection
+    ) -> Dict[str, int]:
+        """
+        Calculate the rank of each algorithm in a single row.
+
+        Parameters
+        ----------
+        algo_values : Dict[str, float]
+            Statistical values for each algorithm.
+        direction : OptimizationDirection
+            Optimization direction (MINIMIZE or MAXIMIZE).
+
+        Returns
+        -------
+        Dict[str, int]
+            Rank of each algorithm (1 is the best).
+        """
+        # Filter out NaN values
+        valid_algos = {algo: val for algo, val in algo_values.items() if not np.isnan(val)}
+
+        if not valid_algos:
+            return {algo: np.nan for algo in algo_values.keys()}
+
+        # Sort based on optimization direction
+        if direction == OptimizationDirection.MINIMIZE:
+            sorted_algos = sorted(valid_algos.items(), key=lambda x: x[1])
+        else:
+            sorted_algos = sorted(valid_algos.items(), key=lambda x: x[1], reverse=True)
+
+        # Assign ranks
+        ranks = {}
+        for rank, (algo, _) in enumerate(sorted_algos, start=1):
+            ranks[algo] = rank
+
+        # Set NaN for algorithms with NaN values
+        for algo in algo_values.keys():
+            if algo not in ranks:
+                ranks[algo] = np.nan
+
+        return ranks
 
     def _format_cell_content(
             self,
@@ -943,6 +992,7 @@ class TableGenerator:
             rows: List[Dict[str, Any]],
             algorithm_order: List[str],
             comparison_counts: Dict[str, ComparisonCounts],
+            algorithm_ranks: Dict[str, List[int]],
             direction: OptimizationDirection
     ) -> pd.DataFrame:
         """
@@ -964,7 +1014,6 @@ class TableGenerator:
         pd.DataFrame
             DataFrame containing the table data.
         """
-        # Append summary row
         if self.config.rank_sum_test:
             summary_row = {'Problem': '+/-/=', 'Task': ''}
             for algo in algorithm_order[:-1]:
@@ -972,6 +1021,17 @@ class TableGenerator:
                 summary_row[algo] = f"{counts.plus}/{counts.minus}/{counts.equal}"
             summary_row[algorithm_order[-1]] = 'Base'
             rows.append(summary_row)
+
+        avg_rank_row = {'Problem': 'Average Rank', 'Task': ''}
+        for algo in algorithm_order:
+            ranks = algorithm_ranks[algo]
+            valid_ranks = [r for r in ranks if not np.isnan(r)]
+            if valid_ranks:
+                avg_rank = np.mean(valid_ranks)
+                avg_rank_row[algo] = f"{avg_rank:.2f}"
+            else:
+                avg_rank_row[algo] = 'N/A'
+        rows.append(avg_rank_row)
 
         # Create DataFrame
         df = pd.DataFrame(rows)
@@ -997,20 +1057,7 @@ class TableGenerator:
             algorithm_order: List[str],
             direction: OptimizationDirection
     ) -> None:
-        """
-        Apply formatting to Excel workbook.
-
-        Parameters
-        ----------
-        output_file : Path
-            Path to Excel file.
-        df : pd.DataFrame
-            DataFrame for row count reference.
-        algorithm_order : List[str]
-            Algorithm names.
-        direction : OptimizationDirection
-            Optimization direction for best value highlighting.
-        """
+        """..."""
         wb = load_workbook(output_file)
         ws = wb.active
 
@@ -1045,7 +1092,11 @@ class TableGenerator:
             ws.column_dimensions[column_letter].width = max_length + 2
 
         # Bold the best value in each data row
-        num_data_rows = len(df) - (1 if self.config.rank_sum_test else 0)
+        num_summary_rows = 1  # Always has Average Rank row
+        if self.config.rank_sum_test:
+            num_summary_rows += 1  # Add +/-/= row
+
+        num_data_rows = len(df) - num_summary_rows
 
         for row_idx in range(2, num_data_rows + 2):
             best_val = None
@@ -1074,6 +1125,27 @@ class TableGenerator:
             if best_col is not None:
                 ws.cell(row=row_idx, column=best_col).font = bold_font
 
+        # Bold the best (minimum) average rank
+        avg_rank_row_idx = len(df) + 1  # Last row in the table
+        best_avg_rank = None
+        best_avg_rank_col = None
+
+        for col_idx, algo in enumerate(algorithm_order, start=3):
+            cell = ws.cell(row=avg_rank_row_idx, column=col_idx)
+            cell_value = cell.value
+
+            if cell_value and cell_value != 'N/A':
+                try:
+                    avg_rank = float(cell_value)
+                    if best_avg_rank is None or avg_rank < best_avg_rank:
+                        best_avg_rank = avg_rank
+                        best_avg_rank_col = col_idx
+                except Exception:
+                    pass
+
+        if best_avg_rank_col is not None:
+            ws.cell(row=avg_rank_row_idx, column=best_avg_rank_col).font = bold_font
+
         wb.save(output_file)
 
     def _generate_latex_table(
@@ -1081,27 +1153,10 @@ class TableGenerator:
             rows: List[Dict[str, Any]],
             algorithm_order: List[str],
             comparison_counts: Dict[str, ComparisonCounts],
+            algorithm_ranks: Dict[str, List[int]],
             direction: OptimizationDirection
     ) -> str:
-        """
-        Generate and save a LaTeX-formatted table.
-
-        Parameters
-        ----------
-        rows : List[Dict[str, Any]]
-            Table row data.
-        algorithm_order : List[str]
-            Algorithm display order.
-        comparison_counts : Dict[str, ComparisonCounts]
-            Comparison result counts.
-        direction : OptimizationDirection
-            Optimization direction.
-
-        Returns
-        -------
-        str
-            LaTeX table string.
-        """
+        """..."""
         df = pd.DataFrame(rows)
 
         # Build table structure
@@ -1148,6 +1203,40 @@ class TableGenerator:
             latex_str += summary_str
             latex_str += "\\hline\n"
 
+        # Average Rank row with best rank highlighted
+        avg_rank_str = "\\multicolumn{2}{|c|}{Average Rank}"
+
+        # Calculate average ranks and find the best
+        avg_ranks = {}
+        for algo in algorithm_order:
+            ranks = algorithm_ranks[algo]
+            valid_ranks = [r for r in ranks if not np.isnan(r)]
+            if valid_ranks:
+                avg_ranks[algo] = np.mean(valid_ranks)
+            else:
+                avg_ranks[algo] = np.nan
+
+        # Find algorithm with best (minimum) average rank
+        valid_avg_ranks = {algo: rank for algo, rank in avg_ranks.items() if not np.isnan(rank)}
+        best_rank_algo = min(valid_avg_ranks, key=valid_avg_ranks.get) if valid_avg_ranks else None
+
+        # Generate Average Rank row
+        for algo in algorithm_order:
+            if np.isnan(avg_ranks[algo]):
+                cell_content = "N/A"
+            else:
+                cell_content = f"{avg_ranks[algo]:.2f}"
+
+            # Bold the best rank
+            if algo == best_rank_algo:
+                cell_content = f"\\textbf{{{cell_content}}}"
+
+            avg_rank_str += f" & {cell_content}"
+
+        avg_rank_str += " \\\\\n"
+        latex_str += avg_rank_str
+        latex_str += "\\hline\n"
+
         latex_str += "\\end{tabular}}\n"
         latex_str += "\\end{table*}\n"
 
@@ -1181,6 +1270,33 @@ class PlotGenerator:
             Configuration object for plot generation.
         """
         self.config = config
+
+    @staticmethod
+    def _calculate_legend_fontsize(n_algorithms: int) -> int:
+        """
+        Calculate legend font size based on number of algorithms.
+
+        Linear interpolation:
+        - 2 algorithms → font size 14
+        - 15 algorithms → font size 6
+
+        Parameters
+        ----------
+        n_algorithms : int
+            Number of algorithms.
+
+        Returns
+        -------
+        int
+            Calculated legend font size.
+        """
+        if n_algorithms <= 2:
+            return 14
+        elif n_algorithms >= 15:
+            return 6
+        else:
+            # Linear interpolation: y = 14 - (14-6)/(15-2) * (x-2)
+            return int(round(14 - (8 / 13) * (n_algorithms - 2)))
 
     def plot_convergence_curves(
             self,
@@ -1217,25 +1333,33 @@ class PlotGenerator:
         save_dir = Path(self.config.save_path)
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        for prob in problems:
-            first_run_data = best_values[algorithm_order[0]][prob][1]
-            num_tasks = len(first_run_data)
+        if self.config.merge_plots:
+            # Merged plot mode: all problems/tasks in one figure
+            self._plot_merged_convergence(
+                metric_values, best_values, max_nfes,
+                algorithm_order, problems, metric_name, save_dir
+            )
+        else:
+            # Separate plot mode: one figure per problem/task
+            for prob in problems:
+                first_run_data = best_values[algorithm_order[0]][prob][1]
+                num_tasks = len(first_run_data)
 
-            for task_idx in range(num_tasks):
-                fig = self._create_convergence_figure(
-                    num_tasks, metric_values, best_values, max_nfes,
-                    algorithm_order, prob, task_idx, metric_name
-                )
+                for task_idx in range(num_tasks):
+                    fig = self._create_convergence_figure(
+                        num_tasks, metric_values, best_values, max_nfes,
+                        algorithm_order, prob, task_idx, metric_name
+                    )
 
-                if num_tasks == 1:
-                    output_file = save_dir / f'{prob}.{self.config.figure_format}'
-                else:
-                    output_file = save_dir / f'{prob}-Task{task_idx + 1}.{self.config.figure_format}'
+                    if num_tasks == 1:
+                        output_file = save_dir / f'{prob}.{self.config.figure_format}'
+                    else:
+                        output_file = save_dir / f'{prob}-Task{task_idx + 1}.{self.config.figure_format}'
 
-                fig.savefig(output_file, dpi=300, bbox_inches='tight')
-                plt.close(fig)
+                    fig.savefig(output_file, dpi=300, bbox_inches='tight')
+                    plt.close(fig)
 
-        print(f"All convergence plots saved to: {save_dir}")
+            print(f"All convergence plots saved to: {save_dir}")
 
     def _create_convergence_figure(
             self,
@@ -1246,7 +1370,9 @@ class PlotGenerator:
             algorithm_order: List[str],
             prob: str,
             task_idx: int,
-            metric_name: Optional[str]
+            metric_name: Optional[str],
+            ax: Optional[plt.Axes] = None,
+            show_legend: bool = True
     ) -> plt.Figure:
         """
         Create a single convergence curve figure.
@@ -1269,13 +1395,32 @@ class PlotGenerator:
             Task index.
         metric_name : Optional[str]
             Metric name for label.
+        ax : Optional[plt.Axes], optional
+            Existing axes to plot on. If None, creates new figure.
+        show_legend : bool, optional
+            Whether to show legend. Default: True.
 
         Returns
         -------
         plt.Figure
-            Matplotlib figure object.
+            Matplotlib figure object (None if ax was provided).
         """
-        fig, ax = plt.subplots(figsize=(5, 3.5))
+        fig = None
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(5, 3.5))
+
+        # Collect curve data for y-axis range and max NFEs for x-axis formatting
+        all_curves = []
+        actual_max_nfes = 0
+
+        # Adaptive line width and marker size based on number of algorithms
+        n_algos = len(algorithm_order)
+        if n_algos <= 4:
+            markersize, linewidth = 8, 2.5
+        elif n_algos <= 6:
+            markersize, linewidth = 7, 2.0
+        else:
+            markersize, linewidth = 6, 1.6
 
         for idx, algo in enumerate(algorithm_order):
             selected_run = StatisticsCalculator.select_representative_run(
@@ -1287,7 +1432,10 @@ class PlotGenerator:
             if len(curve) == 0:
                 continue
 
+            all_curves.append(curve)
+
             nfes = max_nfes[algo][prob][task_idx]
+            actual_max_nfes = max(actual_max_nfes, nfes)
             x = np.linspace(0, nfes, len(curve))
             marker_interval = max(1, len(curve) // 10)
 
@@ -1296,27 +1444,164 @@ class PlotGenerator:
                 color=self.config.colors[idx % len(self.config.colors)],
                 marker=self.config.markers[idx % len(self.config.markers)],
                 markevery=marker_interval,
-                markersize=5, linewidth=1.5, linestyle='-', alpha=0.8
+                markersize=markersize, linewidth=linewidth, linestyle='-', alpha=0.7
             )
 
-        if self.config.log_scale:
-            ax.set_yscale('log')
-
-        # Apply scientific notation for large values
-        self._apply_scientific_notation(ax)
-
+        # Set axis labels
         y_label = metric_name if metric_name is not None else 'Objective Value'
-        ax.set_xlabel('NFEs', fontsize=10)
-        ax.set_ylabel(y_label, fontsize=10)
+        ax.set_xlabel('NFEs', fontsize=14)
+        ax.set_ylabel(y_label, fontsize=14)
 
         title = f'{prob}' if num_tasks == 1 else f'{prob} - Task {task_idx + 1}'
-        ax.set_title(title, fontsize=10)
-        ax.tick_params(axis='both', which='major', labelsize=10)
-        ax.legend(loc='best', fontsize=10)
+        ax.set_title(title, fontsize=14)
+        ax.tick_params(axis='both', which='major', labelsize=14)
+
+        # Auto-adjust legend font size based on number of algorithms
+        if show_legend:
+            legend_fontsize = self._calculate_legend_fontsize(len(algorithm_order))
+            ax.legend(loc='best', fontsize=legend_fontsize)
+
         ax.grid(True, alpha=0.2, linestyle='-')
 
-        fig.tight_layout()
+        # Apply axis formatting after all settings are complete
+        if self.config.log_scale:
+            ax.set_yscale('log')
+            # Check data range; use linear scale if range is too small
+            if len(all_curves) > 0:
+                all_data = np.concatenate([c for c in all_curves])
+                y_min, y_max = np.min(all_data), np.max(all_data)
+
+                # Log scale ineffective for less than one order of magnitude
+                if y_max / y_min < 10:
+                    print(
+                        f"Warning: Data range too small for log scale ({y_min:.4f} to {y_max:.4f}), using linear scale")
+                    ax.set_yscale('linear')
+                    self._apply_scientific_notation(ax, actual_xmax=actual_max_nfes)
+                else:
+                    # Use log scale, still need x-axis scientific notation
+                    from matplotlib.ticker import LogFormatterSciNotation
+                    ax.yaxis.set_major_formatter(LogFormatterSciNotation())
+                    # Use scientific notation for x-axis if > 10000
+                    if actual_max_nfes > 10000:
+                        from matplotlib.ticker import ScalarFormatter
+                        formatter = ScalarFormatter(useMathText=True)
+                        formatter.set_scientific(True)
+                        formatter.set_powerlimits((0, 0))
+                        ax.xaxis.set_major_formatter(formatter)
+                        ax.xaxis.major.formatter._useMathText = True
+        else:
+            # Apply scientific notation only for linear scale
+            self._apply_scientific_notation(ax, actual_xmax=actual_max_nfes)
+
+        # Disable minor ticks (must be called after set_yscale)
+        ax.minorticks_off()
+
+        if fig is not None:
+            fig.tight_layout()
         return fig
+
+    def _plot_merged_convergence(
+            self,
+            metric_values: Dict,
+            best_values: Dict,
+            max_nfes: Dict,
+            algorithm_order: List[str],
+            problems: List[str],
+            metric_name: Optional[str],
+            save_dir: Path
+    ) -> None:
+        """
+        Create a merged figure with all convergence curves.
+
+        Parameters
+        ----------
+        metric_values : Dict
+            Metric values dictionary.
+        best_values : Dict
+            Best values dictionary.
+        max_nfes : Dict
+            Max NFEs dictionary.
+        algorithm_order : List[str]
+            Algorithm order.
+        problems : List[str]
+            List of problem names.
+        metric_name : Optional[str]
+            Metric name for label.
+        save_dir : Path
+            Directory to save the figure.
+        """
+        # Collect all subplot info (problem, task_idx)
+        subplot_info = []
+        for prob in problems:
+            first_run_data = best_values[algorithm_order[0]][prob][1]
+            num_tasks = len(first_run_data)
+            for task_idx in range(num_tasks):
+                subplot_info.append((prob, task_idx, num_tasks))
+
+        n_plots = len(subplot_info)
+        if n_plots == 0:
+            return
+
+        n_cols = self.config.merge_columns
+        n_rows = (n_plots + n_cols - 1) // n_cols
+
+        # Create figure with subplots
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 3.5 * n_rows))
+
+        # Flatten axes array for easy iteration
+        if n_rows == 1 and n_cols == 1:
+            axes = np.array([[axes]])
+        elif n_rows == 1:
+            axes = axes.reshape(1, -1)
+        elif n_cols == 1:
+            axes = axes.reshape(-1, 1)
+
+        axes_flat = axes.flatten()
+
+        # Plot each subplot
+        for i, (prob, task_idx, num_tasks) in enumerate(subplot_info):
+            ax = axes_flat[i]
+            self._create_convergence_figure(
+                num_tasks, metric_values, best_values, max_nfes,
+                algorithm_order, prob, task_idx, metric_name,
+                ax=ax, show_legend=False
+            )
+
+        # Hide unused subplots
+        for i in range(n_plots, len(axes_flat)):
+            axes_flat[i].set_visible(False)
+
+        # Add single legend at the top of the figure
+        handles, labels = axes_flat[0].get_legend_handles_labels()
+        legend_fontsize = 18
+
+        # Calculate legend columns
+        n_legend_cols = min(len(algorithm_order), 6)
+
+        # First apply tight_layout to position subplots
+        fig.tight_layout(h_pad=2.0, w_pad=1.5)
+
+        # Get the top position of the first row of subplots (in figure coordinates)
+        first_row_top = axes_flat[0].get_position().y1
+
+        # Fixed padding between legend and first row (absolute size in cm)
+        legend_padding_cm = 1.0
+        fig_height_inch = fig.get_size_inches()[1]
+        legend_padding = legend_padding_cm / 2.54 / fig_height_inch  # cm -> inch -> figure coords
+
+        fig.legend(
+            handles, labels,
+            loc='lower center',
+            ncol=n_legend_cols,
+            fontsize=legend_fontsize,
+            bbox_to_anchor=(0.5, first_row_top + legend_padding)
+        )
+
+        output_file = save_dir / f'convergence_merged.{self.config.figure_format}'
+        fig.savefig(output_file, dpi=300, bbox_inches='tight')
+        plt.close(fig)
+
+        print(f"Merged convergence plot saved to: {output_file}")
 
     def _get_convergence_curve(
             self,
@@ -1363,7 +1648,13 @@ class PlotGenerator:
             truncated_curves = [c[:min_len] for c in all_curves]
             return np.mean(truncated_curves, axis=0)
 
-    def _apply_scientific_notation(self, ax: plt.Axes) -> None:
+    def _apply_scientific_notation(
+            self,
+            ax: plt.Axes,
+            actual_xmax: Optional[float] = None,
+            x_threshold: float = 10000,
+            y_threshold: float = 1000
+    ) -> None:
         """
         Apply scientific notation to axes if values exceed threshold.
 
@@ -1371,17 +1662,35 @@ class PlotGenerator:
         ----------
         ax : plt.Axes
             Matplotlib axes object.
+        actual_xmax : Optional[float], optional
+            Actual maximum x value from data (not affected by matplotlib padding).
+            If None, uses ax.get_xlim()[1].
+        x_threshold : float, optional
+            Threshold for x-axis to use scientific notation. Default is 10000.
+        y_threshold : float, optional
+            Threshold for y-axis to use scientific notation. Default is 1000.
         """
-        threshold = 1000
-        xmax = ax.get_xlim()[1]
+        from matplotlib.ticker import ScalarFormatter
+
+        # Use actual data max to avoid inconsistency from matplotlib padding
+        xmax = actual_xmax if actual_xmax is not None else ax.get_xlim()[1]
         ymax = ax.get_ylim()[1]
 
-        for axis_name, axis, lim in [('x', ax.xaxis, xmax), ('y', ax.yaxis, ymax)]:
-            if lim > threshold:
-                formatter = plt.matplotlib.ticker.ScalarFormatter(useMathText=True)
-                formatter.set_powerlimits((0, 0))
-                axis.set_major_formatter(formatter)
-                ax.ticklabel_format(style='sci', axis=axis_name, scilimits=(0, 0))
+        # X-axis: use scientific notation if > threshold
+        if xmax > x_threshold:
+            formatter = ScalarFormatter(useMathText=True)
+            formatter.set_scientific(True)
+            formatter.set_powerlimits((0, 0))
+            ax.xaxis.set_major_formatter(formatter)
+            ax.xaxis.major.formatter._useMathText = True
+
+        # Y-axis: use scientific notation if > threshold
+        if ymax > y_threshold:
+            formatter = ScalarFormatter(useMathText=True)
+            formatter.set_scientific(True)
+            formatter.set_powerlimits((0, 0))
+            ax.yaxis.set_major_formatter(formatter)
+            ax.yaxis.major.formatter._useMathText = True
 
     def plot_runtime(
             self,
@@ -1436,7 +1745,7 @@ class PlotGenerator:
                 x_offset, means, bar_width,
                 yerr=stds, label=algo,
                 color=self.config.colors[idx % len(self.config.colors)],
-                alpha=0.8, capsize=4,
+                alpha=0.8, capsize=2,
                 error_kw={'linewidth': 1.2, 'ecolor': 'black', 'alpha': 0.6}
             )
 
@@ -1444,7 +1753,7 @@ class PlotGenerator:
         ax.set_xticks(x_groups)
         ax.set_xticklabels(problems, fontsize=12)
         ax.tick_params(axis='both', which='major', labelsize=10)
-        ax.legend(loc='best', fontsize=10, framealpha=0.7)
+        ax.legend(loc='best', fontsize=12, framealpha=0.7)
         ax.grid(True, axis='y', alpha=0.3, linestyle='-')
 
         fig.tight_layout()
@@ -1488,55 +1797,230 @@ class PlotGenerator:
 
         problems = list(objective_values[algorithm_order[0]].keys())
 
-        for algo in algorithm_order:
-            for prob in problems:
-                first_run = list(objective_values[algo][prob].keys())[0]
-                n_tasks = len(objective_values[algo][prob][first_run])
+        if self.config.merge_plots:
+            # Merged plot mode: all algorithms for each problem/task in one figure
+            self._plot_merged_nd_solutions(
+                best_values, objective_values, algorithm_order, problems, settings, nd_folder
+            )
+        else:
+            # Separate plot mode: one figure per algorithm/problem/task
+            for algo in algorithm_order:
+                for prob in problems:
+                    first_run = list(objective_values[algo][prob].keys())[0]
+                    n_tasks = len(objective_values[algo][prob][first_run])
 
-                for task_idx in range(n_tasks):
-                    first_run_objs = objective_values[algo][prob][first_run][task_idx]
-                    n_objectives = first_run_objs.shape[1]
+                    for task_idx in range(n_tasks):
+                        first_run_objs = objective_values[algo][prob][first_run][task_idx]
+                        n_objectives = first_run_objs.shape[1]
 
-                    if n_objectives <= 1:
-                        continue
+                        if n_objectives <= 1:
+                            continue
 
+                        selected_run = StatisticsCalculator.select_representative_run(
+                            best_values, algo, prob, task_idx, self.config.statistic_type
+                        )
+
+                        if selected_run is None:
+                            selected_run = 1
+
+                        objectives = objective_values[algo][prob][selected_run][task_idx]
+
+                        if objectives.shape[0] == 0:
+                            continue
+
+                        # Filter non-dominated solutions if requested
+                        if self.config.show_nd:
+                            front_no, _ = nd_sort(objectives, objectives.shape[0])
+                            nd_solutions = objectives[front_no == 1]
+                        else:
+                            nd_solutions = objectives
+
+                        # Load true Pareto front if requested
+                        true_pf = None
+                        if self.config.show_pf and settings is not None:
+                            true_pf = DataUtils.load_reference(settings, prob, task_idx, M=n_objectives)
+
+                        # Create appropriate plot based on number of objectives
+                        fig = self._create_nd_plot(nd_solutions, true_pf, n_objectives, n_tasks, prob, task_idx, algo)
+
+                        # Save figure
+                        if n_tasks == 1:
+                            filename = f'{prob}-{algo}.{self.config.figure_format}'
+                        else:
+                            filename = f'{prob}-Task{task_idx + 1}-{algo}.{self.config.figure_format}'
+
+                        fig.savefig(nd_folder / filename, dpi=300)
+                        plt.close(fig)
+
+            print(f"All non-dominated solutions plots saved to: {nd_folder}\n")
+
+    def _plot_merged_nd_solutions(
+            self,
+            best_values: Dict,
+            objective_values: Dict,
+            algorithm_order: List[str],
+            problems: List[str],
+            settings: Optional[Dict[str, Any]],
+            nd_folder: Path
+    ) -> None:
+        """
+        Create merged figures for non-dominated solutions.
+
+        Each merged figure contains all algorithms for a specific problem/task.
+
+        Parameters
+        ----------
+        best_values : Dict
+            Best values dictionary.
+        objective_values : Dict
+            Objective values dictionary.
+        algorithm_order : List[str]
+            Algorithm order.
+        problems : List[str]
+            List of problem names.
+        settings : Optional[Dict[str, Any]]
+            Problem settings.
+        nd_folder : Path
+            Output folder path.
+        """
+        for prob in problems:
+            first_algo = algorithm_order[0]
+            first_run = list(objective_values[first_algo][prob].keys())[0]
+            n_tasks = len(objective_values[first_algo][prob][first_run])
+
+            for task_idx in range(n_tasks):
+                # Get n_objectives for this specific task
+                task_objs = objective_values[first_algo][prob][first_run][task_idx]
+                n_objectives = task_objs.shape[1]
+
+                if n_objectives <= 1:
+                    continue
+
+                n_algos = len(algorithm_order)
+                # One column per algorithm, single row
+                n_cols = n_algos
+                n_rows = 1
+
+                # Determine if 3D plot is needed
+                is_3d = n_objectives == 3
+
+                if is_3d:
+                    fig = plt.figure(figsize=(4.5 * n_cols, 3.5 * n_rows))
+                else:
+                    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4.5 * n_cols, 3.5 * n_rows))
+
+                    # Flatten axes array
+                    if n_cols == 1:
+                        axes = np.array([axes])
+                    axes_flat = axes.flatten()
+
+                # Load true Pareto front once
+                true_pf = None
+                if self.config.show_pf and settings is not None:
+                    true_pf = DataUtils.load_reference(settings, prob, task_idx, M=n_objectives)
+
+                # Build subplot title prefix
+                task_label = f'{prob} - Task {task_idx + 1}' if n_tasks > 1 else prob
+
+                for idx, algo in enumerate(algorithm_order):
                     selected_run = StatisticsCalculator.select_representative_run(
                         best_values, algo, prob, task_idx, self.config.statistic_type
                     )
-
                     if selected_run is None:
                         selected_run = 1
 
                     objectives = objective_values[algo][prob][selected_run][task_idx]
-
                     if objectives.shape[0] == 0:
                         continue
 
-                    # Filter non-dominated solutions if requested
+                    # Filter non-dominated solutions
                     if self.config.show_nd:
                         front_no, _ = nd_sort(objectives, objectives.shape[0])
                         nd_solutions = objectives[front_no == 1]
                     else:
                         nd_solutions = objectives
 
-                    # Load true Pareto front if requested
-                    true_pf = None
-                    if self.config.show_pf and settings is not None:
-                        true_pf = DataUtils.load_reference(settings, prob, task_idx, M=n_objectives)
+                    # Subplot title: "P1 - Task 1 - RVEA" or "P1 - RVEA"
+                    subplot_title = f'{task_label} - {algo}'
 
-                    # Create appropriate plot based on number of objectives
-                    fig = self._create_nd_plot(nd_solutions, true_pf, n_objectives, n_tasks, prob, task_idx, algo)
-
-                    # Save figure
-                    if n_tasks == 1:
-                        filename = f'{prob}-{algo}.{self.config.figure_format}'
+                    # Create subplot
+                    if is_3d:
+                        ax = fig.add_subplot(n_rows, n_cols, idx + 1, projection='3d')
+                        self._plot_nd_subplot_3d(ax, nd_solutions, true_pf, subplot_title)
                     else:
-                        filename = f'{prob}-Task{task_idx + 1}-{algo}.{self.config.figure_format}'
+                        ax = axes_flat[idx]
+                        self._plot_nd_subplot_2d(ax, nd_solutions, true_pf, n_objectives, subplot_title)
 
-                    fig.savefig(nd_folder / filename, dpi=300)
-                    plt.close(fig)
+                fig.tight_layout()
 
-        print(f"All non-dominated solutions plots saved to: {nd_folder}\n")
+                # Save figure
+                if n_tasks == 1:
+                    filename = f'{prob}_merged.{self.config.figure_format}'
+                else:
+                    filename = f'{prob}-Task{task_idx + 1}_merged.{self.config.figure_format}'
+
+                fig.savefig(nd_folder / filename, dpi=300, bbox_inches='tight')
+                plt.close(fig)
+
+        print(f"Merged non-dominated solutions plots saved to: {nd_folder}\n")
+
+    def _plot_nd_subplot_2d(
+            self,
+            ax: plt.Axes,
+            nd_solutions: np.ndarray,
+            true_pf: Optional[np.ndarray],
+            n_objectives: int,
+            title: str
+    ) -> None:
+        """Plot 2D or parallel coordinates subplot for merged ND solutions."""
+        if n_objectives == 2:
+            if true_pf is not None and true_pf.shape[1] == 2:
+                sort_idx = np.argsort(true_pf[:, 0])
+                sorted_pf = true_pf[sort_idx]
+                ax.scatter(sorted_pf[:, 0], sorted_pf[:, 1],
+                           c='gray', s=2, linewidth=0.1, zorder=1)
+
+            ax.scatter(nd_solutions[:, 0], nd_solutions[:, 1],
+                       c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
+                       linewidth=0.8, zorder=2)
+
+            ax.set_xlabel('$f_1$', fontsize=12)
+            ax.set_ylabel('$f_2$', fontsize=12)
+            ax.grid(True, alpha=0.2, linestyle='-')
+        else:
+            # Parallel coordinates
+            for i in range(nd_solutions.shape[0]):
+                ax.plot(range(n_objectives), nd_solutions[i, :],
+                        'b-', alpha=0.3, linewidth=0.8)
+            ax.set_xlabel('Objective', fontsize=12)
+            ax.set_ylabel('Value', fontsize=12)
+            ax.set_xticks(range(n_objectives))
+            ax.set_xticklabels([rf'$f_{{{i + 1}}}$' for i in range(n_objectives)])
+            ax.grid(True, alpha=0.3, linestyle='--')
+
+        ax.set_title(title, fontsize=12)
+
+    def _plot_nd_subplot_3d(
+            self,
+            ax: plt.Axes,
+            nd_solutions: np.ndarray,
+            true_pf: Optional[np.ndarray],
+            title: str
+    ) -> None:
+        """Plot 3D subplot for merged ND solutions."""
+        if true_pf is not None and true_pf.shape[1] == 3:
+            ax.scatter(true_pf[:, 0], true_pf[:, 1], true_pf[:, 2],
+                       c='gray', s=4, alpha=0.2, zorder=1, depthshade=True)
+
+        ax.scatter(nd_solutions[:, 0], nd_solutions[:, 1], nd_solutions[:, 2],
+                   c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
+                   linewidth=0.8, zorder=2, depthshade=True)
+
+        ax.set_xlabel('$f_1$', fontsize=10)
+        ax.set_ylabel('$f_2$', fontsize=10)
+        ax.set_zlabel('$f_3$', fontsize=10)
+        ax.set_title(title, fontsize=12)
+        ax.view_init(elev=20, azim=60)
 
     def _create_nd_plot(
             self,
@@ -1617,8 +2101,8 @@ class PlotGenerator:
                 ax.plot(range(n_objectives), nd_solutions[i, :],
                         'b-', alpha=0.3, linewidth=0.8)
 
-            ax.set_xlabel('Objective Index', fontsize=10)
-            ax.set_ylabel('Value', fontsize=10)
+            ax.set_xlabel('Objective', fontsize=12)
+            ax.set_ylabel('Value', fontsize=12)
             ax.set_xticks(range(n_objectives))
             ax.set_xticklabels([rf'$f_{{{i + 1}}}$' for i in range(n_objectives)])
             ax.grid(True, alpha=0.3, linestyle='--')
@@ -1675,8 +2159,11 @@ class DataAnalyzer:
             log_scale: bool = False,
             show_pf: bool = True,
             show_nd: bool = True,
+            merge_plots: bool = False,
+            merge_columns: int = 3,
             best_so_far: bool = True,
-            clear_results: bool = True
+            clear_results: bool = True,
+            convergence_k: Optional[int] = None
     ):
         """
         Initialize DataAnalyzer with configuration parameters.
@@ -1728,12 +2215,22 @@ class DataAnalyzer:
         show_nd : bool, optional
             Whether to filter and show only non-dominated solutions.
             Default: True
+        merge_plots : bool, optional
+            Whether to merge all plots into a single figure.
+            Default: False
+        merge_columns : int, optional
+            Number of columns in merged plot layout.
+            Default: 3
         best_so_far : bool, optional
             Whether to use best-so-far metric values.
             Default: True
         clear_results : bool, optional
             Whether to clear existing results folder before analysis.
             Default: True
+        convergence_k : Optional[int], optional
+            Number of data points to sample from convergence curves for export.
+            If None, no convergence data is exported.
+            Default: None
         """
         self.data_path = Path(data_path)
         self.settings = settings
@@ -1760,8 +2257,12 @@ class DataAnalyzer:
             log_scale=log_scale,
             show_pf=show_pf,
             show_nd=show_nd,
+            merge_plots=merge_plots,
+            merge_columns=merge_columns,
             save_path=Path(save_path)
         )
+
+        self.convergence_k = convergence_k
 
         # Internal state
         self._scan_result: Optional[ScanResult] = None
@@ -1798,13 +2299,17 @@ class DataAnalyzer:
             runs_dict[algo] = {}
 
             for pkl in algo_dir.glob('*.pkl'):
-                parts = pkl.stem.split('_')
-                if len(parts) >= 3:
-                    prob = '_'.join(parts[1:-1])
-                    runs_dict[algo].setdefault(prob, []).append(pkl)
+                stem = pkl.stem
+                prefix = algo + '_'
+                if stem.startswith(prefix):
+                    remainder = stem[len(prefix):]
+                    last_underscore = remainder.rfind('_')
+                    if last_underscore > 0:
+                        prob = remainder[:last_underscore]
+                        runs_dict[algo].setdefault(prob, []).append(pkl)
 
-                    if prob not in problems:
-                        problems.append(prob)
+                        if prob not in problems:
+                            problems.append(prob)
 
         algorithms.sort()
         problems.sort(key=lambda x: int(''.join(filter(str.isdigit, x))) if any(c.isdigit() for c in x) else x)
@@ -1980,7 +2485,12 @@ class DataAnalyzer:
                         sign = metric_instance.sign
                     elif metric_name == 'HV':
                         metric_instance = HV()
-                        metric_value = metric_instance.calculate(objs_tgen, reference)
+                        # If reference is 1D or single row, treat as ref point; otherwise as PF
+                        if reference.ndim == 1 or reference.shape[0] == 1:
+                            ref_point = reference.flatten()
+                            metric_value = metric_instance.calculate(objs_tgen, reference=ref_point)
+                        else:
+                            metric_value = metric_instance.calculate(objs_tgen, pf=reference)
                         sign = metric_instance.sign
                     elif metric_name == 'IGDp':
                         metric_instance = IGDp()
@@ -2134,6 +2644,71 @@ class DataAnalyzer:
             self.settings
         )
 
+    def export_convergence_data(self, k: Optional[int] = None) -> None:
+        """
+        Export convergence curve data to text files.
+
+        For each problem-task combination, exports a file containing evaluation
+        counts paired with convergence values for all algorithms.
+
+        Parameters
+        ----------
+        k : Optional[int], optional
+            Number of data points to sample from each convergence curve.
+            If None, uses self.convergence_k. If both are None, exports all points.
+        """
+        if self._metric_results is None:
+            self.calculate_metrics()
+
+        k = k if k is not None else self.convergence_k
+        algo_order = self.algorithm_order if self.algorithm_order else self._scan_result.algorithms
+        metric_values = self._metric_results.metric_values
+        best_values = self._metric_results.best_values
+        max_nfes = self._metric_results.max_nfes
+        problems = sorted(metric_values[algo_order[0]].keys())
+
+        save_dir = Path(self.plot_config.save_path) / 'Convergence_Data'
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        plot_gen = PlotGenerator(self.plot_config)
+
+        for prob_idx, prob in enumerate(problems):
+            first_run_data = best_values[algo_order[0]][prob][1]
+            num_tasks = len(first_run_data)
+
+            for task_idx in range(num_tasks):
+                filename = f'Problem{prob_idx + 1}_task{task_idx + 1}.txt'
+                filepath = save_dir / filename
+
+                with open(filepath, 'w') as f:
+                    for algo in algo_order:
+                        selected_run = StatisticsCalculator.select_representative_run(
+                            best_values, algo, prob, task_idx,
+                            self.plot_config.statistic_type
+                        )
+                        curve = plot_gen._get_convergence_curve(
+                            metric_values, algo, prob, task_idx, selected_run
+                        )
+                        if len(curve) == 0:
+                            continue
+
+                        nfes = max_nfes[algo][prob][task_idx]
+                        x = np.linspace(0, nfes, len(curve))
+
+                        # Sample k points if requested
+                        if k is not None and k > 0 and len(curve) > k:
+                            indices = np.linspace(0, len(curve) - 1, k, dtype=int)
+                            x = x[indices]
+                            curve = curve[indices]
+
+                        f.write(f'# Algorithm: {algo}\n')
+                        f.write(f'# NFEs\tValue\n')
+                        for xi, yi in zip(x, curve):
+                            f.write(f'{float(xi):.6g}\t{float(yi):.6g}\n')
+                        f.write('\n')
+
+        print(f"Convergence data exported to: {save_dir}")
+
     def run(self) -> MetricResults:
         """
         Execute the complete analysis pipeline.
@@ -2180,6 +2755,11 @@ class DataAnalyzer:
         # Step 4: Plot convergence curves
         print('\n📈 Plotting convergence curves...')
         self.generate_convergence_plots()
+
+        # Step 4.5: Export convergence data
+        if self.convergence_k is not None:
+            print('\n📂 Exporting convergence data...')
+            self.export_convergence_data()
 
         # Step 5: Plot runtime
         print('\n⏱️ Plotting runtime comparison...')
@@ -2341,7 +2921,42 @@ if __name__ == '__main__':
         )
 
 
-    Example 6: Access Raw Results
+    Example 6: Customizing Plot Font Sizes and Legend
+    -------------------------------------------------
+    Control font sizes, line styles, and legend appearance in convergence plots.
+
+    The following parameters can be customized in PlotGenerator._create_convergence_figure():
+
+    Font sizes (hardcoded, modify in source if needed)::
+
+        ax.set_xlabel('NFEs', fontsize=14)      # X-axis label font size
+        ax.set_ylabel(y_label, fontsize=14)     # Y-axis label font size
+        ax.set_title(title, fontsize=14)        # Title font size
+        ax.tick_params(..., labelsize=14)       # Tick label font size
+
+    Line width and marker size (adaptive based on algorithm count)::
+
+        # 1-4 algorithms:  markersize=8, linewidth=2.5
+        # 5-6 algorithms:  markersize=7, linewidth=2.0
+        # 7+ algorithms:   markersize=6, linewidth=1.6
+
+    Legend font size (adaptive, see _calculate_legend_fontsize())::
+
+        # 2 algorithms:   fontsize=14
+        # 15 algorithms:  fontsize=6
+        # Linear interpolation for values in between
+
+    Merged plot legend (fixed size)::
+
+        # In _plot_combined_convergence_for_problem():
+        legend_fontsize = 18                    # Fixed legend font size
+        legend_padding_cm = 0.3                 # Gap between legend and plots (cm)
+        n_legend_cols = min(len(algorithms), 6) # Max 6 columns in legend
+
+    To modify these values, edit the corresponding methods in PlotGenerator class.
+
+
+    Example 7: Access Raw Results
     -----------------------------
     Access computed metrics for custom analysis::
 
@@ -2369,7 +2984,7 @@ if __name__ == '__main__':
         max_nfes_list = results.max_nfes['Algo1']['P1']
 
 
-    Example 7: Using Utility Classes Directly
+    Example 8: Using Utility Classes Directly
     -----------------------------------------
     Use statistics and data utilities independently::
 

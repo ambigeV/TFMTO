@@ -47,7 +47,7 @@ class EMEA:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, SNum=10, TGap=10, muc=2, mum=5, F=0.5, CR=0.6, save_data=True,
-                 save_path='./TestData', name='EMEA_test', disable_tqdm=True):
+                 save_path='./Data', name='EMEA', disable_tqdm=True):
         """
         Initialize EMEA algorithm.
 

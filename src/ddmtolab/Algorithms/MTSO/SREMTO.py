@@ -54,8 +54,8 @@ class SREMTO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, th=0.3, p_alpha=0.7, p_beta=1.0,
-                 muc=1.0, mum=39.0, save_data=True, save_path='./TestData',
-                 name='SREMTO_test', disable_tqdm=True):
+                 muc=1.0, mum=39.0, save_data=True, save_path='./Data',
+                 name='SREMTO', disable_tqdm=True):
         """
         Initialize SREMTO algorithm.
 

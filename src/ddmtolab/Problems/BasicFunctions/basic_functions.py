@@ -7,8 +7,7 @@ Date: 2025.10.15
 Version: 1.0
 
 References:
-[1] Da, Bingshui, et al. "Evolutionary multitasking for single-objective continuous optimization: Benchmark problems,
-    performance metric, and baseline results." arXiv preprint arXiv:1706.03470 (2017).
+[1] Da, Bingshui, et al. "Evolutionary multitasking for single-objective continuous optimization: Benchmark problems, performance metric, and baseline results." arXiv preprint arXiv:1706.03470 (2017).
 """
 import numpy as np
 

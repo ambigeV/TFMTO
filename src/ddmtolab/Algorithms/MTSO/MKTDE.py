@@ -54,7 +54,7 @@ class MKTDE:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, F=0.5, CR=0.6,
-                 save_data=True, save_path='./TestData', name='MKTDE_test', disable_tqdm=True):
+                 save_data=True, save_path='./Data', name='MKTDE', disable_tqdm=True):
         """
         Initialize MKTDE algorithm.
 

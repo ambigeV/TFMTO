@@ -53,7 +53,7 @@ class SHPSO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n_initial=None, max_nfes=None, ps=None, mu=5,
-                 save_data=True, save_path='./TestData', name='SHPSO_test', disable_tqdm=True):
+                 save_data=True, save_path='./Data', name='SHPSO', disable_tqdm=True):
         """
         Initialize SHPSO algorithm.
 

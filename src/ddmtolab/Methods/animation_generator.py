@@ -1,11 +1,20 @@
 """
-Optimization Animation Generator
+Animation Generator Module for Optimization Visualization
 
 This module generates animations for optimization processes from .pkl result files.
 Supports both single-objective and multi-objective optimization visualization.
 Added multiple merge modes for comparing algorithms.
 
-Author: Assistant
+Classes:
+    AnimationGenerator: Main class for generating optimization animations
+
+Usage:
+    from ddmtolab.Methods.animation_generator import AnimationGenerator
+
+    generator = AnimationGenerator(data_path='./Data', save_path='./Results')
+    generator.run()
+
+Author: Jiangtao Shen
 Date: 2026-01-23
 """
 
@@ -91,10 +100,51 @@ except ImportError:
 
 warnings.filterwarnings('ignore')
 
+# Default color palette for plots (consistent with data_analysis.py)
+DEFAULT_COLORS = [
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+    '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff8c00'
+]
 
-class OptimizationAnimator:
+# Default markers for plots
+DEFAULT_MARKERS = ['o', 's', '^', 'v', 'D', 'p', '*', 'h', '<', '>', 'X', 'P', 'd', '8', 'H']
+
+
+def _calculate_legend_fontsize(n_algorithms: int) -> int:
     """
-    Generate animations for optimization processes.
+    Calculate legend font size based on number of algorithms.
+    """
+    if n_algorithms <= 4:
+        return 10
+    elif n_algorithms <= 6:
+        return 9
+    elif n_algorithms <= 8:
+        return 8
+    else:
+        return 7
+
+
+def _get_adaptive_line_params(n_algorithms: int) -> tuple:
+    """
+    Get adaptive line width and marker size based on number of algorithms.
+
+    Returns
+    -------
+    tuple
+        (markersize, linewidth)
+    """
+    if n_algorithms <= 4:
+        return 6, 2.0
+    elif n_algorithms <= 6:
+        return 5, 1.8
+    else:
+        return 4, 1.5
+
+
+class AnimationGenerator:
+    """
+    Main class for generating optimization process animations.
 
     For single-objective tasks:
         - Decision space convergence (scatter plot)
@@ -109,44 +159,248 @@ class OptimizationAnimator:
         - merge=1: Full merge, all algorithms in same plots
         - merge=2: Decision space separated, objective space merged
         - merge=3: Both decision and objective spaces separated
+
+    Attributes
+    ----------
+    data_path : Path
+        Path to the data directory containing pickle files.
+    save_path : Path
+        Path to save animation files.
     """
 
-    def __init__(self, pkl_path, output_path=None, fps=10, dpi=100, merge=0, pkl_paths=None, title=None,
-                 algorithm_order=None, max_nfes=100, logscale=False):
+    def __init__(
+            self,
+            data_path='./Data',
+            save_path='./Results',
+            algorithm_order=None,
+            title=None,
+            merge=0,
+            max_nfes=100,
+            fps=10,
+            dpi=100,
+            interval=100,
+            format='gif',
+            log_scale=False,
+            file_suffix='.pkl'
+    ):
         """
-        Initialize the animator.
+        Initialize AnimationGenerator.
 
         Parameters
         ----------
-        pkl_path : str or list
-            Path to the .pkl results file, or list of paths when merge>0
-        output_path : str, optional
-            Path for output animation file. If None, uses same directory as pkl_path
-        fps : int, optional
-            Frames per second for animation (default: 10)
-        dpi : int, optional
-            DPI for the output animation (default: 100)
+        data_path : str, optional
+            Path to data directory containing pickle files.
+            Default: './Data'
+        save_path : str, optional
+            Directory path to save animation files.
+            Default: './Results'
+        algorithm_order : list, optional
+            List of algorithm names (file stems) specifying the display order.
+            If None, uses alphabetical order.
+            Example: ['GA', 'DE', 'PSO']
+        title : str, optional
+            Custom title for the animation. If None, auto-generated.
         merge : int, optional
             Merge mode (default: 0)
             - 0: No merge, individual animations for each file
-            - 1: Full merge, all algorithms in same plots (left & right)
-            - 2: Partial merge, separate decision space (left), merged objective space (right)
-            - 3: Separate plots, decision and objective spaces both separated
-        pkl_paths : list, optional
-            List of .pkl file paths when merge>0 (deprecated, use pkl_path as list)
-        title : str, optional
-            Custom title for the animation. If None, uses filename(s) or 'test' for merge mode
-        algorithm_order : list, optional
-            List of algorithm names (file stems) specifying the display order.
-            If None, uses the order from pkl_path/pkl_paths.
-            Example: ['BO', 'MTBO', 'RAMTEA', 'BO-LCB-BCKT']
+            - 1: Full merge, all algorithms in same plots
+            - 2: Partial merge, separate decision space, merged objective space
+            - 3: Separate plots, both spaces separated
         max_nfes : int or list, optional
             Maximum number of function evaluations (NFEs) for each task.
             Can be a scalar (same for all tasks) or a list (one per task).
             Default: 100
-        logscale : bool, optional
-            Use logarithmic scale for y-axis in single-objective convergence curves (default: False)
+        fps : int, optional
+            Frames per second for animation (default: 10)
+        dpi : int, optional
+            DPI for the output animation (default: 100)
+        interval : int, optional
+            Delay between frames in milliseconds (default: 100)
+        format : str, optional
+            Output format: 'gif' or 'mp4' (default: 'gif')
+        log_scale : bool, optional
+            Use logarithmic scale for y-axis in single-objective convergence curves.
+            Default: False
+        file_suffix : str, optional
+            Suffix pattern for pickle files.
+            Default: '.pkl'
         """
+        self.data_path = Path(data_path)
+        self.save_path = Path(save_path)
+        self.algorithm_order = algorithm_order
+        self.title = title
+        self.merge = merge
+        self.max_nfes = max_nfes
+        self.fps = fps
+        self.dpi = dpi
+        self.interval = interval
+        self.format = format
+        self.logscale = log_scale
+        self.file_suffix = file_suffix
+
+        # Internal state (will be populated during run)
+        self._pkl_paths = None
+        self._all_data = None
+        self._algorithm_names = None
+
+    def _scan_data(self):
+        """Scan data directory for pickle files."""
+        if not self.data_path.exists():
+            raise FileNotFoundError(f"Data path does not exist: {self.data_path}")
+
+        pkl_files = list(self.data_path.glob(f'*{self.file_suffix}'))
+        if not pkl_files:
+            raise ValueError(f"No pickle files found in {self.data_path} with suffix '{self.file_suffix}'")
+
+        # Sort by name
+        pkl_files = sorted(pkl_files, key=lambda x: x.stem)
+
+        # Reorder based on algorithm_order if provided
+        if self.algorithm_order is not None:
+            name_to_path = {p.stem: p for p in pkl_files}
+            ordered_files = []
+            for name in self.algorithm_order:
+                if name in name_to_path:
+                    ordered_files.append(name_to_path[name])
+                else:
+                    print(f"Warning: Algorithm '{name}' not found in data directory")
+            pkl_files = ordered_files
+
+        self._pkl_paths = pkl_files
+        self._algorithm_names = [p.stem for p in pkl_files]
+
+        print(f"Found {len(pkl_files)} algorithms: {self._algorithm_names}")
+        return pkl_files
+
+    def _load_data(self):
+        """Load data from all pickle files."""
+        self._all_data = []
+        for pkl_path in self._pkl_paths:
+            with open(pkl_path, 'rb') as f:
+                data = pickle.load(f)
+            self._all_data.append(data)
+
+    def run(self):
+        """
+        Execute the animation generation pipeline.
+
+        Returns
+        -------
+        dict
+            Dictionary with 'success' and 'failed' lists of filenames.
+        """
+        print("=" * 60)
+        print("Starting Animation Generation Pipeline")
+        print("=" * 60)
+        print(f"Data path: {self.data_path}")
+        print(f"Save path: {self.save_path}")
+
+        # Scan for pkl files
+        print('\n[1/2] Scanning data directory...')
+        self._scan_data()
+
+        # Create save directory
+        self.save_path.mkdir(parents=True, exist_ok=True)
+
+        print(f'\n[2/2] Generating animations...')
+        print(f"Animation params: FPS={self.fps}, DPI={self.dpi}, Format={self.format.upper()}")
+        print(f"Max NFEs: {self.max_nfes}, Log scale: {self.logscale}")
+
+        merge_mode_names = {
+            0: 'Individual',
+            1: 'Merged (Full)',
+            2: 'Merged (Decision Separated)',
+            3: 'Merged (All Separated)'
+        }
+        print(f"Mode: {merge_mode_names.get(self.merge, 'Unknown')}")
+
+        success_list = []
+        failed_list = []
+
+        if self.merge > 0:
+            # Merge mode: create one animation with all files
+            output_name = self.title if self.title else 'comparison'
+            output_path = self.save_path / f"{output_name}_animation.{self.format}"
+
+            print(f"\nCreating merged comparison animation...")
+            print(f"Algorithms: {self._algorithm_names}")
+
+            try:
+                self._create_merged_animation(output_path)
+                success_list = self._algorithm_names.copy()
+                print(f"Animation saved to: {output_path}")
+            except Exception as e:
+                failed_list = self._algorithm_names.copy()
+                print(f"Failed: {e}")
+        else:
+            # Individual mode
+            for i, pkl_path in enumerate(self._pkl_paths):
+                filename = pkl_path.stem
+                output_path = self.save_path / f"{filename}_animation.{self.format}"
+
+                print(f"\n[{i+1}/{len(self._pkl_paths)}] Processing: {filename}")
+
+                try:
+                    self._create_single_animation(pkl_path, output_path)
+                    success_list.append(filename)
+                    print(f"Animation saved to: {output_path}")
+                except Exception as e:
+                    failed_list.append(filename)
+                    print(f"Failed: {e}")
+
+        # Summary
+        print("\n" + "=" * 60)
+        print("Animation Generation Completed")
+        print(f"Success: {len(success_list)}, Failed: {len(failed_list)}")
+        if failed_list:
+            print(f"Failed files: {failed_list}")
+        print("=" * 60)
+
+        return {'success': success_list, 'failed': failed_list}
+
+    def _create_single_animation(self, pkl_path, output_path):
+        """Create animation for a single pkl file."""
+        # Use legacy animator for actual animation creation
+        animator = _LegacyAnimator(
+            pkl_path=str(pkl_path),
+            output_path=str(output_path),
+            fps=self.fps,
+            dpi=self.dpi,
+            merge=0,
+            title=self.title,
+            max_nfes=self.max_nfes,
+            logscale=self.logscale
+        )
+        animator.create_animation(interval=self.interval)
+
+    def _create_merged_animation(self, output_path):
+        """Create merged animation for all pkl files."""
+        pkl_paths = [str(p) for p in self._pkl_paths]
+        animator = _LegacyAnimator(
+            pkl_path=pkl_paths,
+            output_path=str(output_path),
+            fps=self.fps,
+            dpi=self.dpi,
+            merge=self.merge,
+            title=self.title,
+            algorithm_order=self._algorithm_names,
+            max_nfes=self.max_nfes,
+            logscale=self.logscale
+        )
+        animator.create_animation(interval=self.interval)
+
+
+class _LegacyAnimator:
+    """
+    Internal class for animation creation (legacy implementation).
+
+    This class handles the actual animation rendering logic.
+    Use AnimationGenerator for the public API.
+    """
+
+    def __init__(self, pkl_path, output_path=None, fps=10, dpi=100, merge=0, pkl_paths=None, title=None,
+                 algorithm_order=None, max_nfes=100, logscale=False):
+        """Initialize the legacy animator."""
         self.fps = fps
         self.dpi = dpi
         self.merge = merge
@@ -348,19 +602,33 @@ class OptimizationAnimator:
             fig_width = column_width * n_cols
 
         n_rows = self.n_tasks
+        fig_height = 4 * n_rows
 
-        fig = plt.figure(figsize=(fig_width, 4 * n_rows))
+        fig = plt.figure(figsize=(fig_width, fig_height))
+
+        # Calculate margins in normalized coordinates
+        # Title to first row: 1.6cm, Bottom margin: 2cm
+        title_gap_cm = 1.6
+        bottom_margin_cm = 2.0
+        title_height_inches = 0.25  # Approximate height for fontsize 16
+
+        title_gap_inches = title_gap_cm / 2.54
+        bottom_margin_inches = bottom_margin_cm / 2.54
+
+        top_margin = (title_gap_inches + title_height_inches) / fig_height
+        bottom_margin = bottom_margin_inches / fig_height
+        title_y = 1 - (title_height_inches / 2) / fig_height  # Center of title
 
         # Set title only if specified
         if self.title:
-            fig.suptitle(self.title, fontsize=16, fontweight='bold')
+            fig.suptitle(self.title, fontsize=16, fontweight='bold', y=title_y)
         elif self.merge == 0:
             # Use filename as title for single file mode
-            fig.suptitle(self.pkl_path.stem, fontsize=16, fontweight='bold')
+            fig.suptitle(self.pkl_path.stem, fontsize=16, fontweight='bold', y=title_y)
 
         # Adjust spacing between subplots
-        # plt.subplots_adjust(hspace=0.4, wspace=0.3)
-        plt.subplots_adjust(hspace=0.4, wspace=0.3, left=0.05, right=0.95)
+        plt.subplots_adjust(hspace=0.4, wspace=0.3, left=0.05, right=0.95,
+                            top=1-top_margin, bottom=bottom_margin)
 
         # Create subplots based on merge mode
         axes = self._create_subplots(fig, n_rows, n_cols)
@@ -499,39 +767,39 @@ class OptimizationAnimator:
                 dim = self.dims_per_task[task_id]
 
                 # Left plot: Decision space
-                ax_left.set_title(f'Task {task_id + 1}: Decision Space (dim={dim})')
-                ax_left.set_xlabel('Decision Variables')
-                ax_left.set_ylabel('Normalized Value')
+                ax_left.set_title(f'Task {task_id + 1}: Decision Space (dim={dim})', fontsize=12)
+                ax_left.set_xlabel('Decision Variables', fontsize=12)
+                ax_left.set_ylabel('Normalized Value', fontsize=12)
                 ax_left.set_ylim(-0.1, 1.1)
-                ax_left.grid(True, alpha=0.3)
+                ax_left.grid(True, alpha=0.2, linestyle='-')
 
                 # Right plot: Objective space or convergence curve
                 if n_objs == 1:
-                    ax_right.set_title(f'Task {task_id + 1}: Convergence Curve')
-                    ax_right.set_xlabel('NFEs')
+                    ax_right.set_title(f'Task {task_id + 1}: Convergence Curve', fontsize=12)
+                    ax_right.set_xlabel('NFEs', fontsize=12)
                     ylabel = 'Best Objective Value (log)' if self.logscale else 'Best Objective Value'
-                    ax_right.set_ylabel(ylabel)
+                    ax_right.set_ylabel(ylabel, fontsize=12)
                     if self.logscale:
                         ax_right.set_yscale('log')
-                    ax_right.grid(True, alpha=0.3)
+                    ax_right.grid(True, alpha=0.2, linestyle='-')
                 elif n_objs == 2:
-                    ax_right.set_title(f'Task {task_id + 1}: Objective Space')
-                    ax_right.set_xlabel('f1')
-                    ax_right.set_ylabel('f2')
-                    ax_right.grid(True, alpha=0.3)
+                    ax_right.set_title(f'Task {task_id + 1}: Objective Space', fontsize=12)
+                    ax_right.set_xlabel('$f_1$', fontsize=12)
+                    ax_right.set_ylabel('$f_2$', fontsize=12)
+                    ax_right.grid(True, alpha=0.2, linestyle='-')
                 elif n_objs == 3:
-                    ax_right.set_title(f'Task {task_id + 1}: Objective Space (3D)')
-                    ax_right.set_xlabel('f1')
-                    ax_right.set_ylabel('f2')
-                    ax_right.set_zlabel('f3')
-                    ax_right.grid(True, alpha=0.3)
+                    ax_right.set_title(f'Task {task_id + 1}: Objective Space (3D)', fontsize=12)
+                    ax_right.set_xlabel('$f_1$', fontsize=12)
+                    ax_right.set_ylabel('$f_2$', fontsize=12)
+                    ax_right.set_zlabel('$f_3$', fontsize=12)
+                    ax_right.grid(True, alpha=0.2, linestyle='-')
                     ax_right.view_init(elev=30, azim=45)
                 else:
-                    ax_right.set_title(f'Task {task_id + 1}: Objective Space (n_objs={n_objs})')
-                    ax_right.set_xlabel('Objectives')
-                    ax_right.set_ylabel('Normalized Objective Value')
+                    ax_right.set_title(f'Task {task_id + 1}: Objective Space (n_objs={n_objs})', fontsize=12)
+                    ax_right.set_xlabel('Objectives', fontsize=12)
+                    ax_right.set_ylabel('Normalized Objective Value', fontsize=12)
                     ax_right.set_ylim(-0.1, 1.1)
-                    ax_right.grid(True, alpha=0.3)
+                    ax_right.grid(True, alpha=0.2, linestyle='-')
 
     def _update(self, frame, axes):
         """Update function for animation (single file mode, merge=0)."""
@@ -566,7 +834,10 @@ class OptimizationAnimator:
 
     def _update_merge(self, frame, axes):
         """Update function for animation (merge modes 1, 2, 3)."""
-        colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'cyan', 'magenta']
+        colors = DEFAULT_COLORS
+        n_algos = self.n_algorithms
+        legend_fontsize = _calculate_legend_fontsize(n_algos)
+        markersize, linewidth = _get_adaptive_line_params(n_algos)
 
         for task_id in range(self.n_tasks):
             n_objs = self.n_objs_per_task[task_id]
@@ -603,8 +874,8 @@ class OptimizationAnimator:
                     else:
                         self._plot_objective_space_merge(ax_obj, objs, n_objs, color, algo_name, algo_idx == 0)
 
-                ax_dec.legend(loc='upper right', fontsize=8)
-                ax_obj.legend(loc='upper right', fontsize=8)
+                ax_dec.legend(loc='upper right', fontsize=legend_fontsize)
+                ax_obj.legend(loc='upper right', fontsize=legend_fontsize)
 
             elif self.merge == 2:
                 # Partial merge: decision separated, objective merged
@@ -637,11 +908,11 @@ class OptimizationAnimator:
 
                     # Plot decision space (individual subplot)
                     ax_dec = axes_dec[algo_idx]
-                    ax_dec.set_title(f'Task {task_id + 1}: {algo_name} (NFEs={current_nfes})')
-                    ax_dec.set_xlabel('Decision Variables')
-                    ax_dec.set_ylabel('Normalized Value')
+                    ax_dec.set_title(f'{algo_name}: Decision Space (NFEs={current_nfes})', fontsize=12)
+                    ax_dec.set_xlabel('Decision Variables', fontsize=12)
+                    ax_dec.set_ylabel('Normalized Value', fontsize=12)
                     ax_dec.set_ylim(-0.1, 1.1)
-                    ax_dec.grid(True, alpha=0.3)
+                    ax_dec.grid(True, alpha=0.2, linestyle='-')
                     self._plot_decision_space_single(ax_dec, decs, dim, color)
 
                     # Plot objective space (merged)
@@ -650,7 +921,7 @@ class OptimizationAnimator:
                     else:
                         self._plot_objective_space_merge(ax_obj, objs, n_objs, color, algo_name, algo_idx == 0)
 
-                ax_obj.legend(loc='upper right', fontsize=8)
+                ax_obj.legend(loc='upper right', fontsize=legend_fontsize)
 
             elif self.merge == 3:
                 # All separated
@@ -681,41 +952,41 @@ class OptimizationAnimator:
 
                     # Plot decision space (individual subplot)
                     ax_dec = axes_dec[algo_idx]
-                    ax_dec.set_title(f'Task {task_id + 1}: {algo_name} Decision (NFEs={current_nfes})')
-                    ax_dec.set_xlabel('Decision Variables')
-                    ax_dec.set_ylabel('Normalized Value')
+                    ax_dec.set_title(f'{algo_name}: Decision Space (NFEs={current_nfes})', fontsize=12)
+                    ax_dec.set_xlabel('Decision Variables', fontsize=12)
+                    ax_dec.set_ylabel('Normalized Value', fontsize=12)
                     ax_dec.set_ylim(-0.1, 1.1)
-                    ax_dec.grid(True, alpha=0.3)
+                    ax_dec.grid(True, alpha=0.2, linestyle='-')
                     self._plot_decision_space_single(ax_dec, decs, dim, color)
 
                     # Plot objective space (individual subplot)
                     ax_obj = axes_obj[algo_idx]
                     if n_objs == 1:
-                        ax_obj.set_title(f'Task {task_id + 1}: {algo_name} Convergence')
-                        ax_obj.set_xlabel('NFEs')
+                        ax_obj.set_title(f'{algo_name}: Convergence Curve', fontsize=12)
+                        ax_obj.set_xlabel('NFEs', fontsize=12)
                         ylabel = 'Best Objective Value (log)' if self.logscale else 'Best Objective Value'
-                        ax_obj.set_ylabel(ylabel)
+                        ax_obj.set_ylabel(ylabel, fontsize=12)
                         if self.logscale:
                             ax_obj.set_yscale('log')
-                        ax_obj.grid(True, alpha=0.3)
+                        ax_obj.grid(True, alpha=0.2, linestyle='-')
                         self._plot_convergence_curve_single(ax_obj, algo_idx, task_id, frame, color)
                     else:
                         if n_objs == 2:
-                            ax_obj.set_title(f'Task {task_id + 1}: {algo_name} Objective')
-                            ax_obj.set_xlabel('f1')
-                            ax_obj.set_ylabel('f2')
+                            ax_obj.set_title(f'{algo_name}: Objective Space', fontsize=12)
+                            ax_obj.set_xlabel('$f_1$', fontsize=12)
+                            ax_obj.set_ylabel('$f_2$', fontsize=12)
                         elif n_objs == 3:
-                            ax_obj.set_title(f'Task {task_id + 1}: {algo_name} Objective')
-                            ax_obj.set_xlabel('f1')
-                            ax_obj.set_ylabel('f2')
-                            ax_obj.set_zlabel('f3')
+                            ax_obj.set_title(f'{algo_name}: Objective Space', fontsize=12)
+                            ax_obj.set_xlabel('$f_1$', fontsize=12)
+                            ax_obj.set_ylabel('$f_2$', fontsize=12)
+                            ax_obj.set_zlabel('$f_3$', fontsize=12)
                             ax_obj.view_init(elev=30, azim=45)
                         else:
-                            ax_obj.set_title(f'Task {task_id + 1}: {algo_name} Objective')
-                            ax_obj.set_xlabel('Objectives')
-                            ax_obj.set_ylabel('Normalized Value')
+                            ax_obj.set_title(f'{algo_name}: Objective Space', fontsize=12)
+                            ax_obj.set_xlabel('Objectives', fontsize=12)
+                            ax_obj.set_ylabel('Normalized Value', fontsize=12)
                             ax_obj.set_ylim(-0.1, 1.1)
-                        ax_obj.grid(True, alpha=0.3)
+                        ax_obj.grid(True, alpha=0.2, linestyle='-')
                         self._plot_objective_space_single(ax_obj, objs, n_objs, color)
 
     def _init_task_plots(self, task_id, ax_left, ax_right, gen_idx):
@@ -724,36 +995,36 @@ class OptimizationAnimator:
         dim = self.dims_per_task[task_id]
 
         # Left plot
-        ax_left.set_title(f'Task {task_id + 1}: Decision Space (Gen {gen_idx + 1})')
-        ax_left.set_xlabel('Decision Variables')
-        ax_left.set_ylabel('Normalized Value')
+        ax_left.set_title(f'Task {task_id + 1}: Decision Space (Gen {gen_idx + 1})', fontsize=12)
+        ax_left.set_xlabel('Decision Variables', fontsize=12)
+        ax_left.set_ylabel('Normalized Value', fontsize=12)
         ax_left.set_ylim(-0.1, 1.1)
-        ax_left.grid(True, alpha=0.3)
+        ax_left.grid(True, alpha=0.2, linestyle='-')
 
         # Right plot
         if n_objs == 1:
-            ax_right.set_title(f'Task {task_id + 1}: Convergence Curve')
-            ax_right.set_xlabel('NFEs')
+            ax_right.set_title(f'Task {task_id + 1}: Convergence Curve', fontsize=12)
+            ax_right.set_xlabel('NFEs', fontsize=12)
             ylabel = 'Best Objective Value (log)' if self.logscale else 'Best Objective Value'
-            ax_right.set_ylabel(ylabel)
+            ax_right.set_ylabel(ylabel, fontsize=12)
             if self.logscale:
                 ax_right.set_yscale('log')
         elif n_objs == 2:
-            ax_right.set_title(f'Task {task_id + 1}: Objective Space (Gen {gen_idx + 1})')
-            ax_right.set_xlabel('f1')
-            ax_right.set_ylabel('f2')
+            ax_right.set_title(f'Task {task_id + 1}: Objective Space (Gen {gen_idx + 1})', fontsize=12)
+            ax_right.set_xlabel('$f_1$', fontsize=12)
+            ax_right.set_ylabel('$f_2$', fontsize=12)
         elif n_objs == 3:
-            ax_right.set_title(f'Task {task_id + 1}: Objective Space (Gen {gen_idx + 1})')
-            ax_right.set_xlabel('f1')
-            ax_right.set_ylabel('f2')
-            ax_right.set_zlabel('f3')
+            ax_right.set_title(f'Task {task_id + 1}: Objective Space (Gen {gen_idx + 1})', fontsize=12)
+            ax_right.set_xlabel('$f_1$', fontsize=12)
+            ax_right.set_ylabel('$f_2$', fontsize=12)
+            ax_right.set_zlabel('$f_3$', fontsize=12)
         else:
-            ax_right.set_title(f'Task {task_id + 1}: Objective Space (Gen {gen_idx + 1})')
-            ax_right.set_xlabel('Objectives')
-            ax_right.set_ylabel('Normalized Objective Value')
+            ax_right.set_title(f'Task {task_id + 1}: Objective Space (Gen {gen_idx + 1})', fontsize=12)
+            ax_right.set_xlabel('Objectives', fontsize=12)
+            ax_right.set_ylabel('Normalized Objective Value', fontsize=12)
             ax_right.set_ylim(-0.1, 1.1)
 
-        ax_right.grid(True, alpha=0.3)
+        ax_right.grid(True, alpha=0.2, linestyle='-')
 
     def _init_task_plots_merge(self, task_id, ax_dec, ax_obj, mode=1):
         """Initialize plots for merge modes."""
@@ -762,37 +1033,37 @@ class OptimizationAnimator:
 
         # Decision plot (for mode 1)
         if ax_dec is not None:
-            ax_dec.set_title(f'Task {task_id + 1}: Decision Space (dim={dim})')
-            ax_dec.set_xlabel('Decision Variables')
-            ax_dec.set_ylabel('Normalized Value')
+            ax_dec.set_title(f'Task {task_id + 1}: Decision Space (dim={dim})', fontsize=12)
+            ax_dec.set_xlabel('Decision Variables', fontsize=12)
+            ax_dec.set_ylabel('Normalized Value', fontsize=12)
             ax_dec.set_ylim(-0.1, 1.1)
-            ax_dec.grid(True, alpha=0.3)
+            ax_dec.grid(True, alpha=0.2, linestyle='-')
 
         # Objective plot
         if n_objs == 1:
-            ax_obj.set_title(f'Task {task_id + 1}: Convergence Curve')
-            ax_obj.set_xlabel('NFEs')
+            ax_obj.set_title(f'Task {task_id + 1}: Convergence Curve', fontsize=12)
+            ax_obj.set_xlabel('NFEs', fontsize=12)
             ylabel = 'Best Objective Value (log)' if self.logscale else 'Best Objective Value'
-            ax_obj.set_ylabel(ylabel)
+            ax_obj.set_ylabel(ylabel, fontsize=12)
             if self.logscale:
                 ax_obj.set_yscale('log')
         elif n_objs == 2:
-            ax_obj.set_title(f'Task {task_id + 1}: Objective Space')
-            ax_obj.set_xlabel('f1')
-            ax_obj.set_ylabel('f2')
+            ax_obj.set_title(f'Task {task_id + 1}: Objective Space', fontsize=12)
+            ax_obj.set_xlabel('$f_1$', fontsize=12)
+            ax_obj.set_ylabel('$f_2$', fontsize=12)
         elif n_objs == 3:
-            ax_obj.set_title(f'Task {task_id + 1}: Objective Space (3D)')
-            ax_obj.set_xlabel('f1')
-            ax_obj.set_ylabel('f2')
-            ax_obj.set_zlabel('f3')
+            ax_obj.set_title(f'Task {task_id + 1}: Objective Space (3D)', fontsize=12)
+            ax_obj.set_xlabel('$f_1$', fontsize=12)
+            ax_obj.set_ylabel('$f_2$', fontsize=12)
+            ax_obj.set_zlabel('$f_3$', fontsize=12)
             ax_obj.view_init(elev=30, azim=45)
         else:
-            ax_obj.set_title(f'Task {task_id + 1}: Objective Space (n_objs={n_objs})')
-            ax_obj.set_xlabel('Objectives')
-            ax_obj.set_ylabel('Normalized Objective Value')
+            ax_obj.set_title(f'Task {task_id + 1}: Objective Space (n_objs={n_objs})', fontsize=12)
+            ax_obj.set_xlabel('Objectives', fontsize=12)
+            ax_obj.set_ylabel('Normalized Objective Value', fontsize=12)
             ax_obj.set_ylim(-0.1, 1.1)
 
-        ax_obj.grid(True, alpha=0.3)
+        ax_obj.grid(True, alpha=0.2, linestyle='-')
 
     def _plot_decision_space(self, ax, decs, objs, dim, n_objs):
         """Plot decision space using parallel coordinates (merge=0)."""
@@ -800,7 +1071,7 @@ class OptimizationAnimator:
         x_positions = np.arange(dim)
 
         for i in range(n_samples):
-            ax.plot(x_positions, decs[i, :], alpha=0.3, linewidth=1, color='blue')
+            ax.plot(x_positions, decs[i, :], alpha=0.3, linewidth=1, color=DEFAULT_COLORS[0])
 
         if dim <= 10:
             tick_indices = x_positions
@@ -875,7 +1146,8 @@ class OptimizationAnimator:
             nfes = int((gen / (n_gens - 1)) * max_nfes) if n_gens > 1 else max_nfes
             nfes_list.append(nfes)
 
-        ax.plot(nfes_list, best_objs, 'r-', linewidth=2, marker='o', markersize=4, alpha=0.7)
+        ax.plot(nfes_list, best_objs, '-', color=DEFAULT_COLORS[0],
+                linewidth=2.0, marker='o', markersize=6, alpha=0.7)
         ax.set_xlim(0, max_nfes)
 
         if not self.logscale and len(best_objs) > 0:
@@ -903,7 +1175,9 @@ class OptimizationAnimator:
             nfes = int((gen / (max_gen_algo - 1)) * max_nfes) if max_gen_algo > 1 else max_nfes
             nfes_list.append(nfes)
 
-        ax.plot(nfes_list, best_objs, '-', linewidth=2, marker='o', markersize=3,
+        # Adaptive line parameters based on number of algorithms
+        markersize, linewidth = _get_adaptive_line_params(self.n_algorithms)
+        ax.plot(nfes_list, best_objs, '-', linewidth=linewidth, marker='o', markersize=markersize,
                 color=color, label=label, alpha=0.7)
         ax.set_xlim(0, max_nfes)
 
@@ -938,7 +1212,8 @@ class OptimizationAnimator:
             nfes = int((gen / (max_gen_algo - 1)) * max_nfes) if max_gen_algo > 1 else max_nfes
             nfes_list.append(nfes)
 
-        ax.plot(nfes_list, best_objs, '-', linewidth=2, marker='o', markersize=3, color=color, alpha=0.7)
+        # Use consistent line parameters for individual plots
+        ax.plot(nfes_list, best_objs, '-', linewidth=2.0, marker='o', markersize=6, color=color, alpha=0.7)
         ax.set_xlim(0, max_nfes)
 
         if not self.logscale and len(best_objs) > 0:
@@ -956,18 +1231,21 @@ class OptimizationAnimator:
         n_samples = pareto_objs.shape[0]
 
         if n_objs == 2:
-            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], c='red', alpha=0.5, s=50, label='Pareto Front')
-            ax.set_xlabel('f1')
-            ax.set_ylabel('f2')
-            ax.legend(loc='upper right')
+            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1],
+                       c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
+                       linewidth=0.8, label='ND Solutions')
+            ax.set_xlabel('$f_1$', fontsize=12)
+            ax.set_ylabel('$f_2$', fontsize=12)
+            ax.legend(loc='upper right', fontsize=10)
 
         elif n_objs == 3:
-            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], pareto_objs[:, 2], c='red', alpha=0.5, s=50,
-                       label='Pareto Front')
-            ax.set_xlabel('f1')
-            ax.set_ylabel('f2')
-            ax.set_zlabel('f3')
-            ax.legend(loc='upper right')
+            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], pareto_objs[:, 2],
+                       c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
+                       linewidth=0.8, label='ND Solutions', depthshade=True)
+            ax.set_xlabel('$f_1$', fontsize=12)
+            ax.set_ylabel('$f_2$', fontsize=12)
+            ax.set_zlabel('$f_3$', fontsize=12)
+            ax.legend(loc='upper right', fontsize=10)
 
         else:
             x_positions = np.arange(n_objs)
@@ -980,14 +1258,14 @@ class OptimizationAnimator:
                     objs_normalized[:, j] = 0.5
 
             for i in range(n_samples):
-                ax.plot(x_positions, objs_normalized[i, :], alpha=0.4, linewidth=1.5, color='red')
+                ax.plot(x_positions, objs_normalized[i, :], alpha=0.3, linewidth=0.8, color='dodgerblue')
 
             ax.set_xticks(x_positions)
-            ax.set_xticklabels([f'f{i + 1}' for i in range(n_objs)])
+            ax.set_xticklabels([f'$f_{i + 1}$' for i in range(n_objs)])
             ax.set_ylim(-0.1, 1.1)
-            ax.set_ylabel('Normalized Objective Value')
-            ax.set_xlabel('Objectives')
-            ax.legend([f'Pareto Front ({n_samples} solutions)'], loc='upper right')
+            ax.set_ylabel('Normalized Objective Value', fontsize=12)
+            ax.set_xlabel('Objectives', fontsize=12)
+            ax.legend([f'ND Solutions ({n_samples})'], loc='upper right', fontsize=10)
 
     def _plot_objective_space_merge(self, ax, objs, n_objs, color, label, show_setup=True):
         """Plot objective space for merge modes 1, 2 (merged)."""
@@ -998,10 +1276,14 @@ class OptimizationAnimator:
         n_samples = pareto_objs.shape[0]
 
         if n_objs == 2:
-            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], c=color, alpha=0.5, s=50, label=label)
+            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1],
+                       c=color, s=60, alpha=0.8, edgecolors='black',
+                       linewidth=0.8, label=label)
 
         elif n_objs == 3:
-            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], pareto_objs[:, 2], c=color, alpha=0.5, s=50, label=label)
+            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], pareto_objs[:, 2],
+                       c=color, s=60, alpha=0.8, edgecolors='black',
+                       linewidth=0.8, label=label, depthshade=True)
 
         else:
             x_positions = np.arange(n_objs)
@@ -1015,14 +1297,14 @@ class OptimizationAnimator:
 
             for i in range(n_samples):
                 if i == 0:
-                    ax.plot(x_positions, objs_normalized[i, :], alpha=0.4, linewidth=1.5,
+                    ax.plot(x_positions, objs_normalized[i, :], alpha=0.3, linewidth=0.8,
                             color=color, label=label)
                 else:
-                    ax.plot(x_positions, objs_normalized[i, :], alpha=0.4, linewidth=1.5, color=color)
+                    ax.plot(x_positions, objs_normalized[i, :], alpha=0.3, linewidth=0.8, color=color)
 
             if show_setup:
                 ax.set_xticks(x_positions)
-                ax.set_xticklabels([f'f{i + 1}' for i in range(n_objs)])
+                ax.set_xticklabels([f'$f_{i + 1}$' for i in range(n_objs)])
                 ax.set_ylim(-0.1, 1.1)
 
     def _plot_objective_space_single(self, ax, objs, n_objs, color):
@@ -1034,10 +1316,13 @@ class OptimizationAnimator:
         n_samples = pareto_objs.shape[0]
 
         if n_objs == 2:
-            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], c=color, alpha=0.5, s=50)
+            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1],
+                       c=color, s=60, alpha=0.8, edgecolors='black', linewidth=0.8)
 
         elif n_objs == 3:
-            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], pareto_objs[:, 2], c=color, alpha=0.5, s=50)
+            ax.scatter(pareto_objs[:, 0], pareto_objs[:, 1], pareto_objs[:, 2],
+                       c=color, s=60, alpha=0.8, edgecolors='black',
+                       linewidth=0.8, depthshade=True)
 
         else:
             x_positions = np.arange(n_objs)
@@ -1050,14 +1335,14 @@ class OptimizationAnimator:
                     objs_normalized[:, j] = 0.5
 
             for i in range(n_samples):
-                ax.plot(x_positions, objs_normalized[i, :], alpha=0.4, linewidth=1.5, color=color)
+                ax.plot(x_positions, objs_normalized[i, :], alpha=0.3, linewidth=0.8, color=color)
 
             ax.set_xticks(x_positions)
-            ax.set_xticklabels([f'f{i + 1}' for i in range(n_objs)])
+            ax.set_xticklabels([f'$f_{i + 1}$' for i in range(n_objs)])
 
 
 def create_optimization_animation(pkl_path=None, output_path=None, fps=10, dpi=100, interval=100,
-                                  data_path='./TestData', save_path='./TestResults', pattern='*.pkl',
+                                  data_path='./Data', save_path='./Results', pattern='*.pkl',
                                   format='gif', merge=0, title=None, algorithm_order=None, max_nfes=100,
                                   logscale=False):
     """
@@ -1079,9 +1364,9 @@ def create_optimization_animation(pkl_path=None, output_path=None, fps=10, dpi=1
     interval : int, optional
         Delay between frames in milliseconds (default: 100)
     data_path : str, optional
-        Directory to scan for .pkl files when pkl_path is None (default: './TestData')
+        Directory to scan for .pkl files when pkl_path is None (default: './Data')
     save_path : str, optional
-        Directory to save animations when pkl_path is None (default: './TestResults')
+        Directory to save animations when pkl_path is None (default: './Results')
     pattern : str, optional
         File pattern to search for when pkl_path is None (default: '*.pkl')
     format : str, optional
@@ -1177,12 +1462,12 @@ def create_optimization_animation(pkl_path=None, output_path=None, fps=10, dpi=1
             else:
                 output_path = str(Path(pkl_path).parent / f"{Path(pkl_path).stem}_animation.{format}")
 
-        animator = OptimizationAnimator(pkl_path, output_path, fps, dpi, merge=merge, title=title,
-                                        algorithm_order=algorithm_order, max_nfes=max_nfes, logscale=logscale)
+        animator = _LegacyAnimator(pkl_path, output_path, fps, dpi, merge=merge, title=title,
+                                    algorithm_order=algorithm_order, max_nfes=max_nfes, logscale=logscale)
         return animator.create_animation(interval=interval)
 
 
-def generate_all_animations(data_path='./TestData', save_path='./TestResults',
+def generate_all_animations(data_path='./Data', save_path='./Results',
                             fps=10, dpi=100, interval=100, pattern='*.pkl', format='gif',
                             merge=0, title=None, algorithm_order=None, max_nfes=100, logscale=False):
     """
@@ -1191,9 +1476,9 @@ def generate_all_animations(data_path='./TestData', save_path='./TestResults',
     Parameters
     ----------
     data_path : str
-        Directory containing .pkl result files (default: './TestData')
+        Directory containing .pkl result files (default: './Data')
     save_path : str
-        Directory to save animation files (default: './TestResults')
+        Directory to save animation files (default: './Results')
     fps : int
         Frames per second (default: 10)
     dpi : int
@@ -1343,24 +1628,65 @@ def generate_all_animations(data_path='./TestData', save_path='./TestResults',
 
 
 if __name__ == '__main__':
-    import sys
+    """
+    Usage Examples for AnimationGenerator
+    =====================================
 
-    if len(sys.argv) < 2:
-        # No arguments: auto-scan mode with default paths
-        print("No arguments provided. Scanning default paths...\n")
-        generate_all_animations(
-            data_path='./TestData',
-            save_path='./TestResults',
-            fps=10,
-            dpi=100,
-            interval=100
+    Example 1: Quick Start
+    ----------------------
+    Generate animations for all pkl files in ./Data:
+
+        from ddmtolab.Methods.animation_generator import AnimationGenerator
+
+        generator = AnimationGenerator(data_path='./Data')
+        generator.run()
+
+
+    Example 2: Merged Comparison
+    ----------------------------
+    Compare multiple algorithms in one animation:
+
+        generator = AnimationGenerator(
+            data_path='./Data',
+            save_path='./Results',
+            algorithm_order=['GA', 'DE', 'PSO'],
+            title='Algorithm_Comparison',
+            merge=1,
+            max_nfes=10000,
+            format='gif'
         )
-    else:
-        # Single file mode
-        pkl_file = sys.argv[1]
-        output_file = sys.argv[2] if len(sys.argv) > 2 else None
-        fps = int(sys.argv[3]) if len(sys.argv) > 3 else 10
-        dpi = int(sys.argv[4]) if len(sys.argv) > 4 else 100
+        generator.run()
 
-        print(f"Processing single file: {pkl_file}")
-        create_optimization_animation(pkl_file, output_file, fps, dpi)
+
+    Example 3: Custom Settings
+    --------------------------
+        generator = AnimationGenerator(
+            data_path='./Data',
+            save_path='./Results',
+            merge=0,          # Individual animations
+            max_nfes=5000,
+            fps=15,
+            dpi=150,
+            format='mp4',
+            log_scale=True
+        )
+        generator.run()
+    """
+
+    # Demo run
+    print("AnimationGenerator - Demo")
+    print("=" * 50)
+
+    generator = AnimationGenerator(
+        data_path='./Data',
+        save_path='./Results',
+        fps=10,
+        dpi=100,
+        format='gif'
+    )
+
+    try:
+        generator.run()
+    except (FileNotFoundError, ValueError) as e:
+        print(f"Demo skipped: {e}")
+        print("Create pickle files in ./Data/ to generate animations.")

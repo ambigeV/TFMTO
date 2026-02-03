@@ -53,7 +53,7 @@ class CCMO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, muc=20.0, mum=15.0,
-                 save_data=True, save_path='./TestData', name='CCMO_test',
+                 save_data=True, save_path='./Data', name='CCMO',
                  disable_tqdm=True):
         """
         Initialize CCMO algorithm.

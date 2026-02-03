@@ -5,8 +5,7 @@ This module implements MFEA for multi-task optimization with knowledge transfer 
 
 References
 ----------
-    [1] Abhishek Gupta, Yew-Soon Ong, and Liang Feng. "Multifactorial Evolution: Toward \
-        Evolutionary Multitasking." IEEE Transactions on Evolutionary Computation, 20(3): 343-357, 2015.
+    [1] Abhishek Gupta, Yew-Soon Ong, and Liang Feng. "Multifactorial Evolution: Toward Evolutionary Multitasking." IEEE Transactions on Evolutionary Computation, 20(3): 343-357, 2015.
 
 Notes
 -----
@@ -47,8 +46,8 @@ class MFEA:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n=None, max_nfes=None, rmp=0.3, save_data=True, save_path='./TestData',
-                 name='MFEA_test', disable_tqdm=True):
+    def __init__(self, problem, n=None, max_nfes=None, rmp=0.3, save_data=True, save_path='./Data',
+                 name='MFEA', disable_tqdm=True):
         """
         Initialize Multifactorial Evolutionary Algorithm.
 

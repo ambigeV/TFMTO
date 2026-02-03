@@ -57,7 +57,7 @@ class KTA2:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n_initial=None, max_nfes=None, n=100, tau=0.75, phi=0.1, wmax=10, mu=5,
-                 save_data=True, save_path='./TestData', name='KTA2_test', disable_tqdm=True):
+                 save_data=True, save_path='./Data', name='KTA2', disable_tqdm=True):
         """
         Initialize KTA2 algorithm.
 

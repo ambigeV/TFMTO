@@ -23,7 +23,7 @@ Create an MTOP instance with optional unified evaluation mode:
 
 .. code-block:: python
 
-    from Methods.mtop import MTOP
+    from ddmtolab.Methods.mtop import MTOP
 
     # Basic initialization
     problem = MTOP()
@@ -59,7 +59,7 @@ The ``add_task`` method is the primary way to add optimization tasks:
 .. code-block:: python
 
     import numpy as np
-    from Methods.mtop import MTOP
+    from ddmtolab.Methods.mtop import MTOP
 
     # Task 1: Single-objective with 2 constraints
     def sphere(x):
@@ -442,7 +442,7 @@ Example: CEC17MTMO Problem 1:
 .. code-block:: python
 
     import numpy as np
-    from Methods.mtop import MTOP
+    from ddmtolab.Methods.mtop import MTOP
 
     class CEC17MTMO:
         """CEC2017 Multi-Task Multi-Objective Test Suite"""
@@ -533,6 +533,229 @@ Implementation Guidelines
 2. Alternative: Create separate ``problem_settings.py`` for complex configurations
 3. File naming: lowercase with underscores (e.g., ``cec17_mtmo.py``)
 4. Class naming: UpperCamelCase (e.g., ``CEC17MTMO``)
+
+Benchmark Problems
+------------------
+
+DDMTOLab provides 180+ benchmark problems organized by optimization type. All problems are implemented as classes that return configured MTOP instances.
+
+Single-Task Single-Objective (STSO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 15 15 15 35
+
+   * - Class
+     - Tasks
+     - Dim
+     - Obj/Con
+     - Description
+   * - ``CLASSICALSO``
+     - 1
+     - 50 (configurable)
+     - 1 / 0
+     - Classical functions: Ackley, Elliptic, Griewank, Rastrigin, Rosenbrock, Schwefel, Sphere, Weierstrass (P1-P8)
+   * - ``CEC10CSO``
+     - 1
+     - 1000 (configurable)
+     - 1 / 0
+     - CEC 2010 Large-Scale Global Optimization: 20 large-scale benchmark functions (F1-F20)
+
+**Usage Example:**
+
+.. code-block:: python
+
+   from ddmtolab.Problems.STSO.classical_so import CLASSICALSO
+
+   problem_suite = CLASSICALSO(dim=30)
+   problem = problem_suite.P1()  # Ackley function
+
+Single-Task Multi-Objective (STMO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 10 20 15 40
+
+   * - Class
+     - Tasks
+     - Dim
+     - Obj/Con
+     - Description
+   * - ``ZDT``
+     - 1
+     - 10-30 (configurable)
+     - 2 / 0
+     - ZDT test suite (ZDT1-ZDT6): Convex, non-convex, disconnected, and multi-modal Pareto fronts
+   * - ``DTLZ``
+     - 1
+     - M+k-1 (scalable)
+     - M / 0 or M
+     - DTLZ test suite (DTLZ1-DTLZ9): Scalable objectives (M=2-10+), DTLZ8-9 are constrained
+   * - ``WFG``
+     - 1
+     - k+l (scalable)
+     - M / 0
+     - WFG test suite (WFG1-WFG9): Bias, flatness, multi-modality, and mixed Pareto fronts
+   * - ``UF``
+     - 1
+     - 30 (configurable)
+     - 2-3 / 0
+     - CEC 2009 Unconstrained test suite (UF1-UF10): Complex landscapes
+   * - ``CF``
+     - 1
+     - 10 (configurable)
+     - 2-3 / 1-2
+     - CEC 2009 Constrained test suite (CF1-CF10): Various constraint types
+   * - ``MW``
+     - 1
+     - 15 (configurable)
+     - 2-3 / 1-3
+     - Ma-Wang constrained test suite (MW1-MW14): Challenging constraint boundaries
+
+**Usage Example:**
+
+.. code-block:: python
+
+   from ddmtolab.Problems.STMO.ZDT import ZDT
+   from ddmtolab.Problems.STMO.DTLZ import DTLZ
+
+   # ZDT problem with 30 dimensions
+   zdt = ZDT()
+   problem = zdt.ZDT1(dim=30)
+
+   # DTLZ problem with 5 objectives
+   dtlz = DTLZ()
+   problem = dtlz.DTLZ2(M=5)
+
+Multi-Task Single-Objective (MTSO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 10 18 12 42
+
+   * - Class
+     - Tasks
+     - Dim
+     - Obj/Con
+     - Description
+   * - ``CEC17MTSO``
+     - 2
+     - 25-50
+     - 1 / 0
+     - CEC 2017 EMTO competition (P1-P9): Complete/Partial/No intersection with High/Medium/Low similarity
+   * - ``CEC17MTSO10D``
+     - 2
+     - 10
+     - 1 / 0
+     - 10-dimensional variant of CEC17MTSO benchmark
+   * - ``CEC19MaTSO``
+     - 10-50
+     - 50
+     - 1 / 0
+     - CEC 2019 Many-Task Optimization: Large-scale multi-task scenarios
+   * - ``CMT``
+     - 2
+     - 50 (configurable)
+     - 1 / 0
+     - Combinatorial Multi-Task benchmark: Varying task correlations
+   * - ``STOP``
+     - 2
+     - 50
+     - 1 / 0
+     - STOP benchmark: Single-objective transfer optimization problems
+
+**Usage Example:**
+
+.. code-block:: python
+
+   from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
+
+   problem_suite = CEC17MTSO()
+   problem = problem_suite.P1()  # CI-HS: Complete Intersection - High Similarity
+   print(f"Tasks: {problem.n_tasks}, Dims: {problem.dims}")
+
+Multi-Task Multi-Objective (MTMO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 10 18 12 42
+
+   * - Class
+     - Tasks
+     - Dim
+     - Obj/Con
+     - Description
+   * - ``CEC17MTMO``
+     - 2
+     - 10-50
+     - 2-3 / 0
+     - CEC 2017 MTMO competition (P1-P9): Bi-objective and tri-objective combinations
+   * - ``CEC19MTMO``
+     - 2
+     - 25-50
+     - 2-3 / 0
+     - CEC 2019 MTMO benchmark: Extended multi-objective scenarios
+   * - ``CEC19MaTMO``
+     - 10-50
+     - 25-50
+     - 2-3 / 0
+     - CEC 2019 Many-Task Multi-Objective: Large-scale MO multi-task
+   * - ``CEC21MTMO``
+     - 2
+     - 25-50
+     - 2-3 / 0
+     - CEC 2021 MTMO benchmark: Latest competition problems
+   * - ``MTMODTLZ``
+     - 2-10
+     - M+k-1
+     - M / 0
+     - Multi-task DTLZ variants: Configurable task relationships
+
+**Usage Example:**
+
+.. code-block:: python
+
+   from ddmtolab.Problems.MTMO.cec17_mtmo import CEC17MTMO
+
+   problem_suite = CEC17MTMO()
+   problem = problem_suite.P8()  # T1: 3-obj DTLZ-like, T2: 2-obj ZDT-like
+   print(f"Task 0 objectives: {problem.n_objs[0]}")  # 3
+   print(f"Task 1 objectives: {problem.n_objs[1]}")  # 2
+
+Real-World Optimization (RWO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+DDMTOLab includes real-world optimization problems in the ``Problems/RWO/`` directory:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 15 65
+
+   * - Problem
+     - Type
+     - Description
+   * - ``PEPVM``
+     - MTSO
+     - Process Equipment Portfolio Value Maximization
+   * - ``SOPM``
+     - STSO
+     - Single-Objective Portfolio Management
+   * - ``PINN_HPO``
+     - STSO
+     - Physics-Informed Neural Network Hyperparameter Optimization
+   * - ``MO_SCP``
+     - STMO
+     - Multi-Objective Ship Course Planning
+   * - ``SCP``
+     - STSO
+     - Ship Course Planning
+   * - ``PKACP``
+     - STMO
+     - Power Keeping & Anti-Collision Path Planning
 
 See Also
 --------

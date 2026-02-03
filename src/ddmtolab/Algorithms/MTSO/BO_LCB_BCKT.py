@@ -54,8 +54,8 @@ class BO_LCB_BCKT:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n_initial=None, max_nfes=None, gen_gap=10,
-                 sigma_I_sq=0.05 ** 2, save_data=True, save_path='./TestData',
-                 name='BO_LCB_BCKT_test', disable_tqdm=True, padding='zero'):
+                 sigma_I_sq=0.05 ** 2, save_data=True, save_path='./Data',
+                 name='BO-LCB-BCKT', disable_tqdm=True, padding='zero'):
         """
         Initialize BO-LCB-BCKT algorithm.
 

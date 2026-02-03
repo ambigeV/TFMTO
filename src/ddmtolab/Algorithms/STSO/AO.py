@@ -5,9 +5,7 @@ This module implements the Aquila Optimizer for single-objective optimization pr
 
 References
 ----------
-    [1] Abualigah, L., Yousri, D., Abd Elaziz, M., Ewees, A. A., Al-qaness, M. A., & \
-        Gandomi, A. H. (2021). Aquila Optimizer: A novel meta-heuristic optimization \
-        algorithm. Computers & Industrial Engineering, 157, 107250.
+    [1] Abualigah, L., Yousri, D., Abd Elaziz, M., Ewees, A. A., Al-qaness, M. A., & Gandomi, A. H. (2021). Aquila Optimizer: A novel meta-heuristic optimization algorithm. Computers & Industrial Engineering, 157, 107250.
 
 Notes
 -----
@@ -51,7 +49,7 @@ class AO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, alpha=0.1, delta=0.1,
-                 save_data=True, save_path='./TestData', name='AO_test', disable_tqdm=True):
+                 save_data=True, save_path='./Data', name='AO', disable_tqdm=True):
         """
         Initialize Aquila Optimizer.
 

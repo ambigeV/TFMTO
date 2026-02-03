@@ -52,7 +52,7 @@ class BO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n_initial=None, max_nfes=None, mode='ei', save_data=True,
-                 save_path='./TestData', name='BO_test', disable_tqdm=True):
+                 save_path='./Data', name='BO', disable_tqdm=True):
         """
         Initialize Bayesian Optimization algorithm.
 
@@ -109,9 +109,9 @@ class BO:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # Reorganize initial data into task-specific history lists
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
+        # Initialize database lists storing all real evaluation points per task
+        db_decs = [decs[i].copy() for i in range(nt)]
+        db_objs = [objs[i].copy() for i in range(nt)]
 
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task), desc=f"{self.name}",
                     disable=self.disable_tqdm)
@@ -135,14 +135,18 @@ class BO:
                 # Update dataset with new sample
                 decs[i], objs[i] = vstack_groups((decs[i], candidate_np), (objs[i], obj))
 
-                # Store cumulative history
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
+                # Update database with new evaluation point
+                db_decs[i] = decs[i].copy()
+                db_objs[i] = objs[i].copy()
 
                 nfes_per_task[i] += 1
                 pbar.update(1)
 
         pbar.close()
         runtime = time.time() - start_time
+
+        # Convert database to staircase history structure for results
+        all_decs, all_objs = build_staircase_history(db_decs, db_objs, k=1)
 
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,
                                      bounds=problem.bounds, save_path=self.save_path,

@@ -56,8 +56,8 @@ class EBS:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, sigma0=0.3, use_n=True,
-                 gen_init=10, save_data=True, save_path='./TestData',
-                 name='EBS_test', disable_tqdm=True):
+                 gen_init=10, save_data=True, save_path='./Data',
+                 name='EBS', disable_tqdm=True):
         """
         Initialize EBS Algorithm.
 

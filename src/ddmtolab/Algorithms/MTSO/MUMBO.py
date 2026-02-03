@@ -8,12 +8,9 @@ setting, rather than a multi-fidelity or target-task-oriented scenario.
 
 References
 ----------
-    [1] Moss, Henry B., David S. Leslie, and Paul Rayson. "Mumbo: Multi-task max-value Bayesian \
-        optimization." Joint European Conference on Machine Learning and Knowledge Discovery in \
-        Databases. Cham: Springer International Publishing, 2020.
+    [1] Moss, Henry B., David S. Leslie, and Paul Rayson. "Mumbo: Multi-task max-value Bayesian optimization." Joint European Conference on Machine Learning and Knowledge Discovery in Databases. Cham: Springer International Publishing, 2020.
 
-    [2] Wang, Zi, and Stefanie Jegelka. "Max-value entropy search for efficient Bayesian \
-        optimization." International Conference on Machine Learning. PMLR, 2017.
+    [2] Wang, Zi, and Stefanie Jegelka. "Max-value entropy search for efficient Bayesian optimization." International Conference on Machine Learning. PMLR, 2017.
 
 Notes
 -----
@@ -63,7 +60,7 @@ class MUMBO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n_initial=None, max_nfes=None, save_data=True,
-                 save_path='./TestData', name='MUMBO_test', disable_tqdm=True):
+                 save_path='./Data', name='MUMBO', disable_tqdm=True):
         """
         Initialize MUMBO
 

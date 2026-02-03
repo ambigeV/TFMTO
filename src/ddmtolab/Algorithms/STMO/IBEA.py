@@ -5,8 +5,7 @@ This module implements IBEA for multi-objective optimization problems.
 
 References
 ----------
-    [1] Zitzler, Eckart, and Simon Künzli. "Indicator-based selection in multiobjective \
-        search." International conference on parallel problem solving from nature. 2004.
+    [1] Zitzler, Eckart, and Simon Künzli. "Indicator-based selection in multiobjective search." International conference on parallel problem solving from nature. 2004.
 
 Notes
 -----
@@ -49,7 +48,7 @@ class IBEA:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, kappa=0.05, muc=20.0, mum=15.0, save_data=True,
-                 save_path='./TestData', name='IBEA_test', disable_tqdm=True):
+                 save_path='./Data', name='IBEA', disable_tqdm=True):
         """
         Initialize IBEA algorithm.
 

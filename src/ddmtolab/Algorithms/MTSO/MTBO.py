@@ -6,8 +6,7 @@ processes.
 
 References
 ----------
-    [1] Swersky, Kevin, Jasper Snoek, and Ryan P. Adams. "Multi-task bayesian optimization." \
-        Advances in neural information processing systems 26 (2013).
+    [1] Swersky, Kevin, Jasper Snoek, and Ryan P. Adams. "Multi-task bayesian optimization." Advances in neural information processing systems 26 (2013).
 
 Notes
 -----
@@ -53,7 +52,7 @@ class MTBO:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n_initial=None, max_nfes=None, save_data=True, save_path='./TestData', name='MTBO_test',
+    def __init__(self, problem, n_initial=None, max_nfes=None, save_data=True, save_path='./Data', name='MTBO',
                  disable_tqdm=True):
         """
         Initialize Multi-Task Bayesian Optimization algorithm.

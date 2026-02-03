@@ -49,8 +49,8 @@ class GA:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n=None, max_nfes=None, muc=2.0, mum=5.0, save_data=True, save_path='./TestData',
-                 name='GA_test', disable_tqdm=True):
+    def __init__(self, problem, n=None, max_nfes=None, muc=2.0, mum=5.0, save_data=True, save_path='./Data',
+                 name='GA', disable_tqdm=True):
         """
         Initialize Genetic Algorithm.
 

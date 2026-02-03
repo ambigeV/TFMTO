@@ -58,7 +58,7 @@ class REMO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=50, max_nfes=300, k=6, gmax=3000,
-                 save_data=True, save_path=None, name='REMO', disable_tqdm=False, **kwargs):
+                 save_data=True, save_path='./Data', name='REMO', disable_tqdm=False, **kwargs):
         """
         Initialize the REMO algorithm parameters.
 

@@ -5,8 +5,7 @@ This module implements Two_Arch2 for many-objective optimization problems.
 
 References
 ----------
-    [1] Wang, H., Jiao, L., & Yao, X. (2015). Two_Arch2: An improved two-archive algorithm for \
-        many-objective optimization. IEEE Transactions on Evolutionary Computation, 19(4), 524-541.
+    [1] Wang, H., Jiao, L., & Yao, X. (2015). Two_Arch2: An improved two-archive algorithm for many-objective optimization. IEEE Transactions on Evolutionary Computation, 19(4), 524-541.
 
 Notes
 -----
@@ -48,7 +47,7 @@ class TwoArch2:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, CA_size=None, p=None, save_data=True,
-                 save_path='./TestData', name='Two_Arch2_test', disable_tqdm=True):
+                 save_path='./Data', name='Two_Arch2', disable_tqdm=True):
         """
         Initialize Two_Arch2 algorithm.
 

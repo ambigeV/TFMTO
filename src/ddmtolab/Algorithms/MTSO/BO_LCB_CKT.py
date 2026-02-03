@@ -67,8 +67,8 @@ class BO_LCB_CKT:
 
     def __init__(self, problem, n_initial=None, max_nfes=None,
                  gen_gap=10, ada_flag=False,
-                 save_data=True, save_path='./TestData',
-                 name='BO_LCB_CKT_test', disable_tqdm=False):
+                 save_data=True, save_path='./Data',
+                 name='BO-LCB-CKT', disable_tqdm=False):
         """
         Initialize BO-LCB-CKT algorithm.
 

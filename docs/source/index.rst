@@ -1,7 +1,7 @@
 DDMTOLab
 =========
 
-.. image:: _static/logo.png
+.. image:: _static/logo.svg
    :alt: DDMTOLab Logo
    :width: 250
    :align: center

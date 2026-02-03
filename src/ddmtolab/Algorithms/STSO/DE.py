@@ -47,8 +47,8 @@ class DE:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n=None, max_nfes=None, F=0.5, CR=0.9, save_data=True, save_path='./TestData',
-                 name='DE_test', disable_tqdm=True):
+    def __init__(self, problem, n=None, max_nfes=None, F=0.5, CR=0.9, save_data=True, save_path='./Data',
+                 name='DE', disable_tqdm=True):
         """
         Initialize Differential Evolution algorithm.
 

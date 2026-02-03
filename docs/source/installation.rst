@@ -266,9 +266,22 @@ Run a quick test to ensure everything works:
 
 .. code-block:: python
 
-   from ddmtolab.bayesian_optimization import BayesianOptimizer
-   from ddmtolab.gaussian_process import GaussianProcess
+   from ddmtolab.Algorithms.STSO.DE import DE
+   from ddmtolab.Methods.mtop import MTOP
+   import numpy as np
 
+   # Define a simple optimization problem
+   def sphere(x):
+       return np.sum(x**2, axis=1)
+
+   problem = MTOP()
+   problem.add_task(sphere, dim=10)
+
+   # Run optimization
+   optimizer = DE(problem, n=50, max_nfes=1000, save_data=False)
+   result = optimizer.optimize()
+
+   print(f"Best objective: {result.best_objs[0][0]:.6f}")
    print("DDMTOLab installation successful!")
 
 Upgrading DDMTOLab

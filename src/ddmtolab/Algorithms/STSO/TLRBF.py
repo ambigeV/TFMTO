@@ -54,7 +54,7 @@ class TLRBF:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n_initial=None, max_nfes=None, save_data=True,
-                 save_path='./TestData', name='TLRBF_test', disable_tqdm=True):
+                 save_path='./Data', name='TLRBF', disable_tqdm=True):
         """
         Initialize TLRBF algorithm.
 

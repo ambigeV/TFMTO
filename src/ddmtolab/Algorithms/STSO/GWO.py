@@ -48,7 +48,7 @@ class GWO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, save_data=True,
-                 save_path='./TestData', name='GWO_test', disable_tqdm=True):
+                 save_path='./Data', name='GWO', disable_tqdm=True):
         """
         Initialize Grey Wolf Optimizer.
 

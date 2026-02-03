@@ -48,7 +48,7 @@ class EO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, a1=2, a2=1, v=1, gp=0.5,
-                 save_data=True, save_path='./TestData', name='EO_test', disable_tqdm=True):
+                 save_data=True, save_path='./Data', name='EO', disable_tqdm=True):
         """
         Initialize Equilibrium Optimizer.
 

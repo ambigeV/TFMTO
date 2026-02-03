@@ -5,8 +5,7 @@ This module implements RVEA for many-objective optimization problems.
 
 References
 ----------
-    [1] Cheng, Ran, et al. "A reference vector guided evolutionary algorithm for many-objective \
-        optimization." IEEE transactions on evolutionary computation 20.5 (2016): 773-791.
+    [1] Cheng, Ran, et al. "A reference vector guided evolutionary algorithm for many-objective optimization." IEEE transactions on evolutionary computation 20.5 (2016): 773-791.
 
 Notes
 -----
@@ -49,8 +48,8 @@ class RVEA:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n=None, max_nfes=None, alpha=2.0, fr=0.1, save_data=True, save_path='./TestData',
-                 name='RVEA_test', disable_tqdm=True):
+    def __init__(self, problem, n=None, max_nfes=None, alpha=2.0, fr=0.1, save_data=True, save_path='./Data',
+                 name='RVEA', disable_tqdm=True):
         """
         Initialize RVEA algorithm.
 

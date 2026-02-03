@@ -2,7 +2,7 @@
 Test Data Analyzer Module for Single-Run Algorithm Testing
 
 This module provides a lightweight analysis pipeline for quick algorithm testing,
-where pickle files are stored directly in the data folder with '_test.pkl' suffix.
+reading pickle files directly from the data folder for single-run visualization.
 
 Classes:
     TestScanResult: Dataclass for storing test scan results
@@ -10,59 +10,32 @@ Classes:
     TestDataAnalyzer: Main class for test data analysis
 
 Usage:
-    analyzer = TestDataAnalyzer(data_path='./TestData', settings=SETTINGS)
+    analyzer = TestDataAnalyzer(data_path='./Data', save_path='./Results')
     results = analyzer.run()
 
 Author: Jiangtao Shen
 Email: j.shen5@exeter.ac.uk
 Date: 2025.10.10
-Version: 1.0
+Version: 2.0
 """
 
-import os
-import pickle
 import shutil
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass, field
-from enum import Enum
-
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from scipy import stats
+from matplotlib.ticker import ScalarFormatter, LogFormatterSciNotation
 
 # Import from project modules
-from ddmtolab.Methods.metrics import *
+from ddmtolab.Methods.metrics import IGD, HV, GD, IGDp, FR, CV, DeltaP, Spread, Spacing
 from ddmtolab.Methods.Algo_Methods.algo_utils import nd_sort
-
-
-# =============================================================================
-# Enums and Constants
-# =============================================================================
-
-class OptimizationDirection(Enum):
-    """Optimization direction enumeration."""
-    MINIMIZE = "minimize"
-    MAXIMIZE = "maximize"
-
-
-class StatisticType(Enum):
-    """Statistical measure type enumeration."""
-    MEAN = "mean"
-    MEDIAN = "median"
-    MAX = "max"
-    MIN = "min"
-
-
-# Default color palette for plots
-DEFAULT_COLORS = [
-    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
-]
-
-# Default markers for plots
-DEFAULT_MARKERS = ['o', 's', '^', 'v', 'D', 'p', '*', 'h', '<', '>']
+from ddmtolab.Methods.data_analysis import (
+    OptimizationDirection,
+    DataUtils,
+    DEFAULT_COLORS,
+    DEFAULT_MARKERS,
+)
 
 
 # =============================================================================
@@ -154,93 +127,9 @@ class PlotConfig:
     log_scale: bool = False
     show_pf: bool = True
     show_nd: bool = True
-    save_path: Path = Path('./TestResults')
+    save_path: Path = Path('./Results')
     colors: List[str] = field(default_factory=lambda: DEFAULT_COLORS.copy())
     markers: List[str] = field(default_factory=lambda: DEFAULT_MARKERS.copy())
-
-
-# =============================================================================
-# Utility Functions
-# =============================================================================
-
-class DataUtils:
-    """Utility class for data loading and processing operations."""
-
-    @staticmethod
-    def load_pickle(file_path: Path) -> Dict[str, Any]:
-        """Load and return a Python object from a pickle file."""
-        with open(file_path, 'rb') as f:
-            return pickle.load(f)
-
-    @staticmethod
-    def load_reference(
-            settings: Dict[str, Any],
-            problem: str,
-            task_identifier: Union[str, int],
-            n_objectives: int
-    ) -> Optional[np.ndarray]:
-        """Load reference data (Pareto Front or reference point) for a specific problem and task."""
-        task_name = f"T{task_identifier + 1}" if isinstance(task_identifier, int) else task_identifier
-
-        if problem not in settings:
-            return None
-
-        problem_settings = settings[problem]
-
-        if task_name not in problem_settings:
-            return None
-
-        ref_definition = problem_settings[task_name]
-
-        if callable(ref_definition):
-            n_points = settings.get('n_ref', 10000)
-            return ref_definition(n_points, n_objectives)
-        elif isinstance(ref_definition, str):
-            return DataUtils._load_reference_from_file(settings, ref_definition, problem, task_name)
-        elif isinstance(ref_definition, (list, tuple, np.ndarray)):
-            reference = np.array(ref_definition)
-            if reference.ndim == 1:
-                reference = reference.reshape(1, -1)
-            return reference
-        else:
-            return None
-
-    @staticmethod
-    def _load_reference_from_file(
-            settings: Dict[str, Any],
-            ref_definition: str,
-            problem: str,
-            task_name: str
-    ) -> Optional[np.ndarray]:
-        """Load reference data from file."""
-        ref_path = settings.get('ref_path', './MOReference')
-
-        if not os.path.isabs(ref_definition):
-            full_path = os.path.join(ref_path, ref_definition)
-        else:
-            full_path = ref_definition
-
-        try:
-            if full_path.endswith('.npy'):
-                return np.load(full_path)
-            elif full_path.endswith('.csv'):
-                return np.loadtxt(full_path, delimiter=',')
-            else:
-                return None
-        except FileNotFoundError:
-            return None
-        except Exception:
-            return None
-
-    @staticmethod
-    def get_metric_direction(metric_name: Optional[str]) -> OptimizationDirection:
-        """Determine optimization direction based on metric type."""
-        if metric_name is None or metric_name == 'IGD':
-            return OptimizationDirection.MINIMIZE
-        elif metric_name == 'HV':
-            return OptimizationDirection.MAXIMIZE
-        else:
-            return OptimizationDirection.MINIMIZE
 
 
 # =============================================================================
@@ -254,6 +143,22 @@ class TestPlotGenerator:
         """Initialize TestPlotGenerator with configuration."""
         self.config = config
 
+    @staticmethod
+    def _calculate_legend_fontsize(n_algorithms: int) -> int:
+        """
+        Calculate legend font size based on number of algorithms.
+
+        Linear interpolation:
+        - 2 algorithms -> font size 14
+        - 15 algorithms -> font size 6
+        """
+        if n_algorithms <= 2:
+            return 14
+        elif n_algorithms >= 15:
+            return 6
+        else:
+            return int(round(14 - (8 / 13) * (n_algorithms - 2)))
+
     def plot_convergence_curves(
             self,
             metric_values: Dict[str, List[np.ndarray]],
@@ -266,7 +171,6 @@ class TestPlotGenerator:
         save_dir = Path(self.config.save_path)
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        # Determine number of tasks from first algorithm
         first_algo = algorithm_order[0]
         num_tasks = len(metric_values[first_algo])
 
@@ -280,8 +184,8 @@ class TestPlotGenerator:
                 problem_name = problems[0] if problems else 'Test'
                 output_file = save_dir / f'{problem_name}_convergence.{self.config.figure_format}'
             else:
-                problem_name = problems[task_idx] if task_idx < len(problems) else f'Task{task_idx + 1}'
-                output_file = save_dir / f'{problem_name}_convergence.{self.config.figure_format}'
+                problem_name = problems[task_idx] if task_idx < len(problems) else f'P{task_idx + 1}'
+                output_file = save_dir / f'{problem_name}-Task{task_idx + 1}_convergence.{self.config.figure_format}'
 
             fig.savefig(output_file, dpi=300, bbox_inches='tight')
             plt.close(fig)
@@ -299,7 +203,20 @@ class TestPlotGenerator:
             metric_name: Optional[str]
     ) -> plt.Figure:
         """Create a single convergence curve figure."""
-        fig, ax = plt.subplots(figsize=(6, 4))
+        fig, ax = plt.subplots(figsize=(5, 3.5))
+
+        # Collect curve data for y-axis range and max NFEs for x-axis formatting
+        all_curves = []
+        actual_max_nfes = 0
+
+        # Adaptive line width and marker size based on number of algorithms
+        n_algos = len(algorithm_order)
+        if n_algos <= 4:
+            markersize, linewidth = 8, 2.5
+        elif n_algos <= 6:
+            markersize, linewidth = 7, 2.0
+        else:
+            markersize, linewidth = 6, 1.6
 
         for idx, algo in enumerate(algorithm_order):
             curve = np.array(metric_values[algo][task_idx]).ravel()
@@ -307,7 +224,10 @@ class TestPlotGenerator:
             if len(curve) == 0:
                 continue
 
+            all_curves.append(curve)
+
             nfes = max_nfes[algo][task_idx] if task_idx < len(max_nfes[algo]) else len(curve)
+            actual_max_nfes = max(actual_max_nfes, nfes)
             x = np.linspace(0, nfes, len(curve))
             marker_interval = max(1, len(curve) // 10)
 
@@ -316,43 +236,76 @@ class TestPlotGenerator:
                 color=self.config.colors[idx % len(self.config.colors)],
                 marker=self.config.markers[idx % len(self.config.markers)],
                 markevery=marker_interval,
-                markersize=5, linewidth=1.5, linestyle='-', alpha=0.8
+                markersize=markersize, linewidth=linewidth, linestyle='-', alpha=0.7
             )
 
-        if self.config.log_scale:
-            ax.set_yscale('log')
-
-        # Apply scientific notation for large values
-        self._apply_scientific_notation(ax)
-
+        # Set axis labels
         y_label = metric_name if metric_name is not None else 'Objective Value'
-        ax.set_xlabel('NFEs', fontsize=11)
-        ax.set_ylabel(y_label, fontsize=11)
+        ax.set_xlabel('NFEs', fontsize=14)
+        ax.set_ylabel(y_label, fontsize=14)
 
         if num_tasks == 1:
             title = problems[0] if problems else 'Test Problem'
         else:
-            title = problems[task_idx] if task_idx < len(problems) else f'Task {task_idx + 1}'
-        ax.set_title(title, fontsize=12)
-        ax.tick_params(axis='both', which='major', labelsize=10)
-        ax.legend(loc='best', fontsize=10)
-        ax.grid(True, alpha=0.3, linestyle='-')
+            prob_name = problems[task_idx] if task_idx < len(problems) else f'P{task_idx + 1}'
+            title = f'{prob_name} - Task {task_idx + 1}'
+        ax.set_title(title, fontsize=14)
+        ax.tick_params(axis='both', which='major', labelsize=14)
+
+        # Auto-adjust legend font size based on number of algorithms
+        legend_fontsize = self._calculate_legend_fontsize(len(algorithm_order))
+        ax.legend(loc='best', fontsize=legend_fontsize)
+        ax.grid(True, alpha=0.2, linestyle='-')
+
+        # Apply axis formatting
+        if self.config.log_scale:
+            ax.set_yscale('log')
+            # Check data range; use linear scale if range is too small
+            if len(all_curves) > 0:
+                all_data = np.concatenate([c for c in all_curves])
+                y_min, y_max = np.min(all_data), np.max(all_data)
+
+                if y_max / y_min < 10:
+                    ax.set_yscale('linear')
+                    self._apply_scientific_notation(ax, actual_xmax=actual_max_nfes)
+                else:
+                    ax.yaxis.set_major_formatter(LogFormatterSciNotation())
+                    if actual_max_nfes > 10000:
+                        formatter = ScalarFormatter(useMathText=True)
+                        formatter.set_scientific(True)
+                        formatter.set_powerlimits((0, 0))
+                        ax.xaxis.set_major_formatter(formatter)
+        else:
+            self._apply_scientific_notation(ax, actual_xmax=actual_max_nfes)
+
+        # Disable minor ticks (must be called after set_yscale)
+        ax.minorticks_off()
 
         fig.tight_layout()
         return fig
 
-    def _apply_scientific_notation(self, ax: plt.Axes) -> None:
+    def _apply_scientific_notation(
+            self,
+            ax: plt.Axes,
+            actual_xmax: Optional[float] = None,
+            x_threshold: float = 10000,
+            y_threshold: float = 1000
+    ) -> None:
         """Apply scientific notation to axes if values exceed threshold."""
-        threshold = 1000
-        xmax = ax.get_xlim()[1]
+        xmax = actual_xmax if actual_xmax is not None else ax.get_xlim()[1]
         ymax = ax.get_ylim()[1]
 
-        for axis_name, axis, lim in [('x', ax.xaxis, xmax), ('y', ax.yaxis, ymax)]:
-            if lim > threshold:
-                formatter = plt.matplotlib.ticker.ScalarFormatter(useMathText=True)
-                formatter.set_powerlimits((0, 0))
-                axis.set_major_formatter(formatter)
-                ax.ticklabel_format(style='sci', axis=axis_name, scilimits=(0, 0))
+        if xmax > x_threshold:
+            formatter = ScalarFormatter(useMathText=True)
+            formatter.set_scientific(True)
+            formatter.set_powerlimits((0, 0))
+            ax.xaxis.set_major_formatter(formatter)
+
+        if ymax > y_threshold:
+            formatter = ScalarFormatter(useMathText=True)
+            formatter.set_scientific(True)
+            formatter.set_powerlimits((0, 0))
+            ax.yaxis.set_major_formatter(formatter)
 
     def plot_runtime(
             self,
@@ -363,7 +316,7 @@ class TestPlotGenerator:
         save_dir = Path(self.config.save_path)
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        fig, ax = plt.subplots(figsize=(6, 4))
+        fig, ax = plt.subplots(figsize=(6, 3.5))
 
         x = np.arange(len(algorithm_order))
         runtimes = [runtime[algo] for algo in algorithm_order]
@@ -376,13 +329,13 @@ class TestPlotGenerator:
             height = bar.get_height()
             ax.annotate(f'{val:.2f}s',
                         xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 0),
+                        xytext=(0, 3),
                         textcoords="offset points",
-                        ha='center', va='bottom', fontsize=9)
+                        ha='center', va='bottom', fontsize=10)
 
-        ax.set_ylabel('Runtime (s)', fontsize=11)
+        ax.set_ylabel('Runtime (s)', fontsize=12)
         ax.set_xticks(x)
-        ax.set_xticklabels(algorithm_order, fontsize=10)
+        ax.set_xticklabels(algorithm_order, fontsize=12)
         ax.tick_params(axis='both', which='major', labelsize=10)
         ax.grid(True, axis='y', alpha=0.3, linestyle='-')
 
@@ -438,8 +391,11 @@ class TestPlotGenerator:
                                            problems, task_idx, algo)
 
                 # Save figure
-                prob_name = problems[task_idx] if task_idx < len(problems) else f'Task{task_idx + 1}'
-                filename = f'{prob_name}-{algo}.{self.config.figure_format}'
+                prob_name = problems[task_idx] if task_idx < len(problems) else f'P{task_idx + 1}'
+                if n_tasks == 1:
+                    filename = f'{prob_name}-{algo}.{self.config.figure_format}'
+                else:
+                    filename = f'{prob_name}-Task{task_idx + 1}-{algo}.{self.config.figure_format}'
                 fig.savefig(nd_folder / filename, dpi=300)
                 plt.close(fig)
 
@@ -456,7 +412,7 @@ class TestPlotGenerator:
             algo: str
     ) -> plt.Figure:
         """Create a non-dominated solution plot."""
-        fig = plt.figure(figsize=(5, 4))
+        fig = plt.figure(figsize=(4.5, 3.5))
 
         if n_objectives == 2:
             ax = fig.add_subplot(111)
@@ -464,8 +420,8 @@ class TestPlotGenerator:
             if true_pf is not None and true_pf.shape[1] == 2:
                 sort_idx = np.argsort(true_pf[:, 0])
                 sorted_pf = true_pf[sort_idx]
-                ax.plot(sorted_pf[:, 0], sorted_pf[:, 1],
-                        'k-', linewidth=2, label='True PF', alpha=0.3, zorder=1)
+                ax.scatter(sorted_pf[:, 0], sorted_pf[:, 1],
+                           c='gray', s=2, linewidth=0.1, label='True PF', zorder=1)
 
             ax.scatter(nd_solutions[:, 0], nd_solutions[:, 1],
                        c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
@@ -474,22 +430,22 @@ class TestPlotGenerator:
             ax.set_xlabel('$f_1$', fontsize=12)
             ax.set_ylabel('$f_2$', fontsize=12)
             ax.grid(True, alpha=0.2, linestyle='-')
-            ax.legend(loc='best', fontsize=9)
+            ax.legend(loc='best', fontsize=10)
 
         elif n_objectives == 3:
             ax = fig.add_subplot(111, projection='3d')
 
             if true_pf is not None and true_pf.shape[1] == 3:
                 ax.scatter(true_pf[:, 0], true_pf[:, 1], true_pf[:, 2],
-                           c='gray', s=2, alpha=0.1, label='True PF', zorder=1)
+                           c='gray', s=4, alpha=0.2, label='True PF', zorder=1, depthshade=True)
 
             ax.scatter(nd_solutions[:, 0], nd_solutions[:, 1], nd_solutions[:, 2],
                        c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
-                       linewidth=0.8, label='ND Solutions', zorder=2)
+                       linewidth=0.8, label='ND Solutions', zorder=2, depthshade=True)
 
-            ax.set_xlabel('$f_1$', fontsize=10)
-            ax.set_ylabel('$f_2$', fontsize=10)
-            ax.set_zlabel('$f_3$', fontsize=10)
+            ax.set_xlabel('$f_1$', fontsize=12)
+            ax.set_ylabel('$f_2$', fontsize=12)
+            ax.set_zlabel('$f_3$', fontsize=12)
             ax.view_init(elev=20, azim=60)
 
         else:
@@ -500,15 +456,18 @@ class TestPlotGenerator:
                 ax.plot(range(n_objectives), nd_solutions[i, :],
                         'b-', alpha=0.3, linewidth=0.8)
 
-            ax.set_xlabel('Objective Index', fontsize=10)
-            ax.set_ylabel('Value', fontsize=10)
+            ax.set_xlabel('Objective', fontsize=12)
+            ax.set_ylabel('Value', fontsize=12)
             ax.set_xticks(range(n_objectives))
             ax.set_xticklabels([rf'$f_{{{i + 1}}}$' for i in range(n_objectives)])
             ax.grid(True, alpha=0.3, linestyle='--')
 
-        prob_name = problems[task_idx] if task_idx < len(problems) else f'Task{task_idx + 1}'
-        title = f'{prob_name} - {algo}'
-        plt.title(title, fontsize=11)
+        prob_name = problems[task_idx] if task_idx < len(problems) else f'P{task_idx + 1}'
+        if n_tasks == 1:
+            title = f'{prob_name} - {algo}'
+        else:
+            title = f'{prob_name} - Task {task_idx + 1} - {algo}'
+        plt.title(title, fontsize=10)
         plt.tight_layout()
 
         return fig
@@ -521,7 +480,7 @@ class TestPlotGenerator:
 class TestTableGenerator:
     """Class for generating LaTeX tables for test data."""
 
-    def __init__(self, save_path: Path = Path('./TestResults')):
+    def __init__(self, save_path: Path = Path('./Results')):
         """Initialize TestTableGenerator."""
         self.save_path = save_path
 
@@ -634,72 +593,6 @@ class TestTableGenerator:
 
         return latex_str
 
-    def generate_summary_table(
-            self,
-            metric_values: Dict[str, List[np.ndarray]],
-            algorithm_order: List[str],
-            problems: List[str],
-            metric_name: Optional[str] = None
-    ) -> str:
-        """
-        Generate a summary LaTeX table with convergence statistics.
-
-        Parameters:
-            metric_values: Dict[str, List[np.ndarray]]
-                Metric values per generation.
-            algorithm_order: List[str]
-                Algorithm display order.
-            problems: List[str]
-                Problem/task names.
-            metric_name: Optional[str]
-                Metric name.
-
-        Returns:
-            str: LaTeX table string.
-        """
-        save_dir = Path(self.save_path)
-        save_dir.mkdir(parents=True, exist_ok=True)
-
-        num_tasks = len(metric_values[algorithm_order[0]])
-
-        latex_str = "\\begin{table}[htbp]\n"
-        latex_str += "\\renewcommand{\\arraystretch}{1.2}\n"
-        latex_str += "\\centering\n"
-        latex_str += "\\caption{Convergence Summary}\n"
-        latex_str += "\\label{tab:convergence_summary}\n"
-        latex_str += "\\begin{tabular}{|c|c|c|c|c|}\n"
-        latex_str += "\\hline\n"
-        latex_str += "Algorithm & Problem & Initial & Final & Improvement \\\\\n"
-        latex_str += "\\hline\n"
-
-        for algo in algorithm_order:
-            for task_idx in range(num_tasks):
-                prob_name = problems[task_idx] if task_idx < len(problems) else f'Task {task_idx + 1}'
-                curve = np.array(metric_values[algo][task_idx]).ravel()
-
-                if len(curve) > 0:
-                    initial = curve[0]
-                    final = curve[-1]
-                    improvement = ((initial - final) / initial * 100) if initial != 0 else 0
-
-                    initial_str = f"{initial:.4e}".replace('e-', 'e$-$')
-                    final_str = f"{final:.4e}".replace('e-', 'e$-$')
-                    imp_str = f"{improvement:.1f}\\%"
-
-                    latex_str += f"{algo} & {prob_name} & {initial_str} & {final_str} & {imp_str} \\\\\n"
-
-            latex_str += "\\hline\n"
-
-        latex_str += "\\end{tabular}\n"
-        latex_str += "\\end{table}\n"
-
-        output_file = save_dir / 'convergence_summary_table.tex'
-        with open(output_file, 'w') as f:
-            f.write(latex_str)
-        print(f"Convergence summary table saved to: {output_file}")
-
-        return latex_str
-
 
 # =============================================================================
 # Main Test Data Analyzer Class
@@ -709,12 +602,12 @@ class TestDataAnalyzer:
     """
     Main class for analyzing single-run test data.
 
-    This class handles pickle files stored directly in the data folder
-    with '_test.pkl' suffix (e.g., ga_test.pkl, de_test.pkl).
+    This class handles pickle files stored directly in the data folder,
+    providing a lightweight analysis pipeline without statistical analysis.
 
     Attributes:
         data_path: Path
-            Path to the data directory containing test pickle files.
+            Path to the data directory containing pickle files.
         settings: Optional[Dict[str, Any]]
             Problem settings including reference definitions.
         algorithm_order: Optional[List[str]]
@@ -725,25 +618,25 @@ class TestDataAnalyzer:
 
     def __init__(
             self,
-            data_path: Union[str, Path] = './TestData',
+            data_path: Union[str, Path] = './Data',
             settings: Optional[Dict[str, Any]] = None,
             algorithm_order: Optional[List[str]] = None,
-            save_path: Union[str, Path] = './TestResults',
+            save_path: Union[str, Path] = './Results',
             figure_format: str = 'pdf',
             log_scale: bool = False,
             show_pf: bool = True,
             show_nd: bool = True,
             best_so_far: bool = True,
             clear_results: bool = True,
-            file_suffix: str = '_test.pkl'
+            file_suffix: str = '.pkl'
     ):
         """
         Initialize TestDataAnalyzer.
 
         Parameters:
             data_path: Union[str, Path]
-                Path to data directory containing test pickle files.
-                Default: './TestData'
+                Path to data directory containing pickle files.
+                Default: './Data'
 
             settings: Optional[Dict[str, Any]]
                 Problem settings dictionary for multi-objective metrics.
@@ -755,7 +648,7 @@ class TestDataAnalyzer:
 
             save_path: Union[str, Path]
                 Directory path to save all output files.
-                Default: './TestResults'
+                Default: './Results'
 
             figure_format: str
                 Output figure format: 'pdf', 'png', 'svg', etc.
@@ -782,8 +675,8 @@ class TestDataAnalyzer:
                 Default: True
 
             file_suffix: str
-                Suffix pattern for test files.
-                Default: '_test.pkl'
+                Suffix pattern for pickle files.
+                Default: '.pkl'
         """
         self.data_path = Path(data_path)
         self.settings = settings
@@ -808,7 +701,7 @@ class TestDataAnalyzer:
 
     def scan_data(self) -> TestScanResult:
         """
-        Scan the data directory to detect test pickle files.
+        Scan the data directory to detect pickle files.
 
         Returns:
             TestScanResult
@@ -820,21 +713,20 @@ class TestDataAnalyzer:
 
         Raises:
             FileNotFoundError: If data_path does not exist.
-            ValueError: If no test pickle files found.
+            ValueError: If no pickle files found.
         """
         if not self.data_path.exists():
             raise FileNotFoundError(f"Data path does not exist: {self.data_path}")
 
-        # Find all test pickle files
+        # Find all pickle files with specified suffix
         file_mapping = {}
         for pkl_file in self.data_path.glob(f'*{self.file_suffix}'):
-            # Extract algorithm name from filename
-            # e.g., ga_test.pkl -> ga, nsga2_test.pkl -> nsga2
-            algo_name = pkl_file.stem.replace(self.file_suffix.replace('.pkl', ''), '')
+            # Extract algorithm name from filename (remove suffix)
+            algo_name = pkl_file.stem
             file_mapping[algo_name] = pkl_file
 
         if not file_mapping:
-            raise ValueError(f"No test pickle files found in {self.data_path} with suffix '{self.file_suffix}'")
+            raise ValueError(f"No pickle files found in {self.data_path} with suffix '{self.file_suffix}'")
 
         algorithms = sorted(file_mapping.keys())
 
@@ -851,7 +743,6 @@ class TestDataAnalyzer:
 
         print(f"Found {len(algorithms)} algorithms: {algorithms}")
         print(f"Found {n_tasks} tasks/problems: {problems}")
-        print(f"Files: {list(file_mapping.values())}")
 
         self._scan_result = TestScanResult(
             algorithms=algorithms,
@@ -940,6 +831,7 @@ class TestDataAnalyzer:
                 Tuple of (metric_values, metric_values_best_so_far).
         """
         all_objs = data['all_objs']
+        all_cons = data.get('all_cons', None)
         n_tasks = len(all_objs)
 
         metric_values = []
@@ -954,6 +846,7 @@ class TestDataAnalyzer:
 
             for gen in range(n_gens):
                 objs_gen = all_objs[t][gen]
+                cons_gen = all_cons[t][gen] if all_cons is not None else None
                 M = objs_gen.shape[1]
 
                 if M == 1:
@@ -977,11 +870,47 @@ class TestDataAnalyzer:
                             sign = metric_instance.sign
                         elif metric_name == 'HV':
                             metric_instance = HV()
+                            # If reference is 1D or single row, treat as ref point; otherwise as PF
+                            if reference.ndim == 1 or reference.shape[0] == 1:
+                                ref_point = reference.flatten()
+                                metric_value = metric_instance.calculate(objs_gen, reference=ref_point)
+                            else:
+                                metric_value = metric_instance.calculate(objs_gen, pf=reference)
+                            sign = metric_instance.sign
+                        elif metric_name == 'IGDp':
+                            metric_instance = IGDp()
                             metric_value = metric_instance.calculate(objs_gen, reference)
                             sign = metric_instance.sign
+                        elif metric_name == 'GD':
+                            metric_instance = GD()
+                            metric_value = metric_instance.calculate(objs_gen, reference)
+                            sign = metric_instance.sign
+                        elif metric_name == 'DeltaP':
+                            metric_instance = DeltaP()
+                            metric_value = metric_instance.calculate(objs_gen, reference)
+                            sign = metric_instance.sign
+                        elif metric_name == 'Spacing':
+                            metric_instance = Spacing()
+                            metric_value = metric_instance.calculate(objs_gen)
+                            sign = metric_instance.sign
+                        elif metric_name == 'Spread':
+                            metric_instance = Spread()
+                            metric_value = metric_instance.calculate(objs_gen, reference)
+                            sign = metric_instance.sign
+                        elif metric_name == 'FR':
+                            if cons_gen is None:
+                                raise ValueError('FR metric requires constraint data, but all_cons is not available')
+                            metric_instance = FR()
+                            metric_value = metric_instance.calculate(cons_gen)
+                            sign = metric_instance.sign
+                        elif metric_name == 'CV':
+                            if cons_gen is None:
+                                raise ValueError('CV metric requires constraint data, but all_cons is not available')
+                            metric_instance = CV()
+                            metric_value = metric_instance.calculate(cons_gen)
+                            sign = metric_instance.sign
                         else:
-                            metric_value = np.min(np.sum(objs_gen, axis=1))
-                            sign = -1
+                            raise ValueError(f'Unsupported metric: {metric_name}')
 
                 task_values[gen] = metric_value
 
@@ -1055,18 +984,10 @@ class TestDataAnalyzer:
 
         table_gen = TestTableGenerator(self.table_save_path)
 
-        # Generate main results table
+        # Generate results table
         main_table = table_gen.generate_latex_table(
             self._metric_results.best_values,
             self._metric_results.runtime,
-            algo_order,
-            self._metric_results.problems,
-            self._metric_results.metric_name
-        )
-
-        # Generate convergence summary table
-        summary_table = table_gen.generate_summary_table(
-            self._metric_results.metric_values,
             algo_order,
             self._metric_results.problems,
             self._metric_results.metric_name
@@ -1083,46 +1004,62 @@ class TestDataAnalyzer:
                 Complete metric results from the analysis.
         """
         print("=" * 60)
-        print('🚀 Starting Test Data Analysis Pipeline! 🚀')
+        print("Starting Test Data Analysis Pipeline")
         print("=" * 60)
 
         # Step 0: Clear results folder if requested
         if self.clear_results:
             results_path = self.plot_config.save_path
             if results_path.exists():
-                print(f'\n♻️  Clearing existing results folder: {results_path}')
-                shutil.rmtree(results_path)
+                print(f'\nClearing existing results folder: {results_path}')
+                # Retry mechanism for Windows file locking issues
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        shutil.rmtree(results_path)
+                        break
+                    except PermissionError as e:
+                        if attempt < max_retries - 1:
+                            import time
+                            print(f'  Warning: Folder in use, retrying in 1s... ({attempt + 1}/{max_retries})')
+                            time.sleep(1)
+                        else:
+                            print(f'  Error: Cannot delete {results_path}. Please close any programs using this folder.')
+                            raise e
             results_path.mkdir(parents=True, exist_ok=True)
 
         # Step 1: Scan data
-        print('\n🔍 Scanning test data directory...')
+        print('\n[1/6] Scanning test data directory...')
         self.scan_data()
 
         # Step 2: Calculate metrics
-        print('\n📊 Calculating metric values...')
+        print('\n[2/6] Calculating metric values...')
         self.calculate_metrics()
 
         # Step 3: Generate LaTeX tables
-        print('\n📋 Generating LaTeX tables...')
+        print('\n[3/6] Generating LaTeX tables...')
         self.generate_latex_tables()
 
         # Step 4: Plot convergence curves
-        print('\n📈 Plotting convergence curves...')
+        print('\n[4/6] Plotting convergence curves...')
         self.generate_convergence_plots()
 
         # Step 5: Plot runtime
-        print('\n⏱️  Plotting runtime comparison...')
+        print('\n[5/6] Plotting runtime comparison...')
         self.generate_runtime_plots()
 
         # Step 6: Plot ND solutions (if multi-objective)
-        first_algo = self._scan_result.algorithms[0]
+        algo_order = self.algorithm_order if self.algorithm_order else self._scan_result.algorithms
+        first_algo = algo_order[0]
         first_objs = self._metric_results.objective_values[first_algo][0]
         if first_objs.shape[1] > 1:
-            print('\n🎯 Plotting non-dominated solutions...')
+            print('\n[6/6] Plotting non-dominated solutions...')
             self.generate_nd_solution_plots()
+        else:
+            print('\n[6/6] Skipping ND plots (single-objective)')
 
         print("\n" + "=" * 60)
-        print('🎉 Test Data Analysis Completed! 🎉')
+        print("Test Data Analysis Completed")
         print("=" * 60)
 
         return self._metric_results
@@ -1139,16 +1076,16 @@ if __name__ == '__main__':
 
     Example 1: Quick Start
     ----------------------
-    Analyze test files in ./TestData folder:
+    Analyze pickle files in ./Data folder:
 
-        from test_data_analyzer import TestDataAnalyzer
+        from ddmtolab.Methods.test_data_analysis import TestDataAnalyzer
 
-        analyzer = TestDataAnalyzer(data_path='./TestData')
+        analyzer = TestDataAnalyzer(data_path='./Data')
         results = analyzer.run()
 
 
-    Example 2: With Custom Settings
-    -------------------------------
+    Example 2: With Custom Settings (Multi-Objective)
+    -------------------------------------------------
     Multi-objective analysis with IGD metric:
 
         SETTINGS = {
@@ -1160,9 +1097,9 @@ if __name__ == '__main__':
         }
 
         analyzer = TestDataAnalyzer(
-            data_path='./TestData',
+            data_path='./Data',
             settings=SETTINGS,
-            save_path='./TestResults',
+            save_path='./Results',
             figure_format='png'
         )
         results = analyzer.run()
@@ -1171,8 +1108,8 @@ if __name__ == '__main__':
     Example 3: Custom Algorithm Order
     ---------------------------------
         analyzer = TestDataAnalyzer(
-            data_path='./TestData',
-            algorithm_order=['de', 'ga', 'ga1'],  # Custom display order
+            data_path='./Data',
+            algorithm_order=['DE', 'GA', 'PSO'],
             figure_format='pdf'
         )
         results = analyzer.run()
@@ -1180,7 +1117,7 @@ if __name__ == '__main__':
 
     Example 4: Step-by-Step Analysis
     --------------------------------
-        analyzer = TestDataAnalyzer(data_path='./TestData')
+        analyzer = TestDataAnalyzer(data_path='./Data')
 
         # Scan files
         scan_result = analyzer.scan_data()
@@ -1194,12 +1131,25 @@ if __name__ == '__main__':
         analyzer.generate_convergence_plots()
 
 
+    Example 5: Plot Customization
+    -----------------------------
+    Control figure format, log scale, and Pareto front display:
+
+        analyzer = TestDataAnalyzer(
+            data_path='./Data',
+            figure_format='pdf',    # Output format: 'pdf', 'png', 'svg'
+            log_scale=True,         # Use log scale for y-axis
+            show_pf=True,           # Show true Pareto front
+            show_nd=True            # Filter non-dominated solutions
+        )
+
+
     Expected File Structure
     -----------------------
-        ./TestData/
-        ├── ga_test.pkl
-        ├── ga1_test.pkl
-        ├── de_test.pkl
+        ./Data/
+        ├── GA.pkl
+        ├── DE.pkl
+        ├── PSO.pkl
         └── ...
 
     Each .pkl file should contain:
@@ -1213,8 +1163,8 @@ if __name__ == '__main__':
     print("=" * 50)
 
     analyzer = TestDataAnalyzer(
-        data_path='./TestData',
-        save_path='./TestResults',
+        data_path='./Data',
+        save_path='./Results',
         figure_format='pdf',
         clear_results=True
     )
@@ -1224,4 +1174,4 @@ if __name__ == '__main__':
         results = analyzer.run()
     except (FileNotFoundError, ValueError) as e:
         print(f"Demo skipped: {e}")
-        print("Create test files in ./TestData/ with '_test.pkl' suffix to run analysis.")
+        print("Create pickle files in ./Data/ to run analysis.")

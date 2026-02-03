@@ -47,7 +47,7 @@ class CSO:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n=None, max_nfes=None, phi=0.1, save_data=True, save_path='./TestData', name='CSO_test',
+    def __init__(self, problem, n=None, max_nfes=None, phi=0.1, save_data=True, save_path='./Data', name='CSO',
                  disable_tqdm=True):
         """
         Initialize Competitive Swarm Optimizer algorithm.

@@ -351,6 +351,77 @@ def par_list(par: Union[int, List[int]], n_tasks: int) -> List[int]:
     return par_per_task
 
 
+def build_staircase_history(
+        db_decs: List[np.ndarray],
+        db_objs: List[np.ndarray],
+        k: int = 1,
+        db_cons: Optional[List[np.ndarray]] = None
+) -> Union[
+    Tuple[List[List[np.ndarray]], List[List[np.ndarray]]],
+    Tuple[List[List[np.ndarray]], List[List[np.ndarray]], List[List[np.ndarray]]]
+]:
+    """
+    Convert flat database lists into staircase history structure.
+
+    For each task, creates an incrementally growing sequence of generations
+    where generation g contains min(k * (g+1), total) solutions from the database.
+
+    Parameters
+    ----------
+    db_decs : List[np.ndarray]
+        Database of all decision variables per task. db_decs[i] has shape (n_i, dim_i).
+    db_objs : List[np.ndarray]
+        Database of all objective values per task. db_objs[i] has shape (n_i, n_objs).
+    k : int, optional
+        Step size controlling the staircase gradient (default: 1).
+        Generation g contains min(k * (g+1), total) solutions.
+    db_cons : List[np.ndarray], optional
+        Database of all constraint values per task (default: None).
+
+    Returns
+    -------
+    all_decs : List[List[np.ndarray]]
+        Staircased decision variable history.
+    all_objs : List[List[np.ndarray]]
+        Staircased objective value history.
+    all_cons : List[List[np.ndarray]], optional
+        Staircased constraint history (only returned if db_cons is not None).
+    """
+    nt = len(db_decs)
+    all_decs = []
+    all_objs = []
+    all_cons = [] if db_cons is not None else None
+
+    for i in range(nt):
+        n = db_decs[i].shape[0]
+        task_decs = []
+        task_objs = []
+        task_cons = [] if db_cons is not None else None
+
+        size = k
+        while size < n:
+            task_decs.append(db_decs[i][:size].copy())
+            task_objs.append(db_objs[i][:size].copy())
+            if db_cons is not None:
+                task_cons.append(db_cons[i][:size].copy())
+            size += k
+
+        # Final generation with all points
+        task_decs.append(db_decs[i][:n].copy())
+        task_objs.append(db_objs[i][:n].copy())
+        if db_cons is not None:
+            task_cons.append(db_cons[i][:n].copy())
+
+        all_decs.append(task_decs)
+        all_objs.append(task_objs)
+        if db_cons is not None:
+            all_cons.append(task_cons)
+
+    if db_cons is not None:
+        return all_decs, all_objs, all_cons
+    return all_decs, all_objs
+
+
 def reorganize_initial_data(
         data: List[np.ndarray],
         nt: int,

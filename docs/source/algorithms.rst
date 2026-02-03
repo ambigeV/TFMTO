@@ -248,17 +248,23 @@ Basic Usage
 
 .. code-block:: python
 
-    from DDMTOLab.problems import Sphere
-    from DDMTOLab.algorithms.STSO.GA import GA
+    from ddmtolab.Methods.mtop import MTOP
+    from ddmtolab.Algorithms.STSO.GA import GA
+    import numpy as np
 
-    # Create problem instance
-    problem = Sphere(n_tasks=1, dims=[30])
+    # Define objective function
+    def sphere(x):
+        return np.sum(x**2, axis=1)
+
+    # Create problem instance using MTOP
+    problem = MTOP()
+    problem.add_task(sphere, dim=30)
 
     # Initialize algorithm
     algorithm = GA(
         problem=problem,
-        n=[100],           # Population size
-        max_nfes=[10000],  # Max function evaluations
+        n=100,             # Population size
+        max_nfes=10000,    # Max function evaluations
         pc=0.9,            # Crossover probability
         pm=0.1             # Mutation probability
     )
@@ -274,21 +280,31 @@ Basic Usage
 
 .. code-block:: python
 
-    from DDMTOLab.problems import MTOP
-    from DDMTOLab.algorithms.MTSO.MFEA import MFEA
+    from ddmtolab.Methods.mtop import MTOP
+    from ddmtolab.Algorithms.MTSO.MFEA import MFEA
+    import numpy as np
 
-    # Create multi-task problem
-    problem = MTOP(
-        problems=['Sphere', 'Rosenbrock', 'Rastrigin'],
-        n_tasks=3,
-        dims=[30, 30, 30]
-    )
+    # Define objective functions
+    def sphere(x):
+        return np.sum(x**2, axis=1)
+
+    def rosenbrock(x):
+        return np.sum(100*(x[:, 1:] - x[:, :-1]**2)**2 + (1 - x[:, :-1])**2, axis=1)
+
+    def rastrigin(x):
+        return 10*x.shape[1] + np.sum(x**2 - 10*np.cos(2*np.pi*x), axis=1)
+
+    # Create multi-task problem using MTOP
+    problem = MTOP()
+    problem.add_task(sphere, dim=30)
+    problem.add_task(rosenbrock, dim=30)
+    problem.add_task(rastrigin, dim=30)
 
     # Initialize MFEA
     algorithm = MFEA(
         problem=problem,
-        n=[100, 100, 100],
-        max_nfes=[10000, 10000, 10000],
+        n=100,
+        max_nfes=10000,
         rmp=0.3  # Random mating probability
     )
 
@@ -296,7 +312,7 @@ Basic Usage
     results = algorithm.optimize()
 
     # Compare task performance
-    for i in range(3):
+    for i in range(problem.n_tasks):
         print(f"Task {i+1} best: {results.best_objs[i]}")
 
 Advanced Configuration
@@ -346,8 +362,12 @@ You can easily implement custom algorithms by following the three construction r
 .. code-block:: python
 
     import numpy as np
-    from DDMTOLab.utils import Results
     import time
+    from ddmtolab.Methods.Algo_Methods.algo_utils import (
+        Results, get_algorithm_information,
+        initialization, evaluation,
+        init_history, append_history, build_save_results
+    )
 
     class MyCustomAlgorithm:
         # Rule 1: Algorithm metadata
@@ -368,39 +388,241 @@ You can easily implement custom algorithms by following the three construction r
             return get_algorithm_information(cls, print_info)
 
         # Rule 2: Accept MTOP instance
-        def __init__(self, problem, n=None, max_nfes=None):
+        def __init__(self, problem, n=100, max_nfes=10000,
+                     save_data=True, save_path='./Data', name='MyAlgo'):
             self.problem = problem
-            self.n = n if n else [100]
-            self.max_nfes = max_nfes if max_nfes else [10000]
+            self.n = n
+            self.max_nfes = max_nfes
+            self.save_data = save_data
+            self.save_path = save_path
+            self.name = name
 
         # Rule 3: Return Results object
         def optimize(self):
             start_time = time.time()
 
-            # Initialize tracking
-            all_decs = [[] for _ in range(self.problem.n_tasks)]
-            all_objs = [[] for _ in range(self.problem.n_tasks)]
+            # Initialize population using algo_utils
+            decs = initialization(self.problem, self.n)
+            objs, cons = evaluation(self.problem, decs)
 
-            # Optimization loop for each task
-            for task_id in range(self.problem.n_tasks):
+            # Initialize history tracking
+            all_decs, all_objs, all_cons = init_history(decs, objs, cons)
+
+            # Main optimization loop
+            nfes = self.n
+            while nfes < self.max_nfes:
                 # Your optimization logic here
-                # ...
+                # Generate new solutions, evaluate, select...
 
-                # Store best solution
-                best_dec = np.array([...])
-                best_obj = np.array([...])
+                # Track history
+                append_history(all_decs, all_objs, all_cons, decs, objs, cons)
+                nfes += self.n
 
             runtime = time.time() - start_time
 
-            # Return Results object
-            return Results(
-                best_decs=[best_dec],
-                best_objs=[best_obj],
+            # Build and save results using utility function
+            return build_save_results(
+                problem=self.problem,
                 all_decs=all_decs,
                 all_objs=all_objs,
+                all_cons=all_cons,
                 runtime=runtime,
-                max_nfes=self.max_nfes
+                max_nfes=self.max_nfes,
+                save_data=self.save_data,
+                save_path=self.save_path,
+                name=self.name
             )
+
+Available Algorithms
+--------------------
+
+DDMTOLab provides 60+ optimization algorithms organized into four categories:
+
+STSO (Single-Task Single-Objective)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Classical evolutionary algorithms and surrogate-assisted methods for single-objective optimization.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
+   * - ``GA``
+     - Genetic Algorithm
+   * - ``DE``
+     - Differential Evolution
+   * - ``PSO``
+     - Particle Swarm Optimization
+   * - ``CMA_ES``
+     - Covariance Matrix Adaptation Evolution Strategy
+   * - ``IPOP_CMA_ES``
+     - CMA-ES with Increasing Population
+   * - ``sep_CMA_ES``
+     - Separable CMA-ES
+   * - ``MA_ES``
+     - Matrix Adaptation Evolution Strategy
+   * - ``OpenAI_ES``
+     - OpenAI Evolution Strategy
+   * - ``xNES``
+     - Exponential Natural Evolution Strategy
+   * - ``CSO``
+     - Competitive Swarm Optimizer
+   * - ``SL_PSO``
+     - Social Learning PSO
+   * - ``KL_PSO``
+     - Knowledge Learning PSO
+   * - ``SHPSO``
+     - Self-adaptive Hierarchical PSO
+   * - ``GWO``
+     - Grey Wolf Optimizer
+   * - ``AO``
+     - Aquila Optimizer
+   * - ``EO``
+     - Equilibrium Optimizer
+   * - ``GL_SADE``
+     - Gaussian Local Search with Self-adaptive DE
+   * - ``SA_COSO``
+     - Surrogate-Assisted Competitive Swarm Optimizer
+   * - ``BO``
+     - Bayesian Optimization
+   * - ``EEI_BO``
+     - Expected Exploration Improvement BO
+   * - ``ESAO``
+     - Efficient Surrogate-Assisted Optimization
+   * - ``TLRBF``
+     - Two-Layer RBF Surrogate-Assisted Optimization
+
+STMO (Single-Task Multi-Objective)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Multi-objective evolutionary algorithms and surrogate-assisted methods.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
+   * - ``NSGA_II``
+     - Non-dominated Sorting Genetic Algorithm II
+   * - ``NSGA_III``
+     - Non-dominated Sorting Genetic Algorithm III
+   * - ``NSGA_II_SDR``
+     - NSGA-II with Stochastic Dominance Ranking
+   * - ``MOEA_D``
+     - Multi-Objective Evolutionary Algorithm based on Decomposition
+   * - ``MOEA_DD``
+     - MOEA/D with Diversity Enhancement
+   * - ``MOEA_D_STM``
+     - MOEA/D with Stable Matching
+   * - ``MOEA_D_FRRMAB``
+     - MOEA/D with Fitness-Rate-Rank Multi-Armed Bandit
+   * - ``MCEA_D``
+     - Multi-Criteria Evolutionary Algorithm based on Decomposition
+   * - ``RVEA``
+     - Reference Vector Guided Evolutionary Algorithm
+   * - ``K_RVEA``
+     - Kriging-assisted RVEA
+   * - ``IBEA``
+     - Indicator-Based Evolutionary Algorithm
+   * - ``SPEA2``
+     - Strength Pareto Evolutionary Algorithm 2
+   * - ``TwoArch2``
+     - Two-Archive Algorithm 2
+   * - ``CCMO``
+     - Coevolutionary Constrained Multi-Objective Optimization
+   * - ``C_TAEA``
+     - Constrained Two-Archive Evolutionary Algorithm
+   * - ``CPS_MOEA``
+     - Constrained Push and Search MOEA
+   * - ``KTA2``
+     - Kriging-assisted Two-Archive Algorithm
+   * - ``ParEGO``
+     - Pareto Efficient Global Optimization
+   * - ``MSEA``
+     - Multi-Surrogate Evolutionary Algorithm
+   * - ``REMO``
+     - Reference-based Multi-Objective Optimization
+   * - ``DSAEA_PS``
+     - Data-driven Surrogate-Assisted EA with Pareto Selection
+
+MTSO (Multi-Task Single-Objective)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Multi-task evolutionary algorithms with knowledge transfer for single-objective optimization.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
+   * - ``MFEA``
+     - Multi-Factorial Evolutionary Algorithm
+   * - ``MFEA_II``
+     - Multi-Factorial Evolutionary Algorithm II
+   * - ``G_MFEA``
+     - Generalized MFEA
+   * - ``MTEA_AD``
+     - Multi-Task Evolutionary Algorithm with Adaptive Distribution
+   * - ``MTEA_SaO``
+     - Multi-Task EA with Surrogate-assisted Optimization
+   * - ``EMEA``
+     - Evolutionary Multi-Task Evolutionary Algorithm
+   * - ``MKTDE``
+     - Multi-Knowledge Transfer Differential Evolution
+   * - ``SREMTO``
+     - Self-Regulated Evolutionary Multi-Task Optimization
+   * - ``RAMTEA``
+     - Resource Allocation Multi-Task Evolutionary Algorithm
+   * - ``SELF``
+     - Self-adaptive Evolutionary Learning Framework
+   * - ``EBS``
+     - Evolution by Similarity
+   * - ``MTBO``
+     - Multi-Task Bayesian Optimization
+   * - ``MUMBO``
+     - Multi-Task Multi-Objective Bayesian Optimization
+   * - ``LCB_EMT``
+     - Lower Confidence Bound Evolutionary Multi-Tasking
+   * - ``BO_LCB_CKT``
+     - BO with LCB and Curriculum Knowledge Transfer
+   * - ``BO_LCB_BCKT``
+     - BO with LCB and Bidirectional Curriculum Knowledge Transfer
+   * - ``EEI_BO_plus``
+     - Enhanced EEI-BO for Multi-Task Optimization
+
+MTMO (Multi-Task Multi-Objective)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Multi-task multi-objective evolutionary algorithms with knowledge transfer.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
+   * - ``MO_MFEA``
+     - Multi-Objective Multi-Factorial Evolutionary Algorithm
+   * - ``MO_MFEA_II``
+     - Multi-Objective MFEA II
+   * - ``MO_EMEA``
+     - Multi-Objective Evolutionary Multi-Task EA
+   * - ``MO_MTEA_SaO``
+     - Multi-Objective MTEA with Surrogate-assisted Optimization
+   * - ``MTEA_D_DN``
+     - Multi-Task EA/D with Dynamic Neighborhood
+   * - ``MTDE_MKTA``
+     - Multi-Task DE with Multi-Knowledge Transfer Adaptation
+   * - ``EMT_ET``
+     - Evolutionary Multi-Tasking with Explicit Transfer
+   * - ``EMT_PD``
+     - Evolutionary Multi-Tasking with Probabilistic Distribution
+   * - ``ParEGO_KT``
+     - ParEGO with Knowledge Transfer
 
 See Also
 --------

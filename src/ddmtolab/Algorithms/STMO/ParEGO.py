@@ -58,7 +58,7 @@ class ParEGO:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n_initial=None, n_weights=None, max_nfes=None, rho=0.05,
-                 save_data=True, save_path='./TestData', name='ParEGO_test', disable_tqdm=True):
+                 save_data=True, save_path='./Data', name='ParEGO', disable_tqdm=True):
         """
         Initialize ParEGO algorithm.
 
