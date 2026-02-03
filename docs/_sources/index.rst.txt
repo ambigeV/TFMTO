@@ -1,12 +1,10 @@
-DDMTOLab
+Data-Driven Multitask Optimization Laboratory
 =========
 
 .. image:: _static/logo.svg
    :alt: DDMTOLab Logo
-   :width: 250
+   :width: 500
    :align: center
-
-.. centered:: **Data-Driven Multitask Optimization Laboratory**
 
 .. image:: https://img.shields.io/badge/docs-latest-blue.svg
    :target: https://jiangtaoshen.github.io/DDMTOLab/
