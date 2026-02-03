@@ -79,6 +79,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#implementation-guidelines">Implementation Guidelines</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#benchmark-problems">Benchmark Problems</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-task-single-objective-stso">Single-Task Single-Objective (STSO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#single-task-multi-objective-stmo">Single-Task Multi-Objective (STMO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-task-single-objective-mtso">Multi-Task Single-Objective (MTSO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-task-multi-objective-mtmo">Multi-Task Multi-Objective (MTMO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#real-world-optimization-rwo">Real-World Optimization (RWO)</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
 </ul>
 </li>
@@ -126,7 +134,7 @@
 <section id="initialization">
 <h2>Initialization<a class="headerlink" href="#initialization" title="Link to this heading"></a></h2>
 <p>Create an MTOP instance with optional unified evaluation mode:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
 
 <span class="c1"># Basic initialization</span>
 <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
@@ -157,7 +165,7 @@
 </div>
 <p><strong>Example: 2 Tasks with [1,3] Objectives and [2,0] Constraints</strong>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
 
 <span class="c1"># Task 1: Single-objective with 2 constraints</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">sphere</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -528,7 +536,7 @@
 <h3>Problem Class Definition<a class="headerlink" href="#problem-class-definition" title="Link to this heading"></a></h3>
 <p>Example: CEC17MTMO Problem 1:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">CEC17MTMO</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;CEC2017 Multi-Task Multi-Objective Test Suite&quot;&quot;&quot;</span>
@@ -619,6 +627,286 @@
 <li><p>File naming: lowercase with underscores (e.g., <code class="docutils literal notranslate"><span class="pre">cec17_mtmo.py</span></code>)</p></li>
 <li><p>Class naming: UpperCamelCase (e.g., <code class="docutils literal notranslate"><span class="pre">CEC17MTMO</span></code>)</p></li>
 </ol>
+</section>
+</section>
+<section id="benchmark-problems">
+<h2>Benchmark Problems<a class="headerlink" href="#benchmark-problems" title="Link to this heading"></a></h2>
+<p>DDMTOLab provides 180+ benchmark problems organized by optimization type. All problems are implemented as classes that return configured MTOP instances.</p>
+<section id="single-task-single-objective-stso">
+<h3>Single-Task Single-Objective (STSO)<a class="headerlink" href="#single-task-single-objective-stso" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Tasks</p></th>
+<th class="head"><p>Dim</p></th>
+<th class="head"><p>Obj/Con</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CLASSICALSO</span></code></p></td>
+<td><p>1</p></td>
+<td><p>50 (configurable)</p></td>
+<td><p>1 / 0</p></td>
+<td><p>Classical functions: Ackley, Elliptic, Griewank, Rastrigin, Rosenbrock, Schwefel, Sphere, Weierstrass (P1-P8)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CEC10CSO</span></code></p></td>
+<td><p>1</p></td>
+<td><p>1000 (configurable)</p></td>
+<td><p>1 / 0</p></td>
+<td><p>CEC 2010 Large-Scale Global Optimization: 20 large-scale benchmark functions (F1-F20)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usage Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Problems.STSO.classical_so</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLASSICALSO</span>
+
+<span class="n">problem_suite</span> <span class="o">=</span> <span class="n">CLASSICALSO</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">problem_suite</span><span class="o">.</span><span class="n">P1</span><span class="p">()</span>  <span class="c1"># Ackley function</span>
+</pre></div>
+</div>
+</section>
+<section id="single-task-multi-objective-stmo">
+<h3>Single-Task Multi-Objective (STMO)<a class="headerlink" href="#single-task-multi-objective-stmo" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 10.0%" />
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Tasks</p></th>
+<th class="head"><p>Dim</p></th>
+<th class="head"><p>Obj/Con</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ZDT</span></code></p></td>
+<td><p>1</p></td>
+<td><p>10-30 (configurable)</p></td>
+<td><p>2 / 0</p></td>
+<td><p>ZDT test suite (ZDT1-ZDT6): Convex, non-convex, disconnected, and multi-modal Pareto fronts</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DTLZ</span></code></p></td>
+<td><p>1</p></td>
+<td><p>M+k-1 (scalable)</p></td>
+<td><p>M / 0 or M</p></td>
+<td><p>DTLZ test suite (DTLZ1-DTLZ9): Scalable objectives (M=2-10+), DTLZ8-9 are constrained</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WFG</span></code></p></td>
+<td><p>1</p></td>
+<td><p>k+l (scalable)</p></td>
+<td><p>M / 0</p></td>
+<td><p>WFG test suite (WFG1-WFG9): Bias, flatness, multi-modality, and mixed Pareto fronts</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UF</span></code></p></td>
+<td><p>1</p></td>
+<td><p>30 (configurable)</p></td>
+<td><p>2-3 / 0</p></td>
+<td><p>CEC 2009 Unconstrained test suite (UF1-UF10): Complex landscapes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CF</span></code></p></td>
+<td><p>1</p></td>
+<td><p>10 (configurable)</p></td>
+<td><p>2-3 / 1-2</p></td>
+<td><p>CEC 2009 Constrained test suite (CF1-CF10): Various constraint types</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MW</span></code></p></td>
+<td><p>1</p></td>
+<td><p>15 (configurable)</p></td>
+<td><p>2-3 / 1-3</p></td>
+<td><p>Ma-Wang constrained test suite (MW1-MW14): Challenging constraint boundaries</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usage Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Problems.STMO.ZDT</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZDT</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Problems.STMO.DTLZ</span><span class="w"> </span><span class="kn">import</span> <span class="n">DTLZ</span>
+
+<span class="c1"># ZDT problem with 30 dimensions</span>
+<span class="n">zdt</span> <span class="o">=</span> <span class="n">ZDT</span><span class="p">()</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">zdt</span><span class="o">.</span><span class="n">ZDT1</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+<span class="c1"># DTLZ problem with 5 objectives</span>
+<span class="n">dtlz</span> <span class="o">=</span> <span class="n">DTLZ</span><span class="p">()</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">dtlz</span><span class="o">.</span><span class="n">DTLZ2</span><span class="p">(</span><span class="n">M</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="multi-task-single-objective-mtso">
+<h3>Multi-Task Single-Objective (MTSO)<a class="headerlink" href="#multi-task-single-objective-mtso" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 12.0%" />
+<col style="width: 42.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Tasks</p></th>
+<th class="head"><p>Dim</p></th>
+<th class="head"><p>Obj/Con</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CEC17MTSO</span></code></p></td>
+<td><p>2</p></td>
+<td><p>25-50</p></td>
+<td><p>1 / 0</p></td>
+<td><p>CEC 2017 EMTO competition (P1-P9): Complete/Partial/No intersection with High/Medium/Low similarity</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CEC17MTSO10D</span></code></p></td>
+<td><p>2</p></td>
+<td><p>10</p></td>
+<td><p>1 / 0</p></td>
+<td><p>10-dimensional variant of CEC17MTSO benchmark</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CEC19MaTSO</span></code></p></td>
+<td><p>10-50</p></td>
+<td><p>50</p></td>
+<td><p>1 / 0</p></td>
+<td><p>CEC 2019 Many-Task Optimization: Large-scale multi-task scenarios</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CMT</span></code></p></td>
+<td><p>2</p></td>
+<td><p>50 (configurable)</p></td>
+<td><p>1 / 0</p></td>
+<td><p>Combinatorial Multi-Task benchmark: Varying task correlations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STOP</span></code></p></td>
+<td><p>2</p></td>
+<td><p>50</p></td>
+<td><p>1 / 0</p></td>
+<td><p>STOP benchmark: Single-objective transfer optimization problems</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usage Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Problems.MTSO.cec17_mtso</span><span class="w"> </span><span class="kn">import</span> <span class="n">CEC17MTSO</span>
+
+<span class="n">problem_suite</span> <span class="o">=</span> <span class="n">CEC17MTSO</span><span class="p">()</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">problem_suite</span><span class="o">.</span><span class="n">P1</span><span class="p">()</span>  <span class="c1"># CI-HS: Complete Intersection - High Similarity</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tasks: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">n_tasks</span><span class="si">}</span><span class="s2">, Dims: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">dims</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="multi-task-multi-objective-mtmo">
+<h3>Multi-Task Multi-Objective (MTMO)<a class="headerlink" href="#multi-task-multi-objective-mtmo" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 12.0%" />
+<col style="width: 42.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Tasks</p></th>
+<th class="head"><p>Dim</p></th>
+<th class="head"><p>Obj/Con</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CEC17MTMO</span></code></p></td>
+<td><p>2</p></td>
+<td><p>10-50</p></td>
+<td><p>2-3 / 0</p></td>
+<td><p>CEC 2017 MTMO competition (P1-P9): Bi-objective and tri-objective combinations</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CEC19MTMO</span></code></p></td>
+<td><p>2</p></td>
+<td><p>25-50</p></td>
+<td><p>2-3 / 0</p></td>
+<td><p>CEC 2019 MTMO benchmark: Extended multi-objective scenarios</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CEC19MaTMO</span></code></p></td>
+<td><p>10-50</p></td>
+<td><p>25-50</p></td>
+<td><p>2-3 / 0</p></td>
+<td><p>CEC 2019 Many-Task Multi-Objective: Large-scale MO multi-task</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CEC21MTMO</span></code></p></td>
+<td><p>2</p></td>
+<td><p>25-50</p></td>
+<td><p>2-3 / 0</p></td>
+<td><p>CEC 2021 MTMO benchmark: Latest competition problems</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MTMODTLZ</span></code></p></td>
+<td><p>2-10</p></td>
+<td><p>M+k-1</p></td>
+<td><p>M / 0</p></td>
+<td><p>Multi-task DTLZ variants: Configurable task relationships</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usage Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Problems.MTMO.cec17_mtmo</span><span class="w"> </span><span class="kn">import</span> <span class="n">CEC17MTMO</span>
+
+<span class="n">problem_suite</span> <span class="o">=</span> <span class="n">CEC17MTMO</span><span class="p">()</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">problem_suite</span><span class="o">.</span><span class="n">P8</span><span class="p">()</span>  <span class="c1"># T1: 3-obj DTLZ-like, T2: 2-obj ZDT-like</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task 0 objectives: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">n_objs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># 3</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task 1 objectives: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">n_objs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># 2</span>
+</pre></div>
+</div>
+</section>
+<section id="real-world-optimization-rwo">
+<h3>Real-World Optimization (RWO)<a class="headerlink" href="#real-world-optimization-rwo" title="Link to this heading"></a></h3>
+<p>DDMTOLab includes real-world optimization problems in the <code class="docutils literal notranslate"><span class="pre">Problems/RWO/</span></code> directory:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Problem</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PEPVM</span></code></p></td>
+<td><p>MTSO</p></td>
+<td><p>Process Equipment Portfolio Value Maximization</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SOPM</span></code></p></td>
+<td><p>STSO</p></td>
+<td><p>Single-Objective Portfolio Management</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PINN_HPO</span></code></p></td>
+<td><p>STSO</p></td>
+<td><p>Physics-Informed Neural Network Hyperparameter Optimization</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MO_SCP</span></code></p></td>
+<td><p>STMO</p></td>
+<td><p>Multi-Objective Ship Course Planning</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SCP</span></code></p></td>
+<td><p>STSO</p></td>
+<td><p>Ship Course Planning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PKACP</span></code></p></td>
+<td><p>STMO</p></td>
+<td><p>Power Keeping &amp; Anti-Collision Path Planning</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="see-also">

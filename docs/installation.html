@@ -310,9 +310,22 @@ pip<span class="w"> </span>install<span class="w"> </span>black<span class="w"> 
 </div>
 <p><strong>Quick Test</strong></p>
 <p>Run a quick test to ensure everything works:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.bayesian_optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">BayesianOptimizer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.gaussian_process</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussianProcess</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Algorithms.STSO.DE</span><span class="w"> </span><span class="kn">import</span> <span class="n">DE</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="c1"># Define a simple optimization problem</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sphere</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">sphere</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Run optimization</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">DE</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_nfes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">save_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best objective: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_objs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DDMTOLab installation successful!&quot;</span><span class="p">)</span>
 </pre></div>
 </div>

@@ -77,7 +77,7 @@
 <span class="sd">Test Data Analyzer Module for Single-Run Algorithm Testing</span>
 
 <span class="sd">This module provides a lightweight analysis pipeline for quick algorithm testing,</span>
-<span class="sd">where pickle files are stored directly in the data folder with &#39;_test.pkl&#39; suffix.</span>
+<span class="sd">reading pickle files directly from the data folder for single-run visualization.</span>
 
 <span class="sd">Classes:</span>
 <span class="sd">    TestScanResult: Dataclass for storing test scan results</span>
@@ -85,65 +85,32 @@
 <span class="sd">    TestDataAnalyzer: Main class for test data analysis</span>
 
 <span class="sd">Usage:</span>
-<span class="sd">    analyzer = TestDataAnalyzer(data_path=&#39;./TestData&#39;, settings=SETTINGS)</span>
+<span class="sd">    analyzer = TestDataAnalyzer(data_path=&#39;./Data&#39;, save_path=&#39;./Results&#39;)</span>
 <span class="sd">    results = analyzer.run()</span>
 
 <span class="sd">Author: Jiangtao Shen</span>
 <span class="sd">Email: j.shen5@exeter.ac.uk</span>
 <span class="sd">Date: 2025.10.10</span>
-<span class="sd">Version: 1.0</span>
+<span class="sd">Version: 2.0</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
-
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarFormatter</span><span class="p">,</span> <span class="n">LogFormatterSciNotation</span>
 
 <span class="c1"># Import from project modules</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">IGD</span><span class="p">,</span> <span class="n">HV</span><span class="p">,</span> <span class="n">GD</span><span class="p">,</span> <span class="n">IGDp</span><span class="p">,</span> <span class="n">FR</span><span class="p">,</span> <span class="n">CV</span><span class="p">,</span> <span class="n">DeltaP</span><span class="p">,</span> <span class="n">Spread</span><span class="p">,</span> <span class="n">Spacing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.Algo_Methods.algo_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">nd_sort</span>
-
-
-<span class="c1"># =============================================================================</span>
-<span class="c1"># Enums and Constants</span>
-<span class="c1"># =============================================================================</span>
-
-<div class="viewcode-block" id="OptimizationDirection">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.OptimizationDirection">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OptimizationDirection</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimization direction enumeration.&quot;&quot;&quot;</span>
-    <span class="n">MINIMIZE</span> <span class="o">=</span> <span class="s2">&quot;minimize&quot;</span>
-    <span class="n">MAXIMIZE</span> <span class="o">=</span> <span class="s2">&quot;maximize&quot;</span></div>
-
-
-
-<div class="viewcode-block" id="StatisticType">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.StatisticType">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">StatisticType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Statistical measure type enumeration.&quot;&quot;&quot;</span>
-    <span class="n">MEAN</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
-    <span class="n">MEDIAN</span> <span class="o">=</span> <span class="s2">&quot;median&quot;</span>
-    <span class="n">MAX</span> <span class="o">=</span> <span class="s2">&quot;max&quot;</span>
-    <span class="n">MIN</span> <span class="o">=</span> <span class="s2">&quot;min&quot;</span></div>
-
-
-
-<span class="c1"># Default color palette for plots</span>
-<span class="n">DEFAULT_COLORS</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;#1f77b4&#39;</span><span class="p">,</span> <span class="s1">&#39;#ff7f0e&#39;</span><span class="p">,</span> <span class="s1">&#39;#2ca02c&#39;</span><span class="p">,</span> <span class="s1">&#39;#d62728&#39;</span><span class="p">,</span> <span class="s1">&#39;#9467bd&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;#8c564b&#39;</span><span class="p">,</span> <span class="s1">&#39;#e377c2&#39;</span><span class="p">,</span> <span class="s1">&#39;#7f7f7f&#39;</span><span class="p">,</span> <span class="s1">&#39;#bcbd22&#39;</span><span class="p">,</span> <span class="s1">&#39;#17becf&#39;</span>
-<span class="p">]</span>
-
-<span class="c1"># Default markers for plots</span>
-<span class="n">DEFAULT_MARKERS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.data_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">OptimizationDirection</span><span class="p">,</span>
+    <span class="n">DataUtils</span><span class="p">,</span>
+    <span class="n">DEFAULT_COLORS</span><span class="p">,</span>
+    <span class="n">DEFAULT_MARKERS</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="c1"># =============================================================================</span>
@@ -243,105 +210,9 @@
     <span class="n">log_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">show_pf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">show_nd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./TestResults&#39;</span><span class="p">)</span>
+    <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./Results&#39;</span><span class="p">)</span>
     <span class="n">colors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">DEFAULT_COLORS</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
     <span class="n">markers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">DEFAULT_MARKERS</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span></div>
-
-
-
-<span class="c1"># =============================================================================</span>
-<span class="c1"># Utility Functions</span>
-<span class="c1"># =============================================================================</span>
-
-<div class="viewcode-block" id="DataUtils">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.DataUtils">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DataUtils</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility class for data loading and processing operations.&quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="DataUtils.load_pickle">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.DataUtils.load_pickle">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_pickle</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load and return a Python object from a pickle file.&quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="DataUtils.load_reference">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.DataUtils.load_reference">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_reference</span><span class="p">(</span>
-            <span class="n">settings</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-            <span class="n">problem</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">task_identifier</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-            <span class="n">n_objectives</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load reference data (Pareto Front or reference point) for a specific problem and task.&quot;&quot;&quot;</span>
-        <span class="n">task_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;T</span><span class="si">{</span><span class="n">task_identifier</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task_identifier</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">task_identifier</span>
-
-        <span class="k">if</span> <span class="n">problem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">problem_settings</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="n">problem</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">task_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">problem_settings</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">ref_definition</span> <span class="o">=</span> <span class="n">problem_settings</span><span class="p">[</span><span class="n">task_name</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">ref_definition</span><span class="p">):</span>
-            <span class="n">n_points</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;n_ref&#39;</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">ref_definition</span><span class="p">(</span><span class="n">n_points</span><span class="p">,</span> <span class="n">n_objectives</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_definition</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">DataUtils</span><span class="o">.</span><span class="n">_load_reference_from_file</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">ref_definition</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">task_name</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_definition</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-            <span class="n">reference</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ref_definition</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">reference</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">reference</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">reference</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span></div>
-
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_reference_from_file</span><span class="p">(</span>
-            <span class="n">settings</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-            <span class="n">ref_definition</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">problem</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-            <span class="n">task_name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load reference data from file.&quot;&quot;&quot;</span>
-        <span class="n">ref_path</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ref_path&#39;</span><span class="p">,</span> <span class="s1">&#39;./MOReference&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">ref_definition</span><span class="p">):</span>
-            <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ref_path</span><span class="p">,</span> <span class="n">ref_definition</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">full_path</span> <span class="o">=</span> <span class="n">ref_definition</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">full_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.npy&#39;</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">full_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">full_path</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-<div class="viewcode-block" id="DataUtils.get_metric_direction">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.DataUtils.get_metric_direction">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_metric_direction</span><span class="p">(</span><span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">OptimizationDirection</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine optimization direction based on metric type.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">metric_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;IGD&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">OptimizationDirection</span><span class="o">.</span><span class="n">MINIMIZE</span>
-        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;HV&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">OptimizationDirection</span><span class="o">.</span><span class="n">MAXIMIZE</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">OptimizationDirection</span><span class="o">.</span><span class="n">MINIMIZE</span></div>
-</div>
 
 
 
@@ -358,6 +229,22 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize TestPlotGenerator with configuration.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_legend_fontsize</span><span class="p">(</span><span class="n">n_algorithms</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate legend font size based on number of algorithms.</span>
+
+<span class="sd">        Linear interpolation:</span>
+<span class="sd">        - 2 algorithms -&gt; font size 14</span>
+<span class="sd">        - 15 algorithms -&gt; font size 6</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">n_algorithms</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">14</span>
+        <span class="k">elif</span> <span class="n">n_algorithms</span> <span class="o">&gt;=</span> <span class="mi">15</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">6</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">14</span> <span class="o">-</span> <span class="p">(</span><span class="mi">8</span> <span class="o">/</span> <span class="mi">13</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_algorithms</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)))</span>
+
 <div class="viewcode-block" id="TestPlotGenerator.plot_convergence_curves">
 <a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.TestPlotGenerator.plot_convergence_curves">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_convergence_curves</span><span class="p">(</span>
@@ -372,7 +259,6 @@
         <span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">save_path</span><span class="p">)</span>
         <span class="n">save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="c1"># Determine number of tasks from first algorithm</span>
         <span class="n">first_algo</span> <span class="o">=</span> <span class="n">algorithm_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">num_tasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_values</span><span class="p">[</span><span class="n">first_algo</span><span class="p">])</span>
 
@@ -386,8 +272,8 @@
                 <span class="n">problem_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">problems</span> <span class="k">else</span> <span class="s1">&#39;Test&#39;</span>
                 <span class="n">output_file</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">problem_name</span><span class="si">}</span><span class="s1">_convergence.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">figure_format</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">problem_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Task</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
-                <span class="n">output_file</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">problem_name</span><span class="si">}</span><span class="s1">_convergence.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">figure_format</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">problem_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;P</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">output_file</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">problem_name</span><span class="si">}</span><span class="s1">-Task</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">_convergence.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">figure_format</span><span class="si">}</span><span class="s1">&#39;</span>
 
             <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
@@ -406,7 +292,20 @@
             <span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a single convergence curve figure.&quot;&quot;&quot;</span>
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
+
+        <span class="c1"># Collect curve data for y-axis range and max NFEs for x-axis formatting</span>
+        <span class="n">all_curves</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">actual_max_nfes</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Adaptive line width and marker size based on number of algorithms</span>
+        <span class="n">n_algos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">algorithm_order</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_algos</span> <span class="o">&lt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">markersize</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="mf">2.5</span>
+        <span class="k">elif</span> <span class="n">n_algos</span> <span class="o">&lt;=</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">markersize</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">2.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">markersize</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="mf">1.6</span>
 
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">algo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">algorithm_order</span><span class="p">):</span>
             <span class="n">curve</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">metric_values</span><span class="p">[</span><span class="n">algo</span><span class="p">][</span><span class="n">task_idx</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
@@ -414,7 +313,10 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">continue</span>
 
+            <span class="n">all_curves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span>
+
             <span class="n">nfes</span> <span class="o">=</span> <span class="n">max_nfes</span><span class="p">[</span><span class="n">algo</span><span class="p">][</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">max_nfes</span><span class="p">[</span><span class="n">algo</span><span class="p">])</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span>
+            <span class="n">actual_max_nfes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">actual_max_nfes</span><span class="p">,</span> <span class="n">nfes</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nfes</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">))</span>
             <span class="n">marker_interval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
 
@@ -423,43 +325,76 @@
                 <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">colors</span><span class="p">)],</span>
                 <span class="n">marker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">markers</span><span class="p">[</span><span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">markers</span><span class="p">)],</span>
                 <span class="n">markevery</span><span class="o">=</span><span class="n">marker_interval</span><span class="p">,</span>
-                <span class="n">markersize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span>
+                <span class="n">markersize</span><span class="o">=</span><span class="n">markersize</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_scale</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-
-        <span class="c1"># Apply scientific notation for large values</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_scientific_notation</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
-
+        <span class="c1"># Set axis labels</span>
         <span class="n">y_label</span> <span class="o">=</span> <span class="n">metric_name</span> <span class="k">if</span> <span class="n">metric_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;Objective Value&#39;</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;NFEs&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;NFEs&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_tasks</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">title</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">problems</span> <span class="k">else</span> <span class="s1">&#39;Test Problem&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">title</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Task </span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+            <span class="n">prob_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;P</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s1"> - Task </span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+        <span class="c1"># Auto-adjust legend font size based on number of algorithms</span>
+        <span class="n">legend_fontsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_legend_fontsize</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">algorithm_order</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">legend_fontsize</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Apply axis formatting</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_scale</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+            <span class="c1"># Check data range; use linear scale if range is too small</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_curves</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">all_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_curves</span><span class="p">])</span>
+                <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">all_data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">all_data</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">y_max</span> <span class="o">/</span> <span class="n">y_min</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_apply_scientific_notation</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">actual_xmax</span><span class="o">=</span><span class="n">actual_max_nfes</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">LogFormatterSciNotation</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">actual_max_nfes</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>
+                        <span class="n">formatter</span> <span class="o">=</span> <span class="n">ScalarFormatter</span><span class="p">(</span><span class="n">useMathText</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">formatter</span><span class="o">.</span><span class="n">set_scientific</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                        <span class="n">formatter</span><span class="o">.</span><span class="n">set_powerlimits</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+                        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_scientific_notation</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">actual_xmax</span><span class="o">=</span><span class="n">actual_max_nfes</span><span class="p">)</span>
+
+        <span class="c1"># Disable minor ticks (must be called after set_yscale)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">minorticks_off</span><span class="p">()</span>
 
         <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">fig</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_scientific_notation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_scientific_notation</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span>
+            <span class="n">actual_xmax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">x_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+            <span class="n">y_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply scientific notation to axes if values exceed threshold.&quot;&quot;&quot;</span>
-        <span class="n">threshold</span> <span class="o">=</span> <span class="mi">1000</span>
-        <span class="n">xmax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="n">actual_xmax</span> <span class="k">if</span> <span class="n">actual_xmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">ymax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="k">for</span> <span class="n">axis_name</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">lim</span> <span class="ow">in</span> <span class="p">[(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">xmax</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)]:</span>
-            <span class="k">if</span> <span class="n">lim</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
-                <span class="n">formatter</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">ticker</span><span class="o">.</span><span class="n">ScalarFormatter</span><span class="p">(</span><span class="n">useMathText</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="n">formatter</span><span class="o">.</span><span class="n">set_powerlimits</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-                <span class="n">axis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;sci&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis_name</span><span class="p">,</span> <span class="n">scilimits</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">xmax</span> <span class="o">&gt;</span> <span class="n">x_threshold</span><span class="p">:</span>
+            <span class="n">formatter</span> <span class="o">=</span> <span class="n">ScalarFormatter</span><span class="p">(</span><span class="n">useMathText</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">set_scientific</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">set_powerlimits</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ymax</span> <span class="o">&gt;</span> <span class="n">y_threshold</span><span class="p">:</span>
+            <span class="n">formatter</span> <span class="o">=</span> <span class="n">ScalarFormatter</span><span class="p">(</span><span class="n">useMathText</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">set_scientific</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">set_powerlimits</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TestPlotGenerator.plot_runtime">
 <a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.TestPlotGenerator.plot_runtime">[docs]</a>
@@ -472,7 +407,7 @@
         <span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">save_path</span><span class="p">)</span>
         <span class="n">save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">algorithm_order</span><span class="p">))</span>
         <span class="n">runtimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">runtime</span><span class="p">[</span><span class="n">algo</span><span class="p">]</span> <span class="k">for</span> <span class="n">algo</span> <span class="ow">in</span> <span class="n">algorithm_order</span><span class="p">]</span>
@@ -485,13 +420,13 @@
             <span class="n">height</span> <span class="o">=</span> <span class="n">bar</span><span class="o">.</span><span class="n">get_height</span><span class="p">()</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">val</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">s&#39;</span><span class="p">,</span>
                         <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">bar</span><span class="o">.</span><span class="n">get_x</span><span class="p">()</span> <span class="o">+</span> <span class="n">bar</span><span class="o">.</span><span class="n">get_width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span>
-                        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                         <span class="n">textcoords</span><span class="o">=</span><span class="s2">&quot;offset points&quot;</span><span class="p">,</span>
-                        <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+                        <span class="n">ha</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Runtime (s)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Runtime (s)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">algorithm_order</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">algorithm_order</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
 
@@ -550,8 +485,11 @@
                                            <span class="n">problems</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">algo</span><span class="p">)</span>
 
                 <span class="c1"># Save figure</span>
-                <span class="n">prob_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Task</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">figure_format</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">prob_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;P</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="k">if</span> <span class="n">n_tasks</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">figure_format</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s1">-Task</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">figure_format</span><span class="si">}</span><span class="s1">&#39;</span>
                 <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">nd_folder</span> <span class="o">/</span> <span class="n">filename</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
@@ -569,7 +507,7 @@
             <span class="n">algo</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a non-dominated solution plot.&quot;&quot;&quot;</span>
-        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">n_objectives</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
@@ -577,8 +515,8 @@
             <span class="k">if</span> <span class="n">true_pf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">true_pf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="n">sort_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">true_pf</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
                 <span class="n">sorted_pf</span> <span class="o">=</span> <span class="n">true_pf</span><span class="p">[</span><span class="n">sort_idx</span><span class="p">]</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sorted_pf</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sorted_pf</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
-                        <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True PF&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">sorted_pf</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sorted_pf</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="n">c</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True PF&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">nd_solutions</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">nd_solutions</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
                        <span class="n">c</span><span class="o">=</span><span class="s1">&#39;dodgerblue&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
@@ -587,22 +525,22 @@
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$f_1$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$f_2$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">n_objectives</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
             <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">true_pf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">true_pf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">true_pf</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">true_pf</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">true_pf</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span>
-                           <span class="n">c</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True PF&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                           <span class="n">c</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True PF&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depthshade</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">nd_solutions</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">nd_solutions</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">nd_solutions</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span>
                        <span class="n">c</span><span class="o">=</span><span class="s1">&#39;dodgerblue&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
-                       <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ND Solutions&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                       <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ND Solutions&#39;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">depthshade</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$f_1$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$f_2$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;$f_3$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$f_1$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$f_2$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;$f_3$&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">view_init</span><span class="p">(</span><span class="n">elev</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">azim</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -613,15 +551,18 @@
                 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_objectives</span><span class="p">),</span> <span class="n">nd_solutions</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span>
                         <span class="s1">&#39;b-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
 
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Objective Index&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Value&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Objective&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Value&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_objectives</span><span class="p">))</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">rf</span><span class="s1">&#39;$f_</span><span class="se">{{</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="se">}}</span><span class="s1">$&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_objectives</span><span class="p">)])</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
 
-        <span class="n">prob_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Task</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
-        <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s1">&#39;</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+        <span class="n">prob_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;P</span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">n_tasks</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s1"> - Task </span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">fig</span></div>
@@ -637,7 +578,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">TestTableGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for generating LaTeX tables for test data.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./TestResults&#39;</span><span class="p">)):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./Results&#39;</span><span class="p">)):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize TestTableGenerator.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span> <span class="o">=</span> <span class="n">save_path</span>
 
@@ -751,75 +692,6 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LaTeX table saved to: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">latex_str</span></div>
-
-
-<div class="viewcode-block" id="TestTableGenerator.generate_summary_table">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.TestTableGenerator.generate_summary_table">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_summary_table</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">metric_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
-            <span class="n">algorithm_order</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-            <span class="n">problems</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-            <span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate a summary LaTeX table with convergence statistics.</span>
-
-<span class="sd">        Parameters:</span>
-<span class="sd">            metric_values: Dict[str, List[np.ndarray]]</span>
-<span class="sd">                Metric values per generation.</span>
-<span class="sd">            algorithm_order: List[str]</span>
-<span class="sd">                Algorithm display order.</span>
-<span class="sd">            problems: List[str]</span>
-<span class="sd">                Problem/task names.</span>
-<span class="sd">            metric_name: Optional[str]</span>
-<span class="sd">                Metric name.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            str: LaTeX table string.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">)</span>
-        <span class="n">save_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">num_tasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_values</span><span class="p">[</span><span class="n">algorithm_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
-
-        <span class="n">latex_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">begin</span><span class="si">{table}</span><span class="s2">[htbp]</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">renewcommand{</span><span class="se">\\</span><span class="s2">arraystretch}</span><span class="si">{1.2}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">centering</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">caption{Convergence Summary}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">label{tab:convergence_summary}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">begin</span><span class="si">{tabular}</span><span class="s2">{|c|c|c|c|c|}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;Algorithm &amp; Problem &amp; Initial &amp; Final &amp; Improvement </span><span class="se">\\\\\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-        <span class="k">for</span> <span class="n">algo</span> <span class="ow">in</span> <span class="n">algorithm_order</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">task_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_tasks</span><span class="p">):</span>
-                <span class="n">prob_name</span> <span class="o">=</span> <span class="n">problems</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;Task </span><span class="si">{</span><span class="n">task_idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
-                <span class="n">curve</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">metric_values</span><span class="p">[</span><span class="n">algo</span><span class="p">][</span><span class="n">task_idx</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">initial</span> <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">final</span> <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                    <span class="n">improvement</span> <span class="o">=</span> <span class="p">((</span><span class="n">initial</span> <span class="o">-</span> <span class="n">final</span><span class="p">)</span> <span class="o">/</span> <span class="n">initial</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span> <span class="k">if</span> <span class="n">initial</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
-
-                    <span class="n">initial_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">initial</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;e-&#39;</span><span class="p">,</span> <span class="s1">&#39;e$-$&#39;</span><span class="p">)</span>
-                    <span class="n">final_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">final</span><span class="si">:</span><span class="s2">.4e</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;e-&#39;</span><span class="p">,</span> <span class="s1">&#39;e$-$&#39;</span><span class="p">)</span>
-                    <span class="n">imp_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">improvement</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="se">\\</span><span class="s2">%&quot;</span>
-
-                    <span class="n">latex_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">algo</span><span class="si">}</span><span class="s2"> &amp; </span><span class="si">{</span><span class="n">prob_name</span><span class="si">}</span><span class="s2"> &amp; </span><span class="si">{</span><span class="n">initial_str</span><span class="si">}</span><span class="s2"> &amp; </span><span class="si">{</span><span class="n">final_str</span><span class="si">}</span><span class="s2"> &amp; </span><span class="si">{</span><span class="n">imp_str</span><span class="si">}</span><span class="s2"> </span><span class="se">\\\\\n</span><span class="s2">&quot;</span>
-
-            <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">hline</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">end</span><span class="si">{tabular}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">latex_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">end</span><span class="si">{table}</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-        <span class="n">output_file</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">/</span> <span class="s1">&#39;convergence_summary_table.tex&#39;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">latex_str</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence summary table saved to: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">latex_str</span></div>
 </div>
 
 
@@ -834,12 +706,12 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Main class for analyzing single-run test data.</span>
 
-<span class="sd">    This class handles pickle files stored directly in the data folder</span>
-<span class="sd">    with &#39;_test.pkl&#39; suffix (e.g., ga_test.pkl, de_test.pkl).</span>
+<span class="sd">    This class handles pickle files stored directly in the data folder,</span>
+<span class="sd">    providing a lightweight analysis pipeline without statistical analysis.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        data_path: Path</span>
-<span class="sd">            Path to the data directory containing test pickle files.</span>
+<span class="sd">            Path to the data directory containing pickle files.</span>
 <span class="sd">        settings: Optional[Dict[str, Any]]</span>
 <span class="sd">            Problem settings including reference definitions.</span>
 <span class="sd">        algorithm_order: Optional[List[str]]</span>
@@ -850,25 +722,25 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
-            <span class="n">data_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;./TestData&#39;</span><span class="p">,</span>
+            <span class="n">data_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;./Data&#39;</span><span class="p">,</span>
             <span class="n">settings</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">algorithm_order</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">save_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;./TestResults&#39;</span><span class="p">,</span>
+            <span class="n">save_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;./Results&#39;</span><span class="p">,</span>
             <span class="n">figure_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
             <span class="n">log_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
             <span class="n">show_pf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">show_nd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">best_so_far</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">clear_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-            <span class="n">file_suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;_test.pkl&#39;</span>
+            <span class="n">file_suffix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;.pkl&#39;</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize TestDataAnalyzer.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            data_path: Union[str, Path]</span>
-<span class="sd">                Path to data directory containing test pickle files.</span>
-<span class="sd">                Default: &#39;./TestData&#39;</span>
+<span class="sd">                Path to data directory containing pickle files.</span>
+<span class="sd">                Default: &#39;./Data&#39;</span>
 
 <span class="sd">            settings: Optional[Dict[str, Any]]</span>
 <span class="sd">                Problem settings dictionary for multi-objective metrics.</span>
@@ -880,7 +752,7 @@
 
 <span class="sd">            save_path: Union[str, Path]</span>
 <span class="sd">                Directory path to save all output files.</span>
-<span class="sd">                Default: &#39;./TestResults&#39;</span>
+<span class="sd">                Default: &#39;./Results&#39;</span>
 
 <span class="sd">            figure_format: str</span>
 <span class="sd">                Output figure format: &#39;pdf&#39;, &#39;png&#39;, &#39;svg&#39;, etc.</span>
@@ -907,8 +779,8 @@
 <span class="sd">                Default: True</span>
 
 <span class="sd">            file_suffix: str</span>
-<span class="sd">                Suffix pattern for test files.</span>
-<span class="sd">                Default: &#39;_test.pkl&#39;</span>
+<span class="sd">                Suffix pattern for pickle files.</span>
+<span class="sd">                Default: &#39;.pkl&#39;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
@@ -935,7 +807,7 @@
 <a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.test_data_analysis.TestDataAnalyzer.scan_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">scan_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestScanResult</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Scan the data directory to detect test pickle files.</span>
+<span class="sd">        Scan the data directory to detect pickle files.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            TestScanResult</span>
@@ -947,21 +819,20 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            FileNotFoundError: If data_path does not exist.</span>
-<span class="sd">            ValueError: If no test pickle files found.</span>
+<span class="sd">            ValueError: If no pickle files found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data path does not exist: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Find all test pickle files</span>
+        <span class="c1"># Find all pickle files with specified suffix</span>
         <span class="n">file_mapping</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">pkl_file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;*</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>
-            <span class="c1"># Extract algorithm name from filename</span>
-            <span class="c1"># e.g., ga_test.pkl -&gt; ga, nsga2_test.pkl -&gt; nsga2</span>
-            <span class="n">algo_name</span> <span class="o">=</span> <span class="n">pkl_file</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="c1"># Extract algorithm name from filename (remove suffix)</span>
+            <span class="n">algo_name</span> <span class="o">=</span> <span class="n">pkl_file</span><span class="o">.</span><span class="n">stem</span>
             <span class="n">file_mapping</span><span class="p">[</span><span class="n">algo_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pkl_file</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">file_mapping</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No test pickle files found in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="si">}</span><span class="s2"> with suffix &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No pickle files found in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span><span class="si">}</span><span class="s2"> with suffix &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_suffix</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
         <span class="n">algorithms</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">file_mapping</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
@@ -978,7 +849,6 @@
 
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">algorithms</span><span class="p">)</span><span class="si">}</span><span class="s2"> algorithms: </span><span class="si">{</span><span class="n">algorithms</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">n_tasks</span><span class="si">}</span><span class="s2"> tasks/problems: </span><span class="si">{</span><span class="n">problems</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Files: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">file_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_scan_result</span> <span class="o">=</span> <span class="n">TestScanResult</span><span class="p">(</span>
             <span class="n">algorithms</span><span class="o">=</span><span class="n">algorithms</span><span class="p">,</span>
@@ -1071,6 +941,7 @@
 <span class="sd">                Tuple of (metric_values, metric_values_best_so_far).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">all_objs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;all_objs&#39;</span><span class="p">]</span>
+        <span class="n">all_cons</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;all_cons&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">n_tasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_objs</span><span class="p">)</span>
 
         <span class="n">metric_values</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1085,6 +956,7 @@
 
             <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_gens</span><span class="p">):</span>
                 <span class="n">objs_gen</span> <span class="o">=</span> <span class="n">all_objs</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">gen</span><span class="p">]</span>
+                <span class="n">cons_gen</span> <span class="o">=</span> <span class="n">all_cons</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">gen</span><span class="p">]</span> <span class="k">if</span> <span class="n">all_cons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
                 <span class="n">M</span> <span class="o">=</span> <span class="n">objs_gen</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
                 <span class="k">if</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -1108,11 +980,47 @@
                             <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
                         <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;HV&#39;</span><span class="p">:</span>
                             <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">HV</span><span class="p">()</span>
+                            <span class="c1"># If reference is 1D or single row, treat as ref point; otherwise as PF</span>
+                            <span class="k">if</span> <span class="n">reference</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">reference</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">ref_point</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                                <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="n">ref_point</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">,</span> <span class="n">pf</span><span class="o">=</span><span class="n">reference</span><span class="p">)</span>
+                            <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
+                        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;IGDp&#39;</span><span class="p">:</span>
+                            <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">IGDp</span><span class="p">()</span>
                             <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
                             <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
+                        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;GD&#39;</span><span class="p">:</span>
+                            <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">GD</span><span class="p">()</span>
+                            <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+                            <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
+                        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;DeltaP&#39;</span><span class="p">:</span>
+                            <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">DeltaP</span><span class="p">()</span>
+                            <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+                            <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
+                        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;Spacing&#39;</span><span class="p">:</span>
+                            <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">Spacing</span><span class="p">()</span>
+                            <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">)</span>
+                            <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
+                        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;Spread&#39;</span><span class="p">:</span>
+                            <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">Spread</span><span class="p">()</span>
+                            <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+                            <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
+                        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;FR&#39;</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">cons_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;FR metric requires constraint data, but all_cons is not available&#39;</span><span class="p">)</span>
+                            <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">FR</span><span class="p">()</span>
+                            <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">cons_gen</span><span class="p">)</span>
+                            <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
+                        <span class="k">elif</span> <span class="n">metric_name</span> <span class="o">==</span> <span class="s1">&#39;CV&#39;</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">cons_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;CV metric requires constraint data, but all_cons is not available&#39;</span><span class="p">)</span>
+                            <span class="n">metric_instance</span> <span class="o">=</span> <span class="n">CV</span><span class="p">()</span>
+                            <span class="n">metric_value</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">cons_gen</span><span class="p">)</span>
+                            <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_instance</span><span class="o">.</span><span class="n">sign</span>
                         <span class="k">else</span><span class="p">:</span>
-                            <span class="n">metric_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">objs_gen</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-                            <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unsupported metric: </span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
                 <span class="n">task_values</span><span class="p">[</span><span class="n">gen</span><span class="p">]</span> <span class="o">=</span> <span class="n">metric_value</span>
 
@@ -1197,18 +1105,10 @@
 
         <span class="n">table_gen</span> <span class="o">=</span> <span class="n">TestTableGenerator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table_save_path</span><span class="p">)</span>
 
-        <span class="c1"># Generate main results table</span>
+        <span class="c1"># Generate results table</span>
         <span class="n">main_table</span> <span class="o">=</span> <span class="n">table_gen</span><span class="o">.</span><span class="n">generate_latex_table</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">best_values</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">runtime</span><span class="p">,</span>
-            <span class="n">algo_order</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">problems</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">metric_name</span>
-        <span class="p">)</span>
-
-        <span class="c1"># Generate convergence summary table</span>
-        <span class="n">summary_table</span> <span class="o">=</span> <span class="n">table_gen</span><span class="o">.</span><span class="n">generate_summary_table</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">metric_values</span><span class="p">,</span>
             <span class="n">algo_order</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">problems</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">metric_name</span>
@@ -1228,46 +1128,62 @@
 <span class="sd">                Complete metric results from the analysis.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;🚀 Starting Test Data Analysis Pipeline! 🚀&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting Test Data Analysis Pipeline&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
 
         <span class="c1"># Step 0: Clear results folder if requested</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clear_results</span><span class="p">:</span>
             <span class="n">results_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_config</span><span class="o">.</span><span class="n">save_path</span>
             <span class="k">if</span> <span class="n">results_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">♻️  Clearing existing results folder: </span><span class="si">{</span><span class="n">results_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">results_path</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Clearing existing results folder: </span><span class="si">{</span><span class="n">results_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="c1"># Retry mechanism for Windows file locking issues</span>
+                <span class="n">max_retries</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">results_path</span><span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="k">except</span> <span class="ne">PermissionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">attempt</span> <span class="o">&lt;</span> <span class="n">max_retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  Warning: Folder in use, retrying in 1s... (</span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+                            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  Error: Cannot delete </span><span class="si">{</span><span class="n">results_path</span><span class="si">}</span><span class="s1">. Please close any programs using this folder.&#39;</span><span class="p">)</span>
+                            <span class="k">raise</span> <span class="n">e</span>
             <span class="n">results_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Step 1: Scan data</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">🔍 Scanning test data directory...&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[1/6] Scanning test data directory...&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scan_data</span><span class="p">()</span>
 
         <span class="c1"># Step 2: Calculate metrics</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">📊 Calculating metric values...&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[2/6] Calculating metric values...&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">()</span>
 
         <span class="c1"># Step 3: Generate LaTeX tables</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">📋 Generating LaTeX tables...&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[3/6] Generating LaTeX tables...&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">generate_latex_tables</span><span class="p">()</span>
 
         <span class="c1"># Step 4: Plot convergence curves</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">📈 Plotting convergence curves...&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[4/6] Plotting convergence curves...&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">generate_convergence_plots</span><span class="p">()</span>
 
         <span class="c1"># Step 5: Plot runtime</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">⏱️  Plotting runtime comparison...&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[5/6] Plotting runtime comparison...&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">generate_runtime_plots</span><span class="p">()</span>
 
         <span class="c1"># Step 6: Plot ND solutions (if multi-objective)</span>
-        <span class="n">first_algo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_result</span><span class="o">.</span><span class="n">algorithms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">algo_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm_order</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm_order</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_result</span><span class="o">.</span><span class="n">algorithms</span>
+        <span class="n">first_algo</span> <span class="o">=</span> <span class="n">algo_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">first_objs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">objective_values</span><span class="p">[</span><span class="n">first_algo</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">first_objs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">🎯 Plotting non-dominated solutions...&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[6/6] Plotting non-dominated solutions...&#39;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">generate_nd_solution_plots</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">[6/6] Skipping ND plots (single-objective)&#39;</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;🎉 Test Data Analysis Completed! 🎉&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Test Data Analysis Completed&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span></div>
@@ -1286,16 +1202,16 @@
 
 <span class="sd">    Example 1: Quick Start</span>
 <span class="sd">    ----------------------</span>
-<span class="sd">    Analyze test files in ./TestData folder:</span>
+<span class="sd">    Analyze pickle files in ./Data folder:</span>
 
-<span class="sd">        from test_data_analyzer import TestDataAnalyzer</span>
+<span class="sd">        from ddmtolab.Methods.test_data_analysis import TestDataAnalyzer</span>
 
-<span class="sd">        analyzer = TestDataAnalyzer(data_path=&#39;./TestData&#39;)</span>
+<span class="sd">        analyzer = TestDataAnalyzer(data_path=&#39;./Data&#39;)</span>
 <span class="sd">        results = analyzer.run()</span>
 
 
-<span class="sd">    Example 2: With Custom Settings</span>
-<span class="sd">    -------------------------------</span>
+<span class="sd">    Example 2: With Custom Settings (Multi-Objective)</span>
+<span class="sd">    -------------------------------------------------</span>
 <span class="sd">    Multi-objective analysis with IGD metric:</span>
 
 <span class="sd">        SETTINGS = {</span>
@@ -1307,9 +1223,9 @@
 <span class="sd">        }</span>
 
 <span class="sd">        analyzer = TestDataAnalyzer(</span>
-<span class="sd">            data_path=&#39;./TestData&#39;,</span>
+<span class="sd">            data_path=&#39;./Data&#39;,</span>
 <span class="sd">            settings=SETTINGS,</span>
-<span class="sd">            save_path=&#39;./TestResults&#39;,</span>
+<span class="sd">            save_path=&#39;./Results&#39;,</span>
 <span class="sd">            figure_format=&#39;png&#39;</span>
 <span class="sd">        )</span>
 <span class="sd">        results = analyzer.run()</span>
@@ -1318,8 +1234,8 @@
 <span class="sd">    Example 3: Custom Algorithm Order</span>
 <span class="sd">    ---------------------------------</span>
 <span class="sd">        analyzer = TestDataAnalyzer(</span>
-<span class="sd">            data_path=&#39;./TestData&#39;,</span>
-<span class="sd">            algorithm_order=[&#39;de&#39;, &#39;ga&#39;, &#39;ga1&#39;],  # Custom display order</span>
+<span class="sd">            data_path=&#39;./Data&#39;,</span>
+<span class="sd">            algorithm_order=[&#39;DE&#39;, &#39;GA&#39;, &#39;PSO&#39;],</span>
 <span class="sd">            figure_format=&#39;pdf&#39;</span>
 <span class="sd">        )</span>
 <span class="sd">        results = analyzer.run()</span>
@@ -1327,7 +1243,7 @@
 
 <span class="sd">    Example 4: Step-by-Step Analysis</span>
 <span class="sd">    --------------------------------</span>
-<span class="sd">        analyzer = TestDataAnalyzer(data_path=&#39;./TestData&#39;)</span>
+<span class="sd">        analyzer = TestDataAnalyzer(data_path=&#39;./Data&#39;)</span>
 
 <span class="sd">        # Scan files</span>
 <span class="sd">        scan_result = analyzer.scan_data()</span>
@@ -1341,12 +1257,25 @@
 <span class="sd">        analyzer.generate_convergence_plots()</span>
 
 
+<span class="sd">    Example 5: Plot Customization</span>
+<span class="sd">    -----------------------------</span>
+<span class="sd">    Control figure format, log scale, and Pareto front display:</span>
+
+<span class="sd">        analyzer = TestDataAnalyzer(</span>
+<span class="sd">            data_path=&#39;./Data&#39;,</span>
+<span class="sd">            figure_format=&#39;pdf&#39;,    # Output format: &#39;pdf&#39;, &#39;png&#39;, &#39;svg&#39;</span>
+<span class="sd">            log_scale=True,         # Use log scale for y-axis</span>
+<span class="sd">            show_pf=True,           # Show true Pareto front</span>
+<span class="sd">            show_nd=True            # Filter non-dominated solutions</span>
+<span class="sd">        )</span>
+
+
 <span class="sd">    Expected File Structure</span>
 <span class="sd">    -----------------------</span>
-<span class="sd">        ./TestData/</span>
-<span class="sd">        ├── ga_test.pkl</span>
-<span class="sd">        ├── ga1_test.pkl</span>
-<span class="sd">        ├── de_test.pkl</span>
+<span class="sd">        ./Data/</span>
+<span class="sd">        ├── GA.pkl</span>
+<span class="sd">        ├── DE.pkl</span>
+<span class="sd">        ├── PSO.pkl</span>
 <span class="sd">        └── ...</span>
 
 <span class="sd">    Each .pkl file should contain:</span>
@@ -1360,8 +1289,8 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
 
     <span class="n">analyzer</span> <span class="o">=</span> <span class="n">TestDataAnalyzer</span><span class="p">(</span>
-        <span class="n">data_path</span><span class="o">=</span><span class="s1">&#39;./TestData&#39;</span><span class="p">,</span>
-        <span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;./TestResults&#39;</span><span class="p">,</span>
+        <span class="n">data_path</span><span class="o">=</span><span class="s1">&#39;./Data&#39;</span><span class="p">,</span>
+        <span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;./Results&#39;</span><span class="p">,</span>
         <span class="n">figure_format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
         <span class="n">clear_results</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">)</span>
@@ -1371,7 +1300,7 @@
         <span class="n">results</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Demo skipped: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Create test files in ./TestData/ with &#39;_test.pkl&#39; suffix to run analysis.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Create pickle files in ./Data/ to run analysis.&quot;</span><span class="p">)</span>
 </pre></div>
 
            </div>

@@ -450,6 +450,80 @@
 
 
 
+<div class="viewcode-block" id="build_staircase_history">
+<a class="viewcode-back" href="../../../../api.html#ddmtolab.Methods.Algo_Methods.algo_utils.build_staircase_history">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_staircase_history</span><span class="p">(</span>
+        <span class="n">db_decs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">db_objs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">db_cons</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]],</span>
+    <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert flat database lists into staircase history structure.</span>
+
+<span class="sd">    For each task, creates an incrementally growing sequence of generations</span>
+<span class="sd">    where generation g contains min(k * (g+1), total) solutions from the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db_decs : List[np.ndarray]</span>
+<span class="sd">        Database of all decision variables per task. db_decs[i] has shape (n_i, dim_i).</span>
+<span class="sd">    db_objs : List[np.ndarray]</span>
+<span class="sd">        Database of all objective values per task. db_objs[i] has shape (n_i, n_objs).</span>
+<span class="sd">    k : int, optional</span>
+<span class="sd">        Step size controlling the staircase gradient (default: 1).</span>
+<span class="sd">        Generation g contains min(k * (g+1), total) solutions.</span>
+<span class="sd">    db_cons : List[np.ndarray], optional</span>
+<span class="sd">        Database of all constraint values per task (default: None).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    all_decs : List[List[np.ndarray]]</span>
+<span class="sd">        Staircased decision variable history.</span>
+<span class="sd">    all_objs : List[List[np.ndarray]]</span>
+<span class="sd">        Staircased objective value history.</span>
+<span class="sd">    all_cons : List[List[np.ndarray]], optional</span>
+<span class="sd">        Staircased constraint history (only returned if db_cons is not None).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">db_decs</span><span class="p">)</span>
+    <span class="n">all_decs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_objs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_cons</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">db_cons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">db_decs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">task_decs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">task_objs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">task_cons</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">db_cons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">size</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="k">while</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">task_decs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">db_decs</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="n">task_objs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">db_objs</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">db_cons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">task_cons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">db_cons</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+            <span class="n">size</span> <span class="o">+=</span> <span class="n">k</span>
+
+        <span class="c1"># Final generation with all points</span>
+        <span class="n">task_decs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">db_decs</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">task_objs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">db_objs</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">db_cons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">task_cons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">db_cons</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+        <span class="n">all_decs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_decs</span><span class="p">)</span>
+        <span class="n">all_objs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_objs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">db_cons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">all_cons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_cons</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">db_cons</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">all_decs</span><span class="p">,</span> <span class="n">all_objs</span><span class="p">,</span> <span class="n">all_cons</span>
+    <span class="k">return</span> <span class="n">all_decs</span><span class="p">,</span> <span class="n">all_objs</span></div>
+
+
+
 <div class="viewcode-block" id="reorganize_initial_data">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Methods.Algo_Methods.algo_utils.reorganize_initial_data">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">reorganize_initial_data</span><span class="p">(</span>
