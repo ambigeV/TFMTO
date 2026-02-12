@@ -54,7 +54,7 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
-Multi-Task Single-Objective (MTSO)
+Multitask Single-Objective (MTSO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.MFEA.MFEA
@@ -78,7 +78,7 @@ Multi-Task Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
-Single-Task Multi-Objective (STMO)
+Single-Task Multiobjective (STMO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: ddmtolab.Algorithms.STMO.NSGA_II.NSGA_II
@@ -109,7 +109,7 @@ Single-Task Multi-Objective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
-Multi-Task Multi-Objective (MTMO)
+Multitask Multiobjective (MTMO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: ddmtolab.Algorithms.MTMO.MO_MFEA.MO_MFEA
@@ -132,7 +132,7 @@ Problems
 MTOP Class
 ~~~~~~~~~~
 
-The **MTOP (Multi-Task Optimization Problem)** class is the core component for defining optimization problems.
+The **MTOP (Multitask Optimization Problem)** class is the core component for defining optimization problems.
 
 .. autoclass:: ddmtolab.Methods.mtop.MTOP
    :members: add_task, add_tasks, evaluate_task, evaluate_tasks, get_task_info, set_unified_eval_mode

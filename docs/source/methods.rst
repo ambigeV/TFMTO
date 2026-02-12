@@ -261,7 +261,7 @@ Initialize the ``DataAnalyzer`` with configuration options:
 Metric Configuration
 ~~~~~~~~~~~~~~~~~~~~
 
-For problems requiring complex metrics (e.g., multi-objective optimization), provide a ``settings`` configuration dictionary:
+For problems requiring complex metrics (e.g., multiobjective optimization), provide a ``settings`` configuration dictionary:
 
 .. code-block:: python
 
@@ -571,7 +571,7 @@ The reference loading is automatically handled by ``DataAnalyzer`` when settings
 
 2. **Set appropriate n_ref for metrics and visualization:**
 
-   When calculating multi-objective metrics (e.g., IGD), it is recommended to set ``n_ref`` to 1000 (preferably not exceeding 2000). Using too many reference points can result in very large PDF files when visualizing Pareto fronts with the true PF overlay.
+   When calculating multiobjective metrics (e.g., IGD), it is recommended to set ``n_ref`` to 1000 (preferably not exceeding 2000). Using too many reference points can result in very large PDF files when visualizing Pareto fronts with the true PF overlay.
 
    .. code-block:: python
 
@@ -709,7 +709,7 @@ Problem Definition (MTOP)
 
     from Methods.mtop import MTOP
 
-The ``MTOP`` (Multi-Task Optimization Problem) class provides a unified interface for defining single-task and multi-task optimization problems with support for objectives, constraints, and variable bounds.
+The ``MTOP`` (Multitask Optimization Problem) class provides a unified interface for defining single-task and multitask optimization problems with support for objectives, constraints, and variable bounds.
 
 Module Features
 ~~~~~~~~~~~~~~~
@@ -779,7 +779,7 @@ Adding Tasks
 
     idx = mtop.add_task(sphere, dim=3, constraint_func=constraint)
 
-**Multi-Objective Task:**
+**Multiobjective Task:**
 
 .. code-block:: python
 
@@ -838,7 +838,7 @@ Animation Generator
 
     from Methods.animation_generator import AnimationGenerator, create_optimization_animation
 
-The animation generator module provides comprehensive visualization tools for optimization processes, supporting both single-objective and multi-objective optimization with multiple comparison modes.
+The animation generator module provides comprehensive visualization tools for optimization processes, supporting both single-objective and multiobjective optimization with multiple comparison modes.
 
 Module Features
 ~~~~~~~~~~~~~~~
@@ -861,7 +861,7 @@ Visualization Components
 - **Decision Space (Left)**: Parallel coordinate plot showing decision variable evolution
 - **Convergence Curve (Right)**: Best objective value vs. NFEs (Number of Function Evaluations)
 
-**For Multi-Objective Optimization:**
+**For Multiobjective Optimization:**
 
 - **Decision Space (Left)**: Parallel coordinate plot showing decision variable evolution
 - **Objective Space (Right)**: Pareto front evolution
@@ -1024,7 +1024,7 @@ Instantiate the ``AnimationGenerator`` class for batch processing:
 - ``merge``: Comparison mode (0-3, default: 0)
 - ``title``: Custom title for the animation (optional)
 - ``algorithm_order``: List of algorithm names specifying display order (merge mode only)
-- ``max_nfes``: Maximum NFEs, scalar or list for multi-task problems (default: 100)
+- ``max_nfes``: Maximum NFEs, scalar or list for multitask problems (default: 100)
 
 NFEs Configuration
 ~~~~~~~~~~~~~~~~~~
@@ -1045,7 +1045,7 @@ The ``max_nfes`` parameter controls the x-axis scale for convergence curves in s
 
 .. code-block:: python
 
-    # Multi-task problem with different NFEs per task
+    # Multitask problem with different NFEs per task
     create_optimization_animation(
         pkl_path='multi_task_results.pkl',
         max_nfes=[5000, 10000, 15000]  # Task 1: 5000, Task 2: 10000, Task 3: 15000
@@ -1053,14 +1053,14 @@ The ``max_nfes`` parameter controls the x-axis scale for convergence curves in s
 
 **Automatic Compatibility:**
 
-The system automatically handles single-task and multi-task scenarios:
+The system automatically handles single-task and multitask scenarios:
 
 .. code-block:: python
 
     # Single-task optimization
     create_optimization_animation('single_task.pkl', max_nfes=1000)
 
-    # Multi-task optimization
+    # Multitask optimization
     create_optimization_animation('multi_task.pkl', max_nfes=[1000, 2000])
 
 Algorithm Order
@@ -1227,18 +1227,18 @@ Complete Example
         format='mp4'
     )
 
-**Multi-Objective Multi-Task Optimization:**
+**Multiobjective Multitask Optimization:**
 
 .. code-block:: python
 
-    # Multi-task with different NFEs
+    # Multitask with different NFEs
     create_optimization_animation(
         pkl_path=['./Data/NSGAII/NSGAII_DTLZ_1.pkl',
                   './Data/MOEAD/MOEAD_DTLZ_1.pkl',
                   './Data/MyAlgo/MyAlgo_DTLZ_1.pkl'],
         output_path='./Animations/MO_comparison.gif',
         merge=3,
-        title='Multi-Objective Comparison',
+        title='Multiobjective Comparison',
         algorithm_order=['NSGA-II', 'MOEA/D', 'MyAlgo'],
         max_nfes=[5000, 8000, 10000],  # Different NFEs for 3 tasks
         fps=12,
@@ -1502,7 +1502,7 @@ All metric classes follow this template:
 Usage Examples
 ~~~~~~~~~~~~~~
 
-**Multi-Objective Metrics (IGD, GD, HV, etc.):**
+**Multiobjective Metrics (IGD, GD, HV, etc.):**
 
 .. code-block:: python
 
@@ -1585,7 +1585,7 @@ The algorithm utilities module provides a complete toolkit for building optimiza
    * - Function
      - Description
    * - ``initialization``
-     - Initialize multi-task decision variable matrices with Random or LHS sampling
+     - Initialize multitask decision variable matrices with Random or LHS sampling
    * - ``evaluation``
      - Batch evaluate multiple tasks with selective objective/constraint evaluation
    * - ``evaluation_single``
@@ -1625,7 +1625,7 @@ The algorithm utilities module provides a complete toolkit for building optimiza
    * - ``select_by_index``
      - Synchronously select rows from multiple arrays by index
    * - ``par_list``
-     - Convert single parameter to multi-task parameter list
+     - Convert single parameter to multitask parameter list
    * - ``get_algorithm_information``
      - Extract and print algorithm metadata
 
@@ -1636,7 +1636,7 @@ Bayesian Optimization Utilities
 
     from Methods.Algo_Methods.bo_utils import *
 
-The BO utilities module provides core Bayesian optimization functionalities based on BoTorch and GPyTorch, including single-task and multi-task Gaussian process modeling.
+The BO utilities module provides core Bayesian optimization functionalities based on BoTorch and GPyTorch, including single-task and multitask Gaussian process modeling.
 
 .. list-table:: Key Functions in bo_utils
    :header-rows: 1
@@ -1651,13 +1651,13 @@ The BO utilities module provides core Bayesian optimization functionalities base
    * - ``bo_next_point``
      - Get next sampling point via single-task BO (LogEI acquisition)
    * - ``mtgp_build``
-     - Build multi-task Gaussian process model
+     - Build multitask Gaussian process model
    * - ``mtgp_predict``
-     - Predict for specified task using multi-task GP
+     - Predict for specified task using multitask GP
    * - ``mtgp_task_corr``
-     - Extract task correlation matrix from multi-task GP
+     - Extract task correlation matrix from multitask GP
    * - ``mtbo_next_point``
-     - Get next sampling point via multi-task BO
+     - Get next sampling point via multitask BO
 
 Similarity Evaluation
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1684,7 +1684,7 @@ Uniform Point Generation
 
     from Methods.Algo_Methods.uniform_point import *
 
-The uniform point generation module provides various methods for generating uniformly distributed points for multi-objective optimization and decision space sampling.
+The uniform point generation module provides various methods for generating uniformly distributed points for multiobjective optimization and decision space sampling.
 
 .. list-table:: Key Functions in uniform_point
    :header-rows: 1

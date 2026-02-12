@@ -577,7 +577,7 @@ Data/
 <pre class="code python literal-block">
 <span class="keyword namespace">from</span><span class="whitespace"> </span><span class="name namespace">Methods.data_analysis</span><span class="whitespace"> </span><span class="keyword namespace">import</span> <span class="name">DataAnalyzer</span>
 </pre>
-<p>The data analysis module provides comprehensive analysis and visualization for multi-task optimization experiment results, including metric calculation, statistical comparison tables, convergence curves, runtime analysis, and Pareto front visualization.</p>
+<p>The data analysis module provides comprehensive analysis and visualization for multitask optimization experiment results, including metric calculation, statistical comparison tables, convergence curves, runtime analysis, and Pareto front visualization.</p>
 <div class="section" id="module-features-1">
 <h2>Module Features</h2>
 <p>The <tt class="docutils literal">DataAnalyzer</tt> class offers:</p>
@@ -617,7 +617,7 @@ Data/
 </div>
 <div class="section" id="metric-configuration">
 <h2>Metric Configuration</h2>
-<p>For problems requiring complex metrics (e.g., multi-objective optimization), provide a <tt class="docutils literal">settings</tt> configuration dictionary:</p>
+<p>For problems requiring complex metrics (e.g., multiobjective optimization), provide a <tt class="docutils literal">settings</tt> configuration dictionary:</p>
 <pre class="code python literal-block">
 <span class="name">SETTINGS</span> <span class="operator">=</span> <span class="punctuation">{</span><span class="whitespace">
 </span>    <span class="literal string single">'metric'</span><span class="punctuation">:</span> <span class="literal string single">'IGD'</span><span class="punctuation">,</span>                    <span class="comment single"># Performance metric: 'IGD' or 'HV'</span><span class="whitespace">
@@ -872,7 +872,7 @@ Data/
 </div>
 <div class="section" id="usage-example-igd">
 <h2>Usage Example: IGD</h2>
-<p>IGD (Inverted Generational Distance) is a common metric for evaluating solution set quality in multi-objective optimization:</p>
+<p>IGD (Inverted Generational Distance) is a common metric for evaluating solution set quality in multiobjective optimization:</p>
 <pre class="code python literal-block">
 <span class="keyword namespace">from</span><span class="whitespace"> </span><span class="name namespace">Methods.metrics</span><span class="whitespace"> </span><span class="keyword namespace">import</span> <span class="name">IGD</span><span class="whitespace">
 
@@ -910,7 +910,7 @@ Data/
 </thead>
 <tbody valign="top">
 <tr><td><tt class="docutils literal">initialization</tt></td>
-<td>Initialize multi-task decision variable matrices with Random or LHS sampling</td>
+<td>Initialize multitask decision variable matrices with Random or LHS sampling</td>
 </tr>
 <tr><td><tt class="docutils literal">evaluation</tt></td>
 <td>Batch evaluate multiple tasks with selective objective/constraint evaluation</td>
@@ -970,7 +970,7 @@ Data/
 <td>Synchronously select rows from multiple arrays by index</td>
 </tr>
 <tr><td><tt class="docutils literal">par_list</tt></td>
-<td>Convert single parameter to multi-task parameter list</td>
+<td>Convert single parameter to multitask parameter list</td>
 </tr>
 <tr><td><tt class="docutils literal">get_algorithm_information</tt></td>
 <td>Extract and print algorithm metadata</td>
@@ -983,7 +983,7 @@ Data/
 <pre class="code python literal-block">
 <span class="keyword namespace">from</span><span class="whitespace"> </span><span class="name namespace">Methods.Algo_Methods.bo_utils</span><span class="whitespace"> </span><span class="keyword namespace">import</span> <span class="operator">*</span>
 </pre>
-<p>The BO utilities module provides core Bayesian optimization functionalities based on BoTorch and GPyTorch, including single-task and multi-task Gaussian process modeling.</p>
+<p>The BO utilities module provides core Bayesian optimization functionalities based on BoTorch and GPyTorch, including single-task and multitask Gaussian process modeling.</p>
 <table border="1" class="docutils">
 <caption>Key Functions in bo_utils</caption>
 <colgroup>
@@ -1006,16 +1006,16 @@ Data/
 <td>Get next sampling point via single-task BO (LogEI acquisition)</td>
 </tr>
 <tr><td><tt class="docutils literal">mtgp_build</tt></td>
-<td>Build multi-task Gaussian process model</td>
+<td>Build multitask Gaussian process model</td>
 </tr>
 <tr><td><tt class="docutils literal">mtgp_predict</tt></td>
-<td>Predict for specified task using multi-task GP</td>
+<td>Predict for specified task using multitask GP</td>
 </tr>
 <tr><td><tt class="docutils literal">mtgp_task_corr</tt></td>
-<td>Extract task correlation matrix from multi-task GP</td>
+<td>Extract task correlation matrix from multitask GP</td>
 </tr>
 <tr><td><tt class="docutils literal">mtbo_next_point</tt></td>
-<td>Get next sampling point via multi-task BO</td>
+<td>Get next sampling point via multitask BO</td>
 </tr>
 </tbody>
 </table>
@@ -1049,7 +1049,7 @@ Data/
 <pre class="code python literal-block">
 <span class="keyword namespace">from</span><span class="whitespace"> </span><span class="name namespace">Methods.Algo_Methods.uniform_point</span><span class="whitespace"> </span><span class="keyword namespace">import</span> <span class="operator">*</span>
 </pre>
-<p>The uniform point generation module provides various methods for generating uniformly distributed points for multi-objective optimization and decision space sampling.</p>
+<p>The uniform point generation module provides various methods for generating uniformly distributed points for multiobjective optimization and decision space sampling.</p>
 <table border="1" class="docutils">
 <caption>Key Functions in uniform_point</caption>
 <colgroup>
