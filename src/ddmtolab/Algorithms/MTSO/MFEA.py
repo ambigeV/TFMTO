@@ -103,7 +103,7 @@ class MFEA:
         all_decs, all_objs, all_cons = init_history(decs, objs, cons)
 
         # Transform populations to unified search space for knowledge transfer
-        pop_decs, pop_cons = space_transfer(problem=problem, decs=decs, cons=cons, type='uni')
+        pop_decs, pop_cons = space_transfer(problem=problem, decs=decs, cons=cons, type='uni', padding='mid')
         pop_objs = objs
 
         # Skill factor indicates which task each individual belongs to

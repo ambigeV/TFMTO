@@ -11,7 +11,7 @@ class MTMO_DTLZ:
     within a multi-task optimization framework.
     """
 
-    def P1(self, M=3, dim=10) -> MTOP:
+    def P1(self, M=3, D=10) -> MTOP:
         """
         Generates Problem 1: **T1 (DTLZ2) vs T2 (DTLZ3)**.
 
@@ -25,8 +25,8 @@ class MTMO_DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
-            Number of decision variables (default is 10). Must satisfy dim >= M.
+        D : int, optional
+            Number of decision variables (default is 10). Must satisfy D >= M.
 
         Returns
         -------
@@ -53,7 +53,7 @@ class MTMO_DTLZ:
             """Task 2: DTLZ3 (3-objective, 10D)"""
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
-            k = dim - M + 1
+            k = D - M + 1
             xM = x[:, M - 1:]
             g = 100 * (k + np.sum((xM - 0.5) ** 2 - np.cos(20 * np.pi * (xM - 0.5)), axis=1))
             obj = np.zeros((n_samples, M))
@@ -65,12 +65,12 @@ class MTMO_DTLZ:
                     obj[:, i] *= np.sin(x[:, M - i - 1] * np.pi / 2)
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(T1, dim=dim, lower_bound=lb, upper_bound=ub)
-        problem.add_task(T2, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(T1, D=D, lower_bound=lb, upper_bound=ub)
+        problem.add_task(T2, D=D, lower_bound=lb, upper_bound=ub)
         return problem
 
 
@@ -95,7 +95,7 @@ def P1_T1_PF(N, M=3) -> np.ndarray:
         Array of shape (N, M) representing the PF points.
     """
     W, _ = uniform_point(N, M)
-    norms = np.sqrt(np.sum(W ** 2, axis=1, keepdims=True))
+    norms = np.sqrt(np.sum(W ** 2, axis=1, keepDs=True))
     return W / norms
 
 

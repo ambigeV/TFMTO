@@ -198,6 +198,9 @@ class PlotConfig:
     merge_columns : int
         Number of columns in merged plot layout.
         Default: 3
+    show_std_band : bool
+        Whether to show standard deviation band on convergence curves.
+        Default: False
     save_path : Path
         Directory path to save output figures.
     colors : List[str]
@@ -212,6 +215,7 @@ class PlotConfig:
     show_nd: bool = True
     merge_plots: bool = False
     merge_columns: int = 3
+    show_std_band: bool = False
     save_path: Path = Path('./Results')
     colors: List[str] = field(default_factory=lambda: DEFAULT_COLORS.copy())
     markers: List[str] = field(default_factory=lambda: DEFAULT_MARKERS.copy())
@@ -1423,11 +1427,16 @@ class PlotGenerator:
             markersize, linewidth = 6, 1.6
 
         for idx, algo in enumerate(algorithm_order):
-            selected_run = StatisticsCalculator.select_representative_run(
-                best_values, algo, prob, task_idx, self.config.statistic_type
-            )
-
-            curve = self._get_convergence_curve(metric_values, algo, prob, task_idx, selected_run)
+            if self.config.show_std_band:
+                mean_curve, std_curve = self._get_convergence_mean_std(
+                    metric_values, algo, prob, task_idx
+                )
+                curve = mean_curve
+            else:
+                selected_run = StatisticsCalculator.select_representative_run(
+                    best_values, algo, prob, task_idx, self.config.statistic_type
+                )
+                curve = self._get_convergence_curve(metric_values, algo, prob, task_idx, selected_run)
 
             if len(curve) == 0:
                 continue
@@ -1439,13 +1448,21 @@ class PlotGenerator:
             x = np.linspace(0, nfes, len(curve))
             marker_interval = max(1, len(curve) // 10)
 
+            color = self.config.colors[idx % len(self.config.colors)]
+
             ax.plot(
                 x, curve, label=algo,
-                color=self.config.colors[idx % len(self.config.colors)],
+                color=color,
                 marker=self.config.markers[idx % len(self.config.markers)],
                 markevery=marker_interval,
                 markersize=markersize, linewidth=linewidth, linestyle='-', alpha=0.7
             )
+
+            if self.config.show_std_band and len(std_curve) > 0:
+                ax.fill_between(
+                    x, curve - std_curve, curve + std_curve,
+                    alpha=0.15, color=color
+                )
 
         # Set axis labels
         y_label = metric_name if metric_name is not None else 'Objective Value'
@@ -1647,6 +1664,45 @@ class PlotGenerator:
             min_len = min(len(c) for c in all_curves)
             truncated_curves = [c[:min_len] for c in all_curves]
             return np.mean(truncated_curves, axis=0)
+
+    def _get_convergence_mean_std(
+            self,
+            metric_values: Dict,
+            algo: str,
+            prob: str,
+            task_idx: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Compute mean and standard deviation of convergence curves across all runs.
+
+        Parameters
+        ----------
+        metric_values : Dict
+            Metric values dictionary.
+        algo : str
+            Algorithm name.
+        prob : str
+            Problem name.
+        task_idx : int
+            Task index.
+
+        Returns
+        -------
+        Tuple[np.ndarray, np.ndarray]
+            (mean_curve, std_curve). Both empty arrays if no data.
+        """
+        all_curves = []
+        for r in metric_values[algo][prob].keys():
+            curve = np.array(metric_values[algo][prob][r][task_idx])
+            if len(curve) > 0:
+                all_curves.append(curve)
+
+        if len(all_curves) < 2:
+            return np.array([]), np.array([])
+
+        min_len = min(len(c) for c in all_curves)
+        truncated_curves = np.array([c[:min_len] for c in all_curves])
+        return np.mean(truncated_curves, axis=0).ravel(), np.std(truncated_curves, axis=0, ddof=1).ravel()
 
     def _apply_scientific_notation(
             self,
@@ -2161,6 +2217,7 @@ class DataAnalyzer:
             show_nd: bool = True,
             merge_plots: bool = False,
             merge_columns: int = 3,
+            show_std_band: bool = False,
             best_so_far: bool = True,
             clear_results: bool = True,
             convergence_k: Optional[int] = None
@@ -2221,6 +2278,9 @@ class DataAnalyzer:
         merge_columns : int, optional
             Number of columns in merged plot layout.
             Default: 3
+        show_std_band : bool, optional
+            Whether to show standard deviation band on convergence curves.
+            Default: False
         best_so_far : bool, optional
             Whether to use best-so-far metric values.
             Default: True
@@ -2259,6 +2319,7 @@ class DataAnalyzer:
             show_nd=show_nd,
             merge_plots=merge_plots,
             merge_columns=merge_columns,
+            show_std_band=show_std_band,
             save_path=Path(save_path)
         )
 

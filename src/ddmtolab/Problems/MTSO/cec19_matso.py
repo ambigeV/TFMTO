@@ -27,7 +27,7 @@ class CEC19MaTSO:
         self.dim = 50
         self.data_dir = 'data_cec19matso'
 
-    def P1(self, task_num=10) -> MTOP:
+    def P1(self, K=10) -> MTOP:
         """
         Generates Problem 1 (MaTSO): **Rosenbrock** tasks.
 
@@ -35,8 +35,12 @@ class CEC19MaTSO:
 
         Parameters
         ----------
-        task_num : int, optional
+        K : int, optional
             Number of tasks to create (default: 10).
+
+        Notes
+        -----
+        Fixed parameters by benchmark definition: D=50
 
         - Function: Rosenbrock
         - Dimensions: 50D
@@ -58,7 +62,7 @@ class CEC19MaTSO:
 
         problem = MTOP()
 
-        for i in range(task_num):
+        for i in range(K):
             rotation_matrix = rotation_task1[0, i]
             go_vector = go_task1[i, :]
 
@@ -71,7 +75,7 @@ class CEC19MaTSO:
                              upper_bound=np.full(self.dim, 50))
         return problem
 
-    def P2(self, task_num=10) -> MTOP:
+    def P2(self, K=10) -> MTOP:
         """
         Generates Problem 2 (MaTSO): **Ackley** tasks.
 
@@ -79,8 +83,12 @@ class CEC19MaTSO:
 
         Parameters
         ----------
-        task_num : int, optional
+        K : int, optional
             Number of tasks to create (default: 10).
+
+        Notes
+        -----
+        Fixed parameters by benchmark definition: D=50
 
         - Function: Ackley
         - Dimensions: 50D
@@ -102,7 +110,7 @@ class CEC19MaTSO:
 
         problem = MTOP()
 
-        for i in range(task_num):
+        for i in range(K):
             rotation_matrix = rotation_task2[0, i]
             go_vector = go_task2[i, :]
 
@@ -115,7 +123,7 @@ class CEC19MaTSO:
                              upper_bound=np.full(self.dim, 50))
         return problem
 
-    def P3(self, task_num=10) -> MTOP:
+    def P3(self, K=10) -> MTOP:
         """
         Generates Problem 3 (MaTSO): **Rastrigin** tasks.
 
@@ -123,8 +131,12 @@ class CEC19MaTSO:
 
         Parameters
         ----------
-        task_num : int, optional
+        K : int, optional
             Number of tasks to create (default: 10).
+
+        Notes
+        -----
+        Fixed parameters by benchmark definition: D=50
 
         - Function: Rastrigin
         - Dimensions: 50D
@@ -146,7 +158,7 @@ class CEC19MaTSO:
 
         problem = MTOP()
 
-        for i in range(task_num):
+        for i in range(K):
             rotation_matrix = rotation_task3[0, i]
             go_vector = go_task3[i, :]
 
@@ -159,7 +171,7 @@ class CEC19MaTSO:
                              upper_bound=np.full(self.dim, 50))
         return problem
 
-    def P4(self, task_num=10) -> MTOP:
+    def P4(self, K=10) -> MTOP:
         """
         Generates Problem 4 (MaTSO): **Griewank** tasks.
 
@@ -167,8 +179,12 @@ class CEC19MaTSO:
 
         Parameters
         ----------
-        task_num : int, optional
+        K : int, optional
             Number of tasks to create (default: 10).
+
+        Notes
+        -----
+        Fixed parameters by benchmark definition: D=50
 
         - Function: Griewank
         - Dimensions: 50D
@@ -190,7 +206,7 @@ class CEC19MaTSO:
 
         problem = MTOP()
 
-        for i in range(task_num):
+        for i in range(K):
             rotation_matrix = rotation_task4[0, i]
             go_vector = go_task4[i, :]
 
@@ -203,7 +219,7 @@ class CEC19MaTSO:
                              upper_bound=np.full(self.dim, 100))
         return problem
 
-    def P5(self, task_num=10) -> MTOP:
+    def P5(self, K=10) -> MTOP:
         """
         Generates Problem 5 (MaTSO): **Weierstrass** tasks.
 
@@ -211,8 +227,12 @@ class CEC19MaTSO:
 
         Parameters
         ----------
-        task_num : int, optional
+        K : int, optional
             Number of tasks to create (default: 10).
+
+        Notes
+        -----
+        Fixed parameters by benchmark definition: D=50
 
         - Function: Weierstrass
         - Dimensions: 50D
@@ -234,7 +254,7 @@ class CEC19MaTSO:
 
         problem = MTOP()
 
-        for i in range(task_num):
+        for i in range(K):
             rotation_matrix = rotation_task5[0, i]
             go_vector = go_task5[i, :]
 
@@ -247,7 +267,7 @@ class CEC19MaTSO:
                              upper_bound=np.full(self.dim, 0.5))
         return problem
 
-    def P6(self, task_num=10) -> MTOP:
+    def P6(self, K=10) -> MTOP:
         """
         Generates Problem 6 (MaTSO): **Schwefel** tasks.
 
@@ -255,8 +275,12 @@ class CEC19MaTSO:
 
         Parameters
         ----------
-        task_num : int, optional
+        K : int, optional
             Number of tasks to create (default: 10).
+
+        Notes
+        -----
+        Fixed parameters by benchmark definition: D=50
 
         - Function: Schwefel
         - Dimensions: 50D
@@ -278,7 +302,7 @@ class CEC19MaTSO:
 
         problem = MTOP()
 
-        for i in range(task_num):
+        for i in range(K):
             rotation_matrix = rotation_task6[0, i]
             go_vector = go_task6[i, :]
 

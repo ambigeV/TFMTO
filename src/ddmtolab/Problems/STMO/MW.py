@@ -18,7 +18,7 @@ class MW:
     IEEE Transactions on Evolutionary Computation, 2019, 23(6): 972-986.
     """
 
-    def MW1(self, M=2, dim=None) -> MTOP:
+    def MW1(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW1** problem.
 
@@ -29,7 +29,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -37,8 +37,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW1 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -66,14 +66,14 @@ class MW:
 
             return con
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW2(self, M=2, dim=None) -> MTOP:
+    def MW2(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW2** problem.
 
@@ -84,7 +84,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -92,8 +92,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW2 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -124,14 +124,14 @@ class MW:
 
             return con
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW3(self, M=2, dim=None) -> MTOP:
+    def MW3(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW3** problem.
 
@@ -142,7 +142,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -150,8 +150,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW3 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -183,14 +183,14 @@ class MW:
 
             return np.column_stack([c1, c2])
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW4(self, M=3, dim=None) -> MTOP:
+    def MW4(self, M=3, D=None) -> MTOP:
         """
         Generates the **MW4** problem.
 
@@ -201,7 +201,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -209,8 +209,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW4 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         # Store M as a local variable to ensure it's captured correctly
         num_obj = M
@@ -251,14 +251,14 @@ class MW:
 
             return con
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW5(self, M=2, dim=None) -> MTOP:
+    def MW5(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW5** problem.
 
@@ -269,7 +269,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -277,8 +277,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW5 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -309,14 +309,14 @@ class MW:
 
             return np.column_stack([c1, c2, c3])
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW6(self, M=2, dim=None) -> MTOP:
+    def MW6(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW6** problem.
 
@@ -327,7 +327,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -335,8 +335,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW6 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -366,14 +366,14 @@ class MW:
 
             return con
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW7(self, M=2, dim=None) -> MTOP:
+    def MW7(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW7** problem.
 
@@ -384,7 +384,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -392,8 +392,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW7 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -421,14 +421,14 @@ class MW:
 
             return np.column_stack([c1, c2])
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW8(self, M=3, dim=None) -> MTOP:
+    def MW8(self, M=3, D=None) -> MTOP:
         """
         Generates the **MW8** problem.
 
@@ -440,7 +440,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -448,8 +448,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW8 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -490,14 +490,14 @@ class MW:
 
             return con
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW9(self, M=2, dim=None) -> MTOP:
+    def MW9(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW9** problem.
 
@@ -509,7 +509,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -517,8 +517,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW9 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -566,14 +566,14 @@ class MW:
 
             return con
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW10(self, M=2, dim=None) -> MTOP:
+    def MW10(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW10** problem.
 
@@ -585,7 +585,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -593,8 +593,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW10 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -646,14 +646,14 @@ class MW:
 
             return np.column_stack([c1, c2, c3])
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW11(self, M=2, dim=None) -> MTOP:
+    def MW11(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW11** problem.
 
@@ -665,7 +665,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -673,8 +673,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW11 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -723,14 +723,14 @@ class MW:
 
             return np.column_stack([c1, c2, c3, c4])
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW12(self, M=2, dim=None) -> MTOP:
+    def MW12(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW12** problem.
 
@@ -741,7 +741,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -749,8 +749,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW12 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -801,14 +801,14 @@ class MW:
 
             return np.column_stack([c1, c2])
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW13(self, M=2, dim=None) -> MTOP:
+    def MW13(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW13** problem.
 
@@ -820,7 +820,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 2).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -828,8 +828,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW13 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -882,14 +882,14 @@ class MW:
 
             return np.column_stack([c1, c2])
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def MW14(self, M=3, dim=None) -> MTOP:
+    def MW14(self, M=3, D=None) -> MTOP:
         """
         Generates the **MW14** problem.
 
@@ -901,7 +901,7 @@ class MW:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to 15 (default is None).
 
         Returns
@@ -909,8 +909,8 @@ class MW:
         MTOP
             A Multi-Task Optimization Problem instance containing the MW14 task.
         """
-        if dim is None:
-            dim = 15
+        if D is None:
+            D = 15
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -964,11 +964,11 @@ class MW:
 
             return con
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
 

@@ -122,7 +122,7 @@ class STOP:
         else:
             raise ValueError(f"Unknown function: {func_name}")
 
-    def _load_and_create_problem(self, mat_filename, dim, task_num):
+    def _load_and_create_problem(self, mat_filename, dim, K):
         """
         Generic method to load MAT file and create MTOP problem.
 
@@ -132,7 +132,7 @@ class STOP:
             MAT file name
         dim : int
             Problem dimension
-        task_num : int
+        K : int
             Number of tasks
 
         Returns
@@ -145,7 +145,7 @@ class STOP:
         mat_data = scipy.io.loadmat(mat_file)
 
         target = mat_data['target']
-        sources = mat_data['sources'] if task_num > 1 else None
+        sources = mat_data['sources'] if K > 1 else None
 
         problem = MTOP()
 
@@ -157,8 +157,8 @@ class STOP:
         problem.add_task(task_function, dim=dim, lower_bound=lb, upper_bound=ub)
 
         # Add source tasks
-        if task_num > 1:
-            for i in range(task_num - 1):
+        if K > 1:
+            for i in range(K - 1):
                 source_opt = sources[0, i]['x_best'].flatten()
                 source_name = sources[0, i]['name'][0]
                 _, lb, ub = self._get_function_and_bounds(source_name, dim)
@@ -167,53 +167,53 @@ class STOP:
 
         return problem
 
-    def STOP1(self, task_num=10) -> MTOP:
+    def STOP1(self, K=10) -> MTOP:
         """STOP Problem 1: Sphere-Ta-hh2-d50-k49"""
-        return self._load_and_create_problem('Sphere-Ta-hh2-d50-k49.mat', 50, task_num)
+        return self._load_and_create_problem('Sphere-Ta-hh2-d50-k49.mat', 50, K)
 
-    def STOP2(self, task_num=10) -> MTOP:
+    def STOP2(self, K=10) -> MTOP:
         """STOP Problem 2: Ellipsoid-Te-hh2-d25-k49"""
-        return self._load_and_create_problem('Ellipsoid-Te-hh2-d25-k49.mat', 25, task_num)
+        return self._load_and_create_problem('Ellipsoid-Te-hh2-d25-k49.mat', 25, K)
 
-    def STOP3(self, task_num=10) -> MTOP:
+    def STOP3(self, K=10) -> MTOP:
         """STOP Problem 3: Schwefel-Ta-hh2-d30-k49"""
-        return self._load_and_create_problem('Schwefel-Ta-hh2-d30-k49.mat', 30, task_num)
+        return self._load_and_create_problem('Schwefel-Ta-hh2-d30-k49.mat', 30, K)
 
-    def STOP4(self, task_num=10) -> MTOP:
+    def STOP4(self, K=10) -> MTOP:
         """STOP Problem 4: Quartic-Te-hh2-d50-k49"""
-        return self._load_and_create_problem('Quartic-Te-hh2-d50-k49.mat', 50, task_num)
+        return self._load_and_create_problem('Quartic-Te-hh2-d50-k49.mat', 50, K)
 
-    def STOP5(self, task_num=10) -> MTOP:
+    def STOP5(self, K=10) -> MTOP:
         """STOP Problem 5: Ackley-Ta-hm1-d25-k49"""
-        return self._load_and_create_problem('Ackley-Ta-hm1-d25-k49.mat', 25, task_num)
+        return self._load_and_create_problem('Ackley-Ta-hm1-d25-k49.mat', 25, K)
 
-    def STOP6(self, task_num=10) -> MTOP:
+    def STOP6(self, K=10) -> MTOP:
         """STOP Problem 6: Rastrigin-Te-hm2-d50-k49"""
-        return self._load_and_create_problem('Rastrigin-Te-hm2-d50-k49.mat', 50, task_num)
+        return self._load_and_create_problem('Rastrigin-Te-hm2-d50-k49.mat', 50, K)
 
-    def STOP7(self, task_num=10) -> MTOP:
+    def STOP7(self, K=10) -> MTOP:
         """STOP Problem 7: Griewank-Ta-hm3-d25-k49"""
-        return self._load_and_create_problem('Griewank-Ta-hm3-d25-k49.mat', 25, task_num)
+        return self._load_and_create_problem('Griewank-Ta-hm3-d25-k49.mat', 25, K)
 
-    def STOP8(self, task_num=10) -> MTOP:
+    def STOP8(self, K=10) -> MTOP:
         """STOP Problem 8: Levy-Te-hm4-d30-k49"""
-        return self._load_and_create_problem('Levy-Te-hm4-d30-k49.mat', 30, task_num)
+        return self._load_and_create_problem('Levy-Te-hm4-d30-k49.mat', 30, K)
 
-    def STOP9(self, task_num=10) -> MTOP:
+    def STOP9(self, K=10) -> MTOP:
         """STOP Problem 9: Sphere-Ta-hl1-d25-k49"""
-        return self._load_and_create_problem('Sphere-Ta-hl1-d25-k49.mat', 25, task_num)
+        return self._load_and_create_problem('Sphere-Ta-hl1-d25-k49.mat', 25, K)
 
-    def STOP10(self, task_num=10) -> MTOP:
+    def STOP10(self, K=10) -> MTOP:
         """STOP Problem 10: Rastrigin-Te-hl2-d30-k49"""
-        return self._load_and_create_problem('Rastrigin-Te-hl2-d30-k49.mat', 30, task_num)
+        return self._load_and_create_problem('Rastrigin-Te-hl2-d30-k49.mat', 30, K)
 
-    def STOP11(self, task_num=10) -> MTOP:
+    def STOP11(self, K=10) -> MTOP:
         """STOP Problem 11: Ackley-Ta-hl2-d50-k49"""
-        return self._load_and_create_problem('Ackley-Ta-hl2-d50-k49.mat', 50, task_num)
+        return self._load_and_create_problem('Ackley-Ta-hl2-d50-k49.mat', 50, K)
 
-    def STOP12(self, task_num=10) -> MTOP:
+    def STOP12(self, K=10) -> MTOP:
         """STOP Problem 12: Ellipsoid-Te-hl1-d50-k49"""
-        return self._load_and_create_problem('Ellipsoid-Te-hl1-d50-k49.mat', 50, task_num)
+        return self._load_and_create_problem('Ellipsoid-Te-hl1-d50-k49.mat', 50, K)
 
     @staticmethod
     def S_Ellipsoid(var, opt):

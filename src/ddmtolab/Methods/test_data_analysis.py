@@ -316,13 +316,28 @@ class TestPlotGenerator:
         save_dir = Path(self.config.save_path)
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        fig, ax = plt.subplots(figsize=(6, 3.5))
+        n_algos = len(algorithm_order)
 
-        x = np.arange(len(algorithm_order))
+        # Adaptive figure width based on number of algorithms
+        fig_width = max(4, min(6, 2 + n_algos * 0.8))
+        fig, ax = plt.subplots(figsize=(fig_width, 3.5))
+
+        x = np.arange(n_algos)
         runtimes = [runtime[algo] for algo in algorithm_order]
-        colors = [self.config.colors[i % len(self.config.colors)] for i in range(len(algorithm_order))]
+        colors = [self.config.colors[i % len(self.config.colors)] for i in range(n_algos)]
 
-        bars = ax.bar(x, runtimes, color=colors, alpha=0.8, edgecolor='black', linewidth=0.8)
+        # Adaptive bar width: narrower bars when fewer algorithms
+        if n_algos == 1:
+            bar_width = 0.35
+        elif n_algos == 2:
+            bar_width = 0.45
+        elif n_algos <= 4:
+            bar_width = 0.55
+        else:
+            bar_width = 0.7
+
+        bars = ax.bar(x, runtimes, width=bar_width, color=colors, alpha=0.8,
+                      edgecolor='black', linewidth=0.8)
 
         # Add value labels on bars
         for bar, val in zip(bars, runtimes):
@@ -338,6 +353,10 @@ class TestPlotGenerator:
         ax.set_xticklabels(algorithm_order, fontsize=12)
         ax.tick_params(axis='both', which='major', labelsize=10)
         ax.grid(True, axis='y', alpha=0.3, linestyle='-')
+
+        # Add top margin for labels (15% extra space)
+        y_max = max(runtimes) if runtimes else 1
+        ax.set_ylim(0, y_max * 1.15)
 
         fig.tight_layout()
 
@@ -421,27 +440,26 @@ class TestPlotGenerator:
                 sort_idx = np.argsort(true_pf[:, 0])
                 sorted_pf = true_pf[sort_idx]
                 ax.scatter(sorted_pf[:, 0], sorted_pf[:, 1],
-                           c='gray', s=2, linewidth=0.1, label='True PF', zorder=1)
+                           c='gray', s=2, linewidth=0.1, zorder=1)
 
             ax.scatter(nd_solutions[:, 0], nd_solutions[:, 1],
                        c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
-                       linewidth=0.8, label='ND Solutions', zorder=2)
+                       linewidth=0.8, zorder=2)
 
             ax.set_xlabel('$f_1$', fontsize=12)
             ax.set_ylabel('$f_2$', fontsize=12)
             ax.grid(True, alpha=0.2, linestyle='-')
-            ax.legend(loc='best', fontsize=10)
 
         elif n_objectives == 3:
             ax = fig.add_subplot(111, projection='3d')
 
             if true_pf is not None and true_pf.shape[1] == 3:
                 ax.scatter(true_pf[:, 0], true_pf[:, 1], true_pf[:, 2],
-                           c='gray', s=4, alpha=0.2, label='True PF', zorder=1, depthshade=True)
+                           c='gray', s=4, alpha=0.2, zorder=1, depthshade=True)
 
             ax.scatter(nd_solutions[:, 0], nd_solutions[:, 1], nd_solutions[:, 2],
                        c='dodgerblue', s=60, alpha=0.8, edgecolors='black',
-                       linewidth=0.8, label='ND Solutions', zorder=2, depthshade=True)
+                       linewidth=0.8, zorder=2, depthshade=True)
 
             ax.set_xlabel('$f_1$', fontsize=12)
             ax.set_ylabel('$f_2$', fontsize=12)
@@ -478,22 +496,22 @@ class TestPlotGenerator:
 # =============================================================================
 
 class TestTableGenerator:
-    """Class for generating LaTeX tables for test data."""
+    """Class for generating Excel tables for test data."""
 
     def __init__(self, save_path: Path = Path('./Results')):
         """Initialize TestTableGenerator."""
         self.save_path = save_path
 
-    def generate_latex_table(
+    def generate_excel_table(
             self,
             best_values: Dict[str, List[float]],
             runtime: Dict[str, float],
             algorithm_order: List[str],
             problems: List[str],
             metric_name: Optional[str] = None
-    ) -> str:
+    ) -> Path:
         """
-        Generate a LaTeX table comparing algorithm performance.
+        Generate an Excel table comparing algorithm performance.
 
         Parameters:
             best_values: Dict[str, List[float]]
@@ -508,90 +526,102 @@ class TestTableGenerator:
                 Metric name for table caption.
 
         Returns:
-            str: LaTeX table string.
+            Path: Path to generated Excel file.
         """
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+        except ImportError:
+            print("Warning: openpyxl not installed. Skipping Excel table generation.")
+            return None
+
         save_dir = Path(self.save_path)
         save_dir.mkdir(parents=True, exist_ok=True)
 
         num_tasks = len(best_values[algorithm_order[0]])
         direction = DataUtils.get_metric_direction(metric_name)
 
-        # Build table data
-        rows = []
+        # Create workbook
+        wb = Workbook()
+        ws = wb.active
+        metric_str = metric_name if metric_name else 'Objective'
+        ws.title = f"Test Results ({metric_str})"
+
+        # Styles
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        best_font = Font(bold=True)
+        center_align = Alignment(horizontal='center', vertical='center')
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        # Header row
+        headers = ['Problem'] + algorithm_order
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_align
+            cell.border = thin_border
+
+        # Data rows
+        row_idx = 2
         for task_idx in range(num_tasks):
             prob_name = problems[task_idx] if task_idx < len(problems) else f'Task {task_idx + 1}'
-            row = {'Problem': prob_name}
 
+            # Find best value for this task
             values = {}
             for algo in algorithm_order:
                 val = best_values[algo][task_idx]
                 values[algo] = val
-                row[algo] = f"{val:.4e}".replace('e-', 'e$-$') if not np.isnan(val) else 'N/A'
 
-            # Find best value
             valid_values = {k: v for k, v in values.items() if not np.isnan(v)}
+            best_algo = None
             if valid_values:
                 if direction == OptimizationDirection.MINIMIZE:
                     best_algo = min(valid_values, key=valid_values.get)
                 else:
                     best_algo = max(valid_values, key=valid_values.get)
-                row['_best'] = best_algo
-            else:
-                row['_best'] = None
 
-            rows.append(row)
-
-        # Add runtime row
-        runtime_row = {'Problem': 'Runtime (s)'}
-        for algo in algorithm_order:
-            runtime_row[algo] = f"{runtime[algo]:.2f}"
-        runtime_row['_best'] = min(runtime, key=runtime.get)
-        rows.append(runtime_row)
-
-        # Build LaTeX string
-        num_cols = len(algorithm_order) + 1
-        col_format = '|'.join(['c'] * num_cols)
-        col_format = '|' + col_format + '|'
-
-        metric_str = metric_name if metric_name else 'Objective Value'
-        latex_str = "\\begin{table}[htbp]\n"
-        latex_str += "\\renewcommand{\\arraystretch}{1.2}\n"
-        latex_str += "\\centering\n"
-        latex_str += f"\\caption{{Test Results Comparison ({metric_str})}}\n"
-        latex_str += "\\label{tab:test_results}\n"
-        latex_str += f"\\begin{{tabular}}{{{col_format}}}\n"
-        latex_str += "\\hline\n"
-
-        # Header row
-        header = "Problem & " + " & ".join(algorithm_order) + " \\\\\n"
-        latex_str += header
-        latex_str += "\\hline\n"
-
-        # Data rows
-        for row in rows:
-            row_str = row['Problem']
-            best_algo = row.get('_best')
-
-            for algo in algorithm_order:
-                cell = row[algo]
+            # Write row
+            ws.cell(row=row_idx, column=1, value=prob_name).border = thin_border
+            for col_idx, algo in enumerate(algorithm_order, 2):
+                val = values[algo]
+                cell = ws.cell(row=row_idx, column=col_idx)
+                cell.value = f"{val:.4e}" if not np.isnan(val) else 'N/A'
+                cell.alignment = center_align
+                cell.border = thin_border
                 if algo == best_algo:
-                    cell = f"\\textbf{{{cell}}}"
-                row_str += f" & {cell}"
+                    cell.font = best_font
 
-            row_str += " \\\\\n"
-            latex_str += row_str
+            row_idx += 1
 
-        latex_str += "\\hline\n"
-        latex_str += "\\end{tabular}\n"
-        latex_str += "\\end{table}\n"
+        # Runtime row
+        ws.cell(row=row_idx, column=1, value='Runtime (s)').border = thin_border
+        best_runtime_algo = min(runtime, key=runtime.get)
+        for col_idx, algo in enumerate(algorithm_order, 2):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.value = f"{runtime[algo]:.2f}"
+            cell.alignment = center_align
+            cell.border = thin_border
+            if algo == best_runtime_algo:
+                cell.font = best_font
 
-        # Save to file
-        output_file = save_dir / 'test_results_table.tex'
-        with open(output_file, 'w') as f:
-            f.write(latex_str)
-        print(f"LaTeX table saved to: {output_file}")
+        # Adjust column widths
+        ws.column_dimensions['A'].width = 15
+        for col_idx in range(2, len(algorithm_order) + 2):
+            ws.column_dimensions[chr(64 + col_idx)].width = 15
 
-        return latex_str
+        # Save file
+        output_file = save_dir / 'test_results.xlsx'
+        wb.save(output_file)
+        print(f"Excel table saved to: {output_file}")
+
+        return output_file
 
 
 # =============================================================================
@@ -970,12 +1000,12 @@ class TestDataAnalyzer:
             self.settings
         )
 
-    def generate_latex_tables(self) -> str:
+    def generate_excel_tables(self) -> Path:
         """
-        Generate LaTeX comparison tables.
+        Generate Excel comparison tables.
 
         Returns:
-            str: LaTeX table string.
+            Path: Path to generated Excel file.
         """
         if self._metric_results is None:
             self.calculate_metrics()
@@ -985,7 +1015,7 @@ class TestDataAnalyzer:
         table_gen = TestTableGenerator(self.table_save_path)
 
         # Generate results table
-        main_table = table_gen.generate_latex_table(
+        output_path = table_gen.generate_excel_table(
             self._metric_results.best_values,
             self._metric_results.runtime,
             algo_order,
@@ -993,7 +1023,7 @@ class TestDataAnalyzer:
             self._metric_results.metric_name
         )
 
-        return main_table
+        return output_path
 
     def run(self) -> TestMetricResults:
         """
@@ -1036,9 +1066,9 @@ class TestDataAnalyzer:
         print('\n[2/6] Calculating metric values...')
         self.calculate_metrics()
 
-        # Step 3: Generate LaTeX tables
-        print('\n[3/6] Generating LaTeX tables...')
-        self.generate_latex_tables()
+        # Step 3: Generate Excel tables
+        print('\n[3/6] Generating Excel tables...')
+        self.generate_excel_tables()
 
         # Step 4: Plot convergence curves
         print('\n[4/6] Plotting convergence curves...')

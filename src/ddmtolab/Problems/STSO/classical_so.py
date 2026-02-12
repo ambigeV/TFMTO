@@ -11,212 +11,268 @@ class CLASSICALSO:
     Multi-Task Optimization Problems (MTOPs) with only one task.
     This serves as a baseline for comparing single-task solvers or as
     individual tasks in a multi-task setting.
-
-    Parameters
-    ----------
-    dim : int, optional
-        The dimensionality of the search space for all tasks (default is 50).
-
-    Attributes
-    ----------
-    dim : int
-        The dimensionality of the problem.
-    M : numpy.ndarray
-        Identity matrix used for rotation/transformation (defaults to identity).
-    o : numpy.ndarray
-        Offset vector used for shifting the optimum (defaults to zero vector).
     """
 
-    def __init__(self, dim=50):
-        self.dim = dim
-        self.M = np.eye(self.dim, dtype=float)
-        self.o = np.zeros((1, self.dim), dtype=float)
+    def __init__(self):
+        pass
 
-    def P1(self) -> MTOP:
+    def P1(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Ackley** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Ackley task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Ackley(x, self.M, self.o, 0.0)
+            return Ackley(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P2(self) -> MTOP:
+    def P2(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Elliptic** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Elliptic task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Elliptic(x, self.M, self.o, 0.0)
+            return Elliptic(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P3(self) -> MTOP:
+    def P3(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Griewank** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Griewank task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Griewank(x, self.M, self.o, 0.0)
+            return Griewank(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P4(self) -> MTOP:
+    def P4(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Rastrigin** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Rastrigin task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Rastrigin(x, self.M, self.o, 0.0)
+            return Rastrigin(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P5(self) -> MTOP:
+    def P5(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Rosenbrock** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Rosenbrock task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Rosenbrock(x, self.M, self.o, 0.0)
+            return Rosenbrock(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P6(self) -> MTOP:
+    def P6(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Schwefel** function (F6).
 
         The search space is set to [-500.0, 500.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Schwefel task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Schwefel(x, self.M, self.o, 0.0)
+            return Schwefel(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -500.0)
-        ub = np.full(self.dim, 500.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -500.0)
+        ub = np.full(D, 500.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P7(self) -> MTOP:
+    def P7(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Schwefel 2.22** function (F7).
 
         The search space is set to [-100.0, 100.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Schwefel 2.22 task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Schwefel2(x, self.M, self.o, 0.0)
+            return Schwefel2(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P8(self) -> MTOP:
+    def P8(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Sphere** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Sphere task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Sphere(x, self.M, self.o, 0.0)
+            return Sphere(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P9(self) -> MTOP:
+    def P9(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Weierstrass** function.
 
         The search space is set to [-0.5, 0.5] in all dimensions.
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the Weierstrass task.
         """
+        M = np.eye(D, dtype=float)
+        o = np.zeros((1, D), dtype=float)
+
         def Task(x):
             x = np.atleast_2d(x)
-            return Weierstrass(x, self.M, self.o, 0.0)
+            return Weierstrass(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -0.5)
-        ub = np.full(self.dim, 0.5)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -0.5)
+        ub = np.full(D, 0.5)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem

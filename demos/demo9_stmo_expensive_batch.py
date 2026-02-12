@@ -30,8 +30,8 @@ if __name__ == '__main__':
     #
     # # Add DTLZ problems with 3 objectives
     # problems = DTLZ()
-    # batch_exp.add_problem(problems.DTLZ1, 'DTLZ1', M=3, dim=10)
-    # batch_exp.add_problem(problems.DTLZ2, 'DTLZ2', M=3, dim=10)
+    # batch_exp.add_problem(problems.DTLZ1, 'DTLZ1', M=3, D=10)
+    # batch_exp.add_problem(problems.DTLZ2, 'DTLZ2', M=3, D=10)
     #
     # # Add surrogate-assisted algorithms
     # # NSGA-II: baseline MOEA

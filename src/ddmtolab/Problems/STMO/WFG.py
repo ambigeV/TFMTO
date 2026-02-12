@@ -228,7 +228,7 @@ class WFG:
     # WFG Problem Implementations
     # =============================================================================
 
-    def WFG1(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG1(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG1** problem.
 
@@ -239,11 +239,12 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
-            Position parameter, which should be a multiple of M-1.
+        Kp : int, optional
+            Position parameter (number of position-related variables),
+            which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -251,14 +252,14 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG1 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -266,27 +267,27 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            z01 = x / (2 * np.arange(1, dim + 1))
+            z01 = x / (2 * np.arange(1, D + 1))
 
-            t1 = np.zeros((n_samples, K + L))
-            t1[:, :K] = z01[:, :K]
-            t1[:, K:] = self._s_linear(z01[:, K:], 0.35)
+            t1 = np.zeros((n_samples, Kp + L))
+            t1[:, :Kp] = z01[:, :Kp]
+            t1[:, Kp:] = self._s_linear(z01[:, Kp:], 0.35)
 
-            t2 = np.zeros((n_samples, K + L))
-            t2[:, :K] = t1[:, :K]
-            t2[:, K:] = self._b_flat(t1[:, K:], 0.8, 0.75, 0.85)
+            t2 = np.zeros((n_samples, Kp + L))
+            t2[:, :Kp] = t1[:, :Kp]
+            t2[:, Kp:] = self._b_flat(t1[:, Kp:], 0.8, 0.75, 0.85)
 
             t3 = self._b_poly(t2, 0.02)
 
             t4 = np.zeros((n_samples, M))
             for i in range(M - 1):
-                start_idx = i * K // (M - 1)
-                end_idx = (i + 1) * K // (M - 1)
+                start_idx = i * Kp // (M - 1)
+                end_idx = (i + 1) * Kp // (M - 1)
                 w = 2 * np.arange(start_idx + 1, end_idx + 1)
                 t4[:, i] = self._r_sum(t3[:, start_idx:end_idx], w)
 
-            w_last = 2 * np.arange(K + 1, K + L + 1)
-            t4[:, M - 1] = self._r_sum(t3[:, K:K + L], w_last)
+            w_last = 2 * np.arange(Kp + 1, Kp + L + 1)
+            t4[:, M - 1] = self._r_sum(t3[:, Kp:Kp + L], w_last)
 
             x_final = np.zeros((n_samples, M))
             for i in range(M - 1):
@@ -296,18 +297,18 @@ class WFG:
             h = self._convex(x_final)
             h[:, M - 1] = self._mixed(x_final)
 
-            obj = D * x_final[:, M - 1:M] + S * h
+            obj = D_scale * x_final[:, M - 1:M] + S * h
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG2(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG2(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG2** problem.
 
@@ -319,11 +320,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -331,17 +332,17 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG2 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
         if L % 2 != 0:
             raise ValueError('In WFG2 the distance-related parameter (L) must be divisible by 2.')
 
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -349,23 +350,23 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            z01 = x / (2 * np.arange(1, dim + 1))
+            z01 = x / (2 * np.arange(1, D + 1))
 
-            t1 = np.zeros((n_samples, K + L))
-            t1[:, :K] = z01[:, :K]
-            t1[:, K:] = self._s_linear(z01[:, K:], 0.35)
+            t1 = np.zeros((n_samples, Kp + L))
+            t1[:, :Kp] = z01[:, :Kp]
+            t1[:, Kp:] = self._s_linear(z01[:, Kp:], 0.35)
 
-            t2_parts = [t1[:, i] for i in range(K)]
-            ind_non_sep = K + L // 2
-            for i in range(K, ind_non_sep):
-                head = K + 2 * (i - K)
-                tail = K + 2 * (i - K) + 2
+            t2_parts = [t1[:, i] for i in range(Kp)]
+            ind_non_sep = Kp + L // 2
+            for i in range(Kp, ind_non_sep):
+                head = Kp + 2 * (i - Kp)
+                tail = Kp + 2 * (i - Kp) + 2
                 t2_parts.append(self._r_nonsep(t1[:, head:tail], 2))
 
             t2 = np.column_stack(t2_parts)
 
-            ind_r_sum = K + (dim - K) // 2
-            gap = K // (M - 1)
+            ind_r_sum = Kp + (D - Kp) // 2
+            gap = Kp // (M - 1)
 
             t3 = np.zeros((n_samples, M))
             for i in range(M - 1):
@@ -373,7 +374,7 @@ class WFG:
                 end_idx = (i + 1) * gap
                 t3[:, i] = self._r_sum_uniform(t2[:, start_idx:end_idx])
 
-            t3[:, M - 1] = self._r_sum_uniform(t2[:, K:ind_r_sum])
+            t3[:, M - 1] = self._r_sum_uniform(t2[:, Kp:ind_r_sum])
 
             x_final = np.zeros((n_samples, M))
             for i in range(M - 1):
@@ -383,18 +384,18 @@ class WFG:
             h = self._convex(x_final)
             h[:, M - 1] = self._disconnected(x_final, alpha=1.0, beta=1.0, A=5.0)
 
-            obj = D * x_final[:, M - 1:M] + S * h
+            obj = D_scale * x_final[:, M - 1:M] + S * h
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG3(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG3(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG3** problem.
 
@@ -405,11 +406,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -417,17 +418,17 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG3 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
         if L % 2 != 0:
             raise ValueError('In WFG3 the distance-related parameter (L) must be divisible by 2.')
 
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
         A[1:] = 0
@@ -436,32 +437,32 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            xu = 2 * np.arange(1, dim + 1)
+            xu = 2 * np.arange(1, D + 1)
             y = x / xu
 
-            y[:, K:dim] = self._transformation_shift_linear(y[:, K:dim], 0.35)
+            y[:, Kp:D] = self._transformation_shift_linear(y[:, Kp:D], 0.35)
 
-            y_list = [y[:, i] for i in range(K)]
+            y_list = [y[:, i] for i in range(Kp)]
 
-            l = dim - K
-            ind_non_sep = K + l // 2
+            l = D - Kp
+            ind_non_sep = Kp + l // 2
 
-            i = K + 1
+            i = Kp + 1
             while i <= ind_non_sep:
-                head = K + 2 * (i - K) - 2
-                tail = K + 2 * (i - K)
+                head = Kp + 2 * (i - Kp) - 2
+                tail = Kp + 2 * (i - Kp)
                 y_list.append(self._reduction_non_sep(y[:, head:tail], 2))
                 i += 1
 
             y = np.column_stack(y_list)
 
-            ind_r_sum = K + (dim - K) // 2
-            gap = K // (M - 1)
+            ind_r_sum = Kp + (D - Kp) // 2
+            gap = Kp // (M - 1)
 
             t = []
             for m in range(1, M):
                 t.append(self._reduction_weighted_sum_uniform(y[:, (m - 1) * gap: m * gap]))
-            t.append(self._reduction_weighted_sum_uniform(y[:, K:ind_r_sum]))
+            t.append(self._reduction_weighted_sum_uniform(y[:, Kp:ind_r_sum]))
 
             y = np.column_stack(t)
 
@@ -475,18 +476,18 @@ class WFG:
             for m in range(M):
                 h.append(self._shape_linear(y[:, :-1], m + 1))
 
-            obj = D * y[:, -1][:, None] + S * np.column_stack(h)
+            obj = D_scale * y[:, -1][:, None] + S * np.column_stack(h)
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG4(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG4(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG4** problem.
 
@@ -497,11 +498,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -509,14 +510,14 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG4 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -524,16 +525,16 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            xu = 2 * np.arange(1, dim + 1)
+            xu = 2 * np.arange(1, D + 1)
             y = x / xu
 
             y = self._transformation_shift_multi_modal(y, 30.0, 10.0, 0.35)
 
-            gap = K // (M - 1)
+            gap = Kp // (M - 1)
             t = []
             for m in range(1, M):
                 t.append(self._reduction_weighted_sum_uniform(y[:, (m - 1) * gap: m * gap]))
-            t.append(self._reduction_weighted_sum_uniform(y[:, K:]))
+            t.append(self._reduction_weighted_sum_uniform(y[:, Kp:]))
 
             y = np.column_stack(t)
 
@@ -547,18 +548,18 @@ class WFG:
             for m in range(M):
                 h.append(self._shape_concave(y[:, :-1], m + 1))
 
-            obj = D * y[:, -1][:, None] + S * np.column_stack(h)
+            obj = D_scale * y[:, -1][:, None] + S * np.column_stack(h)
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG5(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG5(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG5** problem.
 
@@ -569,11 +570,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -581,14 +582,14 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG5 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -596,16 +597,16 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            xu = 2 * np.arange(1, dim + 1)
+            xu = 2 * np.arange(1, D + 1)
             y = x / xu
 
             y = self._transformation_param_deceptive(y, A=0.35, B=0.001, C=0.05)
 
-            gap = K // (M - 1)
+            gap = Kp // (M - 1)
             t = []
             for m in range(1, M):
                 t.append(self._reduction_weighted_sum_uniform(y[:, (m - 1) * gap: m * gap]))
-            t.append(self._reduction_weighted_sum_uniform(y[:, K:]))
+            t.append(self._reduction_weighted_sum_uniform(y[:, Kp:]))
 
             y = np.column_stack(t)
 
@@ -619,18 +620,18 @@ class WFG:
             for m in range(M):
                 h.append(self._shape_concave(y[:, :-1], m + 1))
 
-            obj = D * y[:, -1][:, None] + S * np.column_stack(h)
+            obj = D_scale * y[:, -1][:, None] + S * np.column_stack(h)
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG6(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG6(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG6** problem.
 
@@ -641,11 +642,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -653,14 +654,14 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG6 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -668,16 +669,16 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            xu = 2 * np.arange(1, dim + 1)
+            xu = 2 * np.arange(1, D + 1)
             y = x / xu
 
-            y[:, K:dim] = self._transformation_shift_linear(y[:, K:dim], 0.35)
+            y[:, Kp:D] = self._transformation_shift_linear(y[:, Kp:D], 0.35)
 
-            gap = K // (M - 1)
+            gap = Kp // (M - 1)
             t = []
             for m in range(1, M):
                 t.append(self._reduction_non_sep(y[:, (m - 1) * gap: m * gap], gap))
-            t.append(self._reduction_non_sep(y[:, K:], dim - K))
+            t.append(self._reduction_non_sep(y[:, Kp:], D - Kp))
 
             y = np.column_stack(t)
 
@@ -691,18 +692,18 @@ class WFG:
             for m in range(M):
                 h.append(self._shape_concave(y[:, :-1], m + 1))
 
-            obj = D * y[:, -1][:, None] + S * np.column_stack(h)
+            obj = D_scale * y[:, -1][:, None] + S * np.column_stack(h)
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG7(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG7(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG7** problem.
 
@@ -713,11 +714,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -725,14 +726,14 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG7 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -740,20 +741,20 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            xu = 2 * np.arange(1, dim + 1)
+            xu = 2 * np.arange(1, D + 1)
             y = x / xu
 
-            for i in range(K):
+            for i in range(Kp):
                 aux = self._reduction_weighted_sum_uniform(y[:, i + 1:])
                 y[:, i] = self._transformation_param_dependent(y[:, i], aux)
 
-            y[:, K:dim] = self._transformation_shift_linear(y[:, K:dim], 0.35)
+            y[:, Kp:D] = self._transformation_shift_linear(y[:, Kp:D], 0.35)
 
-            gap = K // (M - 1)
+            gap = Kp // (M - 1)
             t = []
             for m in range(1, M):
                 t.append(self._reduction_weighted_sum_uniform(y[:, (m - 1) * gap: m * gap]))
-            t.append(self._reduction_weighted_sum_uniform(y[:, K:]))
+            t.append(self._reduction_weighted_sum_uniform(y[:, Kp:]))
 
             y = np.column_stack(t)
 
@@ -767,18 +768,18 @@ class WFG:
             for m in range(M):
                 h.append(self._shape_concave(y[:, :-1], m + 1))
 
-            obj = D * y[:, -1][:, None] + S * np.column_stack(h)
+            obj = D_scale * y[:, -1][:, None] + S * np.column_stack(h)
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG8(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG8(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG8** problem.
 
@@ -790,11 +791,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -802,14 +803,14 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG8 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -817,22 +818,22 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            xu = 2 * np.arange(1, dim + 1)
+            xu = 2 * np.arange(1, D + 1)
             y = x / xu
 
             ret = []
-            for i in range(K, dim):
+            for i in range(Kp, D):
                 aux = self._reduction_weighted_sum_uniform(y[:, :i])
                 ret.append(self._transformation_param_dependent(y[:, i], aux, A=0.98 / 49.98, B=0.02, C=50.0))
-            y[:, K:dim] = np.column_stack(ret)
+            y[:, Kp:D] = np.column_stack(ret)
 
-            y[:, K:dim] = self._transformation_shift_linear(y[:, K:dim], 0.35)
+            y[:, Kp:D] = self._transformation_shift_linear(y[:, Kp:D], 0.35)
 
-            gap = K // (M - 1)
+            gap = Kp // (M - 1)
             t = []
             for m in range(1, M):
                 t.append(self._reduction_weighted_sum_uniform(y[:, (m - 1) * gap: m * gap]))
-            t.append(self._reduction_weighted_sum_uniform(y[:, K:]))
+            t.append(self._reduction_weighted_sum_uniform(y[:, Kp:]))
 
             y = np.column_stack(t)
 
@@ -846,18 +847,18 @@ class WFG:
             for m in range(M):
                 h.append(self._shape_concave(y[:, :-1], m + 1))
 
-            obj = D * y[:, -1][:, None] + S * np.column_stack(h)
+            obj = D_scale * y[:, -1][:, None] + S * np.column_stack(h)
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def WFG9(self, M=3, K=None, dim=None) -> MTOP:
+    def WFG9(self, M=3, Kp=None, D=None) -> MTOP:
         """
         Generates the **WFG9** problem.
 
@@ -869,11 +870,11 @@ class WFG:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        K : int, optional
+        Kp : int, optional
             Position parameter, which should be a multiple of M-1.
             If None, it is set to M-1 (default is None).
-        dim : int, optional
-            Number of decision variables. If None, it is set to K + 10
+        D : int, optional
+            Number of decision variables. If None, it is set to Kp + 10
             (default is None).
 
         Returns
@@ -881,14 +882,14 @@ class WFG:
         MTOP
             A Multi-Task Optimization Problem instance containing the WFG9 task.
         """
-        if K is None:
-            K = M - 1
+        if Kp is None:
+            Kp = M - 1
 
         L = 10
-        if dim is None:
-            dim = K + L
+        if D is None:
+            D = Kp + L
 
-        D = 1
+        D_scale = 1
         S = 2 * np.arange(1, M + 1)
         A = np.ones(M - 1)
 
@@ -896,28 +897,28 @@ class WFG:
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
 
-            xu = 2 * np.arange(1, dim + 1)
+            xu = 2 * np.arange(1, D + 1)
             y = x / xu
 
             ret = []
-            for i in range(0, dim - 1):
+            for i in range(0, D - 1):
                 aux = self._reduction_weighted_sum_uniform(y[:, i + 1:])
                 ret.append(self._transformation_param_dependent(y[:, i], aux))
-            y[:, :dim - 1] = np.column_stack(ret)
+            y[:, :D - 1] = np.column_stack(ret)
 
             a = []
-            for i in range(K):
+            for i in range(Kp):
                 a.append(self._transformation_shift_deceptive(y[:, i], 0.35, 0.001, 0.05))
             b = []
-            for i in range(K, dim):
+            for i in range(Kp, D):
                 b.append(self._transformation_shift_multi_modal(y[:, i], 30.0, 95.0, 0.35))
             y = np.column_stack(a + b)
 
-            gap = K // (M - 1)
+            gap = Kp // (M - 1)
             t = []
             for m in range(1, M):
                 t.append(self._reduction_non_sep(y[:, (m - 1) * gap: m * gap], gap))
-            t.append(self._reduction_non_sep(y[:, K:], dim - K))
+            t.append(self._reduction_non_sep(y[:, Kp:], D - Kp))
 
             y = np.column_stack(t)
 
@@ -931,15 +932,15 @@ class WFG:
             for m in range(M):
                 h.append(self._shape_concave(y[:, :-1], m + 1))
 
-            obj = D * y[:, -1][:, None] + S * np.column_stack(h)
+            obj = D_scale * y[:, -1][:, None] + S * np.column_stack(h)
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = 2 * np.arange(1, dim + 1, dtype=float)
+        lb = np.zeros(D)
+        ub = 2 * np.arange(1, D + 1, dtype=float)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
 # Pareto Front Generation Functions

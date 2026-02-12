@@ -1,0 +1,17 @@
+# DDMTOLab UI Requirements
+
+# Core UI framework
+dearpygui>=1.9.0
+
+# Image processing
+Pillow>=9.0.0
+
+# Data analysis display
+pandas>=2.0.0
+openpyxl>=3.0.0
+
+# SVG support (optional)
+cairosvg>=2.5.0
+
+# Numerical computing (from main package)
+numpy>=2.0.0

@@ -17,18 +17,18 @@ class CF:
     University of Essex, Colchester, UK, Tech. Rep. CES-487, 2009.
     """
 
-    def CF1(self, M=2, dim=None) -> MTOP:
+    def CF1(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF1** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(2, D, 2)
-            J2 = np.arange(1, D, 2)
+            N, n_vars = x.shape
+            J1 = np.arange(2, n_vars, 2)
+            J2 = np.arange(1, n_vars, 2)
 
             # Exponents for the transformation
             y1_exp = 0.5 * (1 + 3 * (J1 + 1 - 2) / (D - 2))
@@ -48,28 +48,28 @@ class CF:
             # Transformed to <= 0 form: 1 + abs(...) - f1 - f2 <= 0
             return 1 - obj[:, 0] - obj[:, 1] + np.abs(np.sin(10 * np.pi * (obj[:, 0] - obj[:, 1] + 1)))
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF2(self, M=2, dim=None) -> MTOP:
+    def CF2(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF2** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(2, D, 2)
-            J2 = np.arange(1, D, 2)
+            N, n_vars = x.shape
+            J1 = np.arange(2, n_vars, 2)
+            J2 = np.arange(1, n_vars, 2)
 
-            term1 = (x[:, J1] - np.sin(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / D)) ** 2
-            term2 = (x[:, J2] - np.cos(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / D)) ** 2
+            term1 = (x[:, J1] - np.sin(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / n_vars)) ** 2
+            term2 = (x[:, J2] - np.cos(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / n_vars)) ** 2
 
             obj = np.zeros((N, M))
             obj[:, 0] = x[:, 0] + (2 * np.mean(term1, axis=1) if J1.size > 0 else 0)
@@ -83,28 +83,28 @@ class CF:
             # Returns <= 0 if feasible (t >= 0)
             return -t / (1 + np.exp(4 * np.abs(t)))
 
-        lb = np.zeros(dim)
+        lb = np.zeros(D)
         lb[1:] = -1.0
-        ub = np.ones(dim)
+        ub = np.ones(D)
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF3(self, M=2, dim=None) -> MTOP:
+    def CF3(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF3** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(2, D, 2)
-            J2 = np.arange(1, D, 2)
+            N, n_vars = x.shape
+            J1 = np.arange(2, n_vars, 2)
+            J2 = np.arange(1, n_vars, 2)
 
-            Y = x - np.sin(6 * np.pi * x[:, 0:1] + (np.arange(D) + 1) * np.pi / D)
+            Y = x - np.sin(6 * np.pi * x[:, 0:1] + (np.arange(n_vars) + 1) * np.pi / n_vars)
 
             # For J1
             term1 = 4 * np.sum(Y[:, J1] ** 2, axis=1) - 2 * np.prod(np.cos(20 * Y[:, J1] * np.pi / np.sqrt(J1 + 1)),
@@ -123,29 +123,29 @@ class CF:
             # Constraint: f2 + f1^2 >= 1 + sin(...)
             return 1 - obj[:, 1] - obj[:, 0] ** 2 + np.sin(2 * np.pi * (obj[:, 0] ** 2 - obj[:, 1] + 1))
 
-        lb = np.zeros(dim)
+        lb = np.zeros(D)
         lb[1:] = -2.0
-        ub = np.ones(dim)
+        ub = np.ones(D)
         ub[1:] = 2.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF4(self, M=2, dim=None) -> MTOP:
+    def CF4(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF4** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(2, D, 2)
-            J2 = np.arange(1, D, 2)
+            N, n_vars = x.shape
+            J1 = np.arange(2, n_vars, 2)
+            J2 = np.arange(1, n_vars, 2)
 
-            Y = x - np.sin(6 * np.pi * x[:, 0:1] + (np.arange(D) + 1) * np.pi / D)
+            Y = x - np.sin(6 * np.pi * x[:, 0:1] + (np.arange(n_vars) + 1) * np.pi / n_vars)
 
             h = Y ** 2
             # Special handling for h[:, 1] (index 1)
@@ -163,31 +163,31 @@ class CF:
             t = x[:, 1] - np.sin(6 * np.pi * x[:, 0] + 2 * np.pi / x.shape[1]) - 0.5 * x[:, 0] + 0.25
             return -t / (1 + np.exp(4 * np.abs(t)))
 
-        lb = np.zeros(dim)
+        lb = np.zeros(D)
         lb[1:] = -2.0
-        ub = np.ones(dim)
+        ub = np.ones(D)
         ub[1:] = 2.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF5(self, M=2, dim=None) -> MTOP:
+    def CF5(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF5** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(2, D, 2)
-            J2 = np.arange(1, D, 2)
+            N, n_vars = x.shape
+            J1 = np.arange(2, n_vars, 2)
+            J2 = np.arange(1, n_vars, 2)
 
             Y = np.zeros_like(x)
-            Y[:, J1] = x[:, J1] - 0.8 * x[:, 0:1] * np.cos(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / D)
-            Y[:, J2] = x[:, J2] - 0.8 * x[:, 0:1] * np.sin(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / D)
+            Y[:, J1] = x[:, J1] - 0.8 * x[:, 0:1] * np.cos(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / n_vars)
+            Y[:, J2] = x[:, J2] - 0.8 * x[:, 0:1] * np.sin(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / n_vars)
 
             h = 2 * Y ** 2 - np.cos(4 * np.pi * Y) + 1
             # Special handling for Y[:, 1]
@@ -205,31 +205,31 @@ class CF:
             return -x[:, 1] + 0.8 * x[:, 0] * np.sin(6 * np.pi * x[:, 0] + 2 * np.pi / x.shape[1]) + 0.5 * x[
                 :, 0] - 0.25
 
-        lb = np.zeros(dim)
+        lb = np.zeros(D)
         lb[1:] = -2.0
-        ub = np.ones(dim)
+        ub = np.ones(D)
         ub[1:] = 2.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF6(self, M=2, dim=None) -> MTOP:
+    def CF6(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF6** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(2, D, 2)
-            J2 = np.arange(1, D, 2)
+            N, n_vars = x.shape
+            J1 = np.arange(2, n_vars, 2)
+            J2 = np.arange(1, n_vars, 2)
 
             Y = np.zeros_like(x)
-            Y[:, J1] = x[:, J1] - 0.8 * x[:, 0:1] * np.cos(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / D)
-            Y[:, J2] = x[:, J2] - 0.8 * x[:, 0:1] * np.sin(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / D)
+            Y[:, J1] = x[:, J1] - 0.8 * x[:, 0:1] * np.cos(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / n_vars)
+            Y[:, J2] = x[:, J2] - 0.8 * x[:, 0:1] * np.sin(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / n_vars)
 
             obj = np.zeros((N, M))
             obj[:, 0] = x[:, 0] + np.sum(Y[:, J1] ** 2, axis=1)
@@ -241,39 +241,39 @@ class CF:
             term1 = 0.5 * (1 - x[:, 0]) - (1 - x[:, 0]) ** 2
             term2 = 0.25 * np.sqrt(1 - x[:, 0]) - 0.5 * (1 - x[:, 0])
 
-            c1 = -x[:, 1] + 0.8 * x[:, 0] * np.sin(6 * np.pi * x[:, 0] + 2 * np.pi / D) + \
+            c1 = -x[:, 1] + 0.8 * x[:, 0] * np.sin(6 * np.pi * x[:, 0] + 2 * np.pi / n_vars) + \
                  np.sign(term1) * np.sqrt(np.abs(term1))
 
-            c2 = -x[:, 3] + 0.8 * x[:, 0] * np.sin(6 * np.pi * x[:, 0] + 4 * np.pi / D) + \
+            c2 = -x[:, 3] + 0.8 * x[:, 0] * np.sin(6 * np.pi * x[:, 0] + 4 * np.pi / n_vars) + \
                  np.sign(term2) * np.sqrt(np.abs(term2))
 
             return np.column_stack([c1, c2])
 
-        lb = np.zeros(dim)
+        lb = np.zeros(D)
         lb[1:] = -2.0
-        ub = np.ones(dim)
+        ub = np.ones(D)
         ub[1:] = 2.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF7(self, M=2, dim=None) -> MTOP:
+    def CF7(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF7** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(2, D, 2)
-            J2 = np.arange(1, D, 2)
+            N, n_vars = x.shape
+            J1 = np.arange(2, n_vars, 2)
+            J2 = np.arange(1, n_vars, 2)
 
             Y = np.zeros_like(x)
-            Y[:, J1] = x[:, J1] - np.cos(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / D)
-            Y[:, J2] = x[:, J2] - np.sin(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / D)
+            Y[:, J1] = x[:, J1] - np.cos(6 * np.pi * x[:, 0:1] + (J1 + 1) * np.pi / n_vars)
+            Y[:, J2] = x[:, J2] - np.sin(6 * np.pi * x[:, 0:1] + (J2 + 1) * np.pi / n_vars)
 
             h = 2 * Y ** 2 - np.cos(4 * np.pi * Y) + 1
             # Special handling for h[:, 1] (index 1) and h[:, 3] (index 3)
@@ -290,38 +290,38 @@ class CF:
             term1 = 0.5 * (1 - x[:, 0]) - (1 - x[:, 0]) ** 2
             term2 = 0.25 * np.sqrt(1 - x[:, 0]) - 0.5 * (1 - x[:, 0])
 
-            c1 = -x[:, 1] + np.sin(6 * np.pi * x[:, 0] + 2 * np.pi / D) + \
+            c1 = -x[:, 1] + np.sin(6 * np.pi * x[:, 0] + 2 * np.pi / n_vars) + \
                  np.sign(term1) * np.sqrt(np.abs(term1))
 
-            c2 = -x[:, 3] + np.sin(6 * np.pi * x[:, 0] + 4 * np.pi / D) + \
+            c2 = -x[:, 3] + np.sin(6 * np.pi * x[:, 0] + 4 * np.pi / n_vars) + \
                  np.sign(term2) * np.sqrt(np.abs(term2))
 
             return np.column_stack([c1, c2])
 
-        lb = np.zeros(dim)
+        lb = np.zeros(D)
         lb[1:] = -2.0
-        ub = np.ones(dim)
+        ub = np.ones(D)
         ub[1:] = 2.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF8(self, M=3, dim=None) -> MTOP:
+    def CF8(self, M=3, D=None) -> MTOP:
         """
         Generates the **CF8** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(3, D, 3)  # Indices 3, 6, 9...
-            J2 = np.arange(4, D, 3)  # Indices 4, 7, 10...
-            J3 = np.arange(2, D, 3)  # Indices 2, 5, 8...
+            N, n_vars = x.shape
+            J1 = np.arange(3, n_vars, 3)  # Indices 3, 6, 9...
+            J2 = np.arange(4, n_vars, 3)  # Indices 4, 7, 10...
+            J3 = np.arange(2, n_vars, 3)  # Indices 2, 5, 8...
 
-            Y = x - 2 * x[:, 1:2] * np.sin(2 * np.pi * x[:, 0:1] + (np.arange(D) + 1) * np.pi / D)
+            Y = x - 2 * x[:, 1:2] * np.sin(2 * np.pi * x[:, 0:1] + (np.arange(n_vars) + 1) * np.pi / n_vars)
 
             obj = np.zeros((N, M))
             obj[:, 0] = np.cos(0.5 * x[:, 0] * np.pi) * np.cos(0.5 * x[:, 1] * np.pi) + (
@@ -345,30 +345,30 @@ class CF:
             val = 1 - term + 4 * np.abs(np.sin(2 * np.pi * ((obj[:, 0] ** 2 - obj[:, 1] ** 2) / den + 1)))
             return val
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         lb[2:] = -4.0
         ub[2:] = 4.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF9(self, M=3, dim=None) -> MTOP:
+    def CF9(self, M=3, D=None) -> MTOP:
         """
         Generates the **CF9** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(3, D, 3)
-            J2 = np.arange(4, D, 3)
-            J3 = np.arange(2, D, 3)
+            N, n_vars = x.shape
+            J1 = np.arange(3, n_vars, 3)
+            J2 = np.arange(4, n_vars, 3)
+            J3 = np.arange(2, n_vars, 3)
 
-            Y = x - 2 * x[:, 1:2] * np.sin(2 * np.pi * x[:, 0:1] + (np.arange(D) + 1) * np.pi / D)
+            Y = x - 2 * x[:, 1:2] * np.sin(2 * np.pi * x[:, 0:1] + (np.arange(n_vars) + 1) * np.pi / n_vars)
 
             obj = np.zeros((N, M))
             obj[:, 0] = np.cos(0.5 * x[:, 0] * np.pi) * np.cos(0.5 * x[:, 1] * np.pi) + (
@@ -389,30 +389,30 @@ class CF:
             val = 1 - term + 3 * np.sin(2 * np.pi * ((obj[:, 0] ** 2 - obj[:, 1] ** 2) / den + 1))
             return val
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         lb[2:] = -2.0
         ub[2:] = 2.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def CF10(self, M=3, dim=None) -> MTOP:
+    def CF10(self, M=3, D=None) -> MTOP:
         """
         Generates the **CF10** problem.
         """
-        if dim is None:
-            dim = 10
+        if D is None:
+            D = 10
 
         def T1(x):
             x = np.atleast_2d(x)
-            N, D = x.shape
-            J1 = np.arange(3, D, 3)
-            J2 = np.arange(4, D, 3)
-            J3 = np.arange(2, D, 3)
+            N, n_vars = x.shape
+            J1 = np.arange(3, n_vars, 3)
+            J2 = np.arange(4, n_vars, 3)
+            J3 = np.arange(2, n_vars, 3)
 
-            Y = x - 2 * x[:, 1:2] * np.sin(2 * np.pi * x[:, 0:1] + (np.arange(D) + 1) * np.pi / D)
+            Y = x - 2 * x[:, 1:2] * np.sin(2 * np.pi * x[:, 0:1] + (np.arange(n_vars) + 1) * np.pi / n_vars)
 
             h_J1 = 4 * Y[:, J1] ** 2 - np.cos(8 * np.pi * Y[:, J1]) + 1
             h_J2 = 4 * Y[:, J2] ** 2 - np.cos(8 * np.pi * Y[:, J2]) + 1
@@ -438,13 +438,13 @@ class CF:
             val = 1 - term + np.sin(2 * np.pi * ((obj[:, 0] ** 2 - obj[:, 1] ** 2) / den + 1))
             return val
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         lb[2:] = -2.0
         ub[2:] = 2.0
 
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
 

@@ -152,12 +152,12 @@ animation = create_optimization_animation(max_nfes=100, merge=2, title='BO vs MT
 
 ### Algorithms (60+)
 
-| Category | Description | Algorithms |
-|----------|-------------|------------|
-| **STSO** | Single-Task Single-Objective | GA, DE, PSO, SL_PSO, KL_PSO, CSO, CMA_ES, IPOP_CMA_ES, sep_CMA_ES, MA_ES, xNES, OpenAI_ES, AO, GWO, EO, BO, EEI_BO, ESAO, SHPSO, SA_COSO, TLRBF, GL_SADE |
-| **STMO** | Single-Task Multi-Objective | NSGA_II, NSGA_III, NSGA_II_SDR, SPEA2, MOEA_D, MOEA_DD, MOEA_D_FRRMAB, MOEA_D_STM, RVEA, IBEA, TwoArch2, MSEA, C_TAEA, CCMO, MCEA_D, CPS_MOEA, ParEGO, K_RVEA, DSAEA_PS, KTA2, REMO |
-| **MTSO** | Multi-Task Single-Objective | MFEA, MFEA_II, EMEA, EBS, G_MFEA, MTEA_AD, MKTDE, MTEA_SaO, SREMTO, LCB_EMT, MTBO, RAMTEA, SELF, EEI_BO_plus, MUMBO, BO_LCB_CKT, BO_LCB_BCKT |
-| **MTMO** | Multi-Task Multi-Objective | MO_MFEA, MO_MFEA_II, MO_EMEA, MO_MTEA_SaO, MTDE_MKTA, MTEA_D_DN, EMT_ET, EMT_PD, ParEGO_KT |
+| Category | Description                  | Algorithms |
+|----------|------------------------------|------------|
+| **STSO** | Single-task single-objective | GA, DE, PSO, SL_PSO, KL_PSO, CSO, CMA_ES, IPOP_CMA_ES, sep_CMA_ES, MA_ES, xNES, OpenAI_ES, AO, GWO, EO, BO, EEI_BO, ESAO, SHPSO, SA_COSO, TLRBF, GL_SADE |
+| **STMO** | Single-task multiobjective   | NSGA_II, NSGA_III, NSGA_II_SDR, SPEA2, MOEA_D, MOEA_DD, MOEA_D_FRRMAB, MOEA_D_STM, RVEA, IBEA, TwoArch2, MSEA, C_TAEA, CCMO, MCEA_D, CPS_MOEA, ParEGO, K_RVEA, DSAEA_PS, KTA2, REMO |
+| **MTSO** | Multitask single-objective   | MFEA, MFEA_II, EMEA, EBS, G_MFEA, MTEA_AD, MKTDE, MTEA_SaO, SREMTO, LCB_EMT, MTBO, RAMTEA, SELF, EEI_BO_plus, MUMBO, BO_LCB_CKT, BO_LCB_BCKT |
+| **MTMO** | Multitask multiobjective     | MO_MFEA, MO_MFEA_II, MO_EMEA, MO_MTEA_SaO, MTDE_MKTA, MTEA_D_DN, EMT_ET, EMT_PD, ParEGO_KT |
 
 ### Problems (180+)
 

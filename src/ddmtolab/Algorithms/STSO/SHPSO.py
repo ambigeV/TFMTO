@@ -19,7 +19,7 @@ import numpy as np
 from tqdm import tqdm
 from scipy.interpolate import RBFInterpolator
 from ddmtolab.Methods.Algo_Methods.algo_utils import *
-from ddmtolab.Algorithms.STSO.SLPSO import SLPSO
+from ddmtolab.Algorithms.STSO.SL_PSO import SL_PSO
 from ddmtolab.Methods.mtop import MTOP
 import warnings
 
@@ -372,7 +372,7 @@ class SHPSO:
         max_nfes = n_pop * max_gen
 
         # Run SL-PSO
-        slpso = SLPSO(surrogate_problem, n=n_pop, max_nfes=max_nfes, disable_tqdm=True)
+        slpso = SL_PSO(surrogate_problem, n=n_pop, max_nfes=max_nfes, save_data=False)
         results = slpso.optimize()
 
         # Get best solution

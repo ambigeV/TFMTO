@@ -995,6 +995,8 @@ Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]]:
             if dif > 0:
                 if padding == 'random':
                     pad_values = np.random.rand(n_samples, dif)
+                elif padding == 'mid':
+                    pad_values = np.full((n_samples, dif), 0.5)
                 else:  # padding == 'zero'
                     pad_values = np.zeros((n_samples, dif))
                 new_decs[i] = np.hstack([new_decs[i], pad_values])
@@ -1008,6 +1010,8 @@ Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]]:
                 if dif > 0:
                     if padding == 'random':
                         pad_values = np.random.rand(n_samples, dif)
+                    elif padding == 'mid':
+                        pad_values = np.full((n_samples, dif), 0.5)
                     else:  # padding == 'zero'
                         pad_values = np.zeros((n_samples, dif))
                     new_objs[i] = np.hstack([new_objs[i], pad_values])
@@ -1030,6 +1034,8 @@ Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]]:
                         if dif > 0:
                             if padding == 'random':
                                 pad_values = np.random.rand(n_samples, dif)
+                            elif padding == 'mid':
+                                pad_values = np.full((n_samples, dif), 0.5)
                             else:  # padding == 'zero'
                                 pad_values = np.zeros((n_samples, dif))
                             new_cons[i] = np.hstack([new_cons[i], pad_values])

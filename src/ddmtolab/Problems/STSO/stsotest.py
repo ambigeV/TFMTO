@@ -3,6 +3,31 @@ from ddmtolab.Methods.mtop import MTOP
 import numpy as np
 
 
+def _generate_rotation_and_offset(D, seed=1234):
+    """
+    Generate rotation matrix and offset vector for STSOtest problems.
+
+    Parameters
+    ----------
+    D : int
+        Dimensionality of the search space.
+    seed : int, optional
+        Random seed for reproducibility (default is 1234).
+
+    Returns
+    -------
+    M : numpy.ndarray
+        Orthogonal rotation matrix of shape (D, D).
+    o : numpy.ndarray
+        Offset vector of shape (1, D).
+    """
+    np.random.seed(seed)
+    random_matrix = np.random.randn(D, D)
+    M, _ = np.linalg.qr(random_matrix)
+    o = np.random.uniform(0., 10., (1, D))
+    return M, o
+
+
 class STSOtest:
     """
     Modified Single-Task Optimization (STSOtest) benchmark problems.
@@ -13,232 +38,268 @@ class STSOtest:
     Unlike CLASSICALSO, this class uses non-identity rotation matrices (M)
     and non-zero offset vectors (o) to create different but corresponding
     problem instances.
-
-    Parameters
-    ----------
-    dim : int, optional
-        The dimensionality of the search space for all tasks (default is 50).
-
-    Attributes
-    ----------
-    dim : int
-        The dimensionality of the problem.
-    M : numpy.ndarray
-        Rotation matrix for transformation (orthogonal matrix).
-    o : numpy.ndarray
-        Offset vector for shifting the optimum.
     """
 
-    def __init__(self, dim=50):
-        self.dim = dim
-        np.random.seed(1234)
-        random_matrix = np.random.randn(self.dim, self.dim)
-        self.M, _ = np.linalg.qr(random_matrix)
-        self.o = np.random.uniform(0., 10., (1, self.dim))
+    def __init__(self):
+        pass
 
-    def P1(self) -> MTOP:
+    def P1(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Ackley** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Ackley task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Ackley(x, self.M, self.o, 0.0)
+            return Ackley(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P2(self) -> MTOP:
+    def P2(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Elliptic** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Elliptic task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Elliptic(x, self.M, self.o, 0.0)
+            return Elliptic(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P3(self) -> MTOP:
+    def P3(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Griewank** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Griewank task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Griewank(x, self.M, self.o, 0.0)
+            return Griewank(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P4(self) -> MTOP:
+    def P4(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Rastrigin** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Rastrigin task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Rastrigin(x, self.M, self.o, 0.0)
+            return Rastrigin(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P5(self) -> MTOP:
+    def P5(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Rosenbrock** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Rosenbrock task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Rosenbrock(x, self.M, self.o, 0.0)
+            return Rosenbrock(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P6(self) -> MTOP:
+    def P6(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Schwefel** function (F6).
 
         The search space is set to [-500.0, 500.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Schwefel task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Schwefel(x, self.M, self.o, 0.0)
+            return Schwefel(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -500.0)
-        ub = np.full(self.dim, 500.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -500.0)
+        ub = np.full(D, 500.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P7(self) -> MTOP:
+    def P7(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Schwefel 2.22** function (F7).
 
         The search space is set to [-100.0, 100.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Schwefel 2.22 task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Schwefel2(x, self.M, self.o, 0.0)
+            return Schwefel2(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P8(self) -> MTOP:
+    def P8(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Sphere** function.
 
         The search space is set to [-100.0, 100.0] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Sphere task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Sphere(x, self.M, self.o, 0.0)
+            return Sphere(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -100.0)
-        ub = np.full(self.dim, 100.0)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -100.0)
+        ub = np.full(D, 100.0)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def P9(self) -> MTOP:
+    def P9(self, D=50) -> MTOP:
         """
         Generates a single-task MTOP based on the **Weierstrass** function.
 
         The search space is set to [-0.5, 0.5] in all dimensions.
         Uses fixed rotation matrix M and offset vector o.
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing the modified Weierstrass task.
         """
+        M, o = _generate_rotation_and_offset(D)
 
         def Task(x):
             x = np.atleast_2d(x)
-            return Weierstrass(x, self.M, self.o, 0.0)
+            return Weierstrass(x, M, o, 0.0)
 
         problem = MTOP()
-        lb = np.full(self.dim, -0.5)
-        ub = np.full(self.dim, 0.5)
-        problem.add_task(Task, dim=self.dim, lower_bound=lb, upper_bound=ub)
+        lb = np.full(D, -0.5)
+        ub = np.full(D, 0.5)
+        problem.add_task(Task, dim=D, lower_bound=lb, upper_bound=ub)
         return problem

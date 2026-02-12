@@ -22,10 +22,10 @@ class ZDT:
     Notes
     -----
     All ZDT problems have exactly M=2 objectives. The decision space dimension
-    can be adjusted via the `dim` parameter.
+    can be adjusted via the `D` parameter.
     """
 
-    def ZDT1(self, dim=30) -> MTOP:
+    def ZDT1(self, D=30) -> MTOP:
         """
         Generates the **ZDT1** problem.
 
@@ -34,7 +34,7 @@ class ZDT:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -57,13 +57,13 @@ class ZDT:
             obj[:, 1] = g * h
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def ZDT2(self, dim=30) -> MTOP:
+    def ZDT2(self, D=30) -> MTOP:
         """
         Generates the **ZDT2** problem.
 
@@ -72,7 +72,7 @@ class ZDT:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -95,13 +95,13 @@ class ZDT:
             obj[:, 1] = g * h
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def ZDT3(self, dim=30) -> MTOP:
+    def ZDT3(self, D=30) -> MTOP:
         """
         Generates the **ZDT3** problem.
 
@@ -110,7 +110,7 @@ class ZDT:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -133,13 +133,13 @@ class ZDT:
             obj[:, 1] = g * h
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def ZDT4(self, dim=10) -> MTOP:
+    def ZDT4(self, D=10) -> MTOP:
         """
         Generates the **ZDT4** problem.
 
@@ -148,7 +148,7 @@ class ZDT:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 10).
 
         Returns
@@ -173,13 +173,13 @@ class ZDT:
             obj[:, 1] = g * h
             return obj
 
-        lb = np.hstack([0, -5 * np.ones(dim - 1)])
-        ub = np.hstack([1, 5 * np.ones(dim - 1)])
+        lb = np.hstack([0, -5 * np.ones(D - 1)])
+        ub = np.hstack([1, 5 * np.ones(D - 1)])
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def ZDT5(self, dim=80) -> MTOP:
+    def ZDT5(self, D=80) -> MTOP:
         """
         Generates the **ZDT5** problem.
 
@@ -188,7 +188,7 @@ class ZDT:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 80). The actual dimension
             will be adjusted to 30 + 5k format.
 
@@ -203,7 +203,7 @@ class ZDT:
         to binary by thresholding at 0.5: x > 0.5 → 1, x ≤ 0.5 → 0.
         """
         # Adjust dimension to 30 + 5k format
-        dim = int(np.ceil(max(dim - 30, 1) / 5)) * 5 + 30
+        D = int(np.ceil(max(D - 30, 1) / 5)) * 5 + 30
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -212,7 +212,7 @@ class ZDT:
             x_binary = (x > 0.5).astype(int)
 
             n_samples = x_binary.shape[0]
-            # Number of groups: 1 group of 30 + (dim - 30) / 5 groups of 5
+            # Number of groups: 1 group of 30 + (D - 30) / 5 groups of 5
             n_groups = 1 + (x_binary.shape[1] - 30) // 5
             u = np.zeros((n_samples, n_groups))
 
@@ -245,13 +245,13 @@ class ZDT:
             return obj
 
         # Binary variables: lower bound 0, upper bound 1
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def ZDT6(self, dim=10) -> MTOP:
+    def ZDT6(self, D=10) -> MTOP:
         """
         Generates the **ZDT6** problem.
 
@@ -260,7 +260,7 @@ class ZDT:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 10).
 
         Returns
@@ -283,10 +283,10 @@ class ZDT:
             obj[:, 1] = g * h
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
 

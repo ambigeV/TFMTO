@@ -14,9 +14,15 @@ class CEC17MTSO:
     of algorithms to leverage knowledge transfer under various relationships
     between tasks (similarity of global optima and search spaces).
 
+    Notes
+    -----
+    Fixed parameters by benchmark definition:
+    - D=50 (decision variables)
+    - K=2 (number of tasks)
+
     Attributes
     ----------
-    mat_dir : str
+    data_dir : str
         The directory path for problem data files.
     """
 

@@ -22,9 +22,9 @@ from ddmtolab.Algorithms.STMO.K_RVEA import K_RVEA
 # Problem Setup and Optimization
 # =============================================================================
 # DTLZ2: scalable multi-objective benchmark
-# M=4: 4 objectives, dim=10: 10 decision variables
+# M=4: 4 objectives, D=10: 10 decision variables
 
-problem = DTLZ().DTLZ2(M=4, dim=10)
+problem = DTLZ().DTLZ2(M=4, D=10)
 
 # Compare algorithms with limited budget (200 evaluations)
 # NSGA-II: standard MOEA (baseline)

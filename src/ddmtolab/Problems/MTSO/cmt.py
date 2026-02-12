@@ -8,7 +8,6 @@ Each function has both objective and constraint components.
 
 import numpy as np
 from typing import Tuple
-from typing import Optional
 from ddmtolab.Methods.mtop import MTOP
 
 
@@ -847,20 +846,37 @@ def C_Weierstrass3(var: np.ndarray, M: np.ndarray, opt: np.ndarray,
 
 
 class CMT:
-    def __init__(self, default_dim: int = 50):
-        self.default_dim = default_dim
+    """
+    CMT (Constrained Multi-Task) benchmark problems.
 
-    def CMT1(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+    This class provides constrained multi-task optimization problems
+    with various function combinations and constraint types.
+    """
 
+    def __init__(self):
+        pass
+
+    def CMT1(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 1: Griewank (Type 1 constraint) + Rastrigin (Type 1 constraint).
+
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = np.zeros(dim)
-        opt_con1 = -40 * np.ones(dim)
+        opt1 = np.zeros(D)
+        opt_con1 = -40 * np.ones(D)
 
         M2 = np.array([[1.0]])
-        opt2 = np.zeros(dim)
-        opt_con2 = 20 * np.ones(dim)
+        opt2 = np.zeros(D)
+        opt_con2 = 20 * np.ones(D)
 
         def task1_func(x):
             obj, con = C_Griewank1(x, M1, opt1, opt_con1)
@@ -889,14 +905,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-100,
             upper_bound=100
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-50,
             upper_bound=50
@@ -904,17 +920,27 @@ class CMT:
 
         return problem
 
-    def CMT2(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+    def CMT2(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 2: Ackley (Type 2 constraint) + Rastrigin (Type 2 constraint).
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = np.zeros(dim)
-        opt_con1 = -4 * np.ones(dim)
+        opt1 = np.zeros(D)
+        opt_con1 = -4 * np.ones(D)
 
         M2 = np.array([[1.0]])
-        opt2 = np.zeros(dim)
-        opt_con2 = 4 * np.ones(dim)
+        opt2 = np.zeros(D)
+        opt_con2 = 4 * np.ones(D)
 
         def task1_func(x):
             obj, con = C_Ackley2(x, M1, opt1, opt_con1)
@@ -943,14 +969,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-50,
             upper_bound=50
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-50,
             upper_bound=50
@@ -958,17 +984,27 @@ class CMT:
 
         return problem
 
-    def CMT3(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+    def CMT3(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 3: Ackley (Type 2 constraint) + Schwefel (Type 1 constraint).
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = 42.096 * np.ones(dim)
-        opt_con1 = 40 * np.ones(dim)
+        opt1 = 42.096 * np.ones(D)
+        opt_con1 = 40 * np.ones(D)
 
         M2 = np.array([[1.0]])
-        opt2 = np.zeros(dim)
-        opt_con2 = 400 * np.ones(dim)
+        opt2 = np.zeros(D)
+        opt_con2 = 400 * np.ones(D)
 
         def task1_func(x):
             obj, con = C_Ackley2(x, M1, opt1, opt_con1)
@@ -997,14 +1033,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-50,
             upper_bound=50
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-500,
             upper_bound=500
@@ -1012,17 +1048,27 @@ class CMT:
 
         return problem
 
-    def CMT4(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+    def CMT4(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 4: Rastrigin (Type 1 constraint) + Sphere (Type 1 constraint).
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = np.zeros(dim)
-        opt_con1 = -20 * np.ones(dim)
+        opt1 = np.zeros(D)
+        opt_con1 = -20 * np.ones(D)
 
         M2 = np.array([[1.0]])
-        opt2 = np.zeros(dim)
-        opt_con2 = 30 * np.ones(dim)
+        opt2 = np.zeros(D)
+        opt_con2 = 30 * np.ones(D)
 
         def task1_func(x):
             obj, con = C_Rastrigin1(x, M1, opt1, opt_con1)
@@ -1051,14 +1097,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-50,
             upper_bound=50
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-100,
             upper_bound=100
@@ -1066,17 +1112,27 @@ class CMT:
 
         return problem
 
-    def CMT5(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+    def CMT5(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 5: Ackley (Type 1 constraint) + Rosenbrock (Type 2 constraint).
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = np.zeros(dim)
-        opt_con1 = -30 * np.ones(dim)
+        opt1 = np.zeros(D)
+        opt_con1 = -30 * np.ones(D)
 
         M2 = np.array([[1.0]])
-        opt2 = np.zeros(dim)
-        opt_con2 = np.zeros(dim)
+        opt2 = np.zeros(D)
+        opt_con2 = np.zeros(D)
 
         def task1_func(x):
             obj, con = C_Ackley1(x, M1, opt1, opt_con1)
@@ -1105,14 +1161,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-50,
             upper_bound=50
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-50,
             upper_bound=50
@@ -1120,17 +1176,27 @@ class CMT:
 
         return problem
 
-    def CMT6(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+    def CMT6(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 6: Ackley (Type 2 constraint) + Weierstrass (Type 3 constraint).
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = 2 * np.ones(dim)
-        opt_con1 = np.zeros(dim)
+        opt1 = 2 * np.ones(D)
+        opt_con1 = np.zeros(D)
 
         M2 = np.array([[1.0]])
-        opt2 = 0.1 * np.ones(dim)
-        opt_con2 = np.zeros(dim)
+        opt2 = 0.1 * np.ones(D)
+        opt_con2 = np.zeros(D)
 
         def task1_func(x):
             obj, con = C_Ackley2(x, M1, opt1, opt_con1)
@@ -1159,14 +1225,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-50,
             upper_bound=50
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-0.5,
             upper_bound=0.5
@@ -1174,19 +1240,27 @@ class CMT:
 
         return problem
 
-    # 添加到 cmt.py 中的 CMT 类
+    def CMT7(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 7: Rosenbrock (Type 1 constraint) + Rastrigin (Type 1 constraint).
 
-    def CMT7(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = -30 * np.ones(dim)
-        opt_con1 = -35 * np.ones(dim)
+        opt1 = -30 * np.ones(D)
+        opt_con1 = -35 * np.ones(D)
 
         M2 = np.array([[1.0]])
-        opt2 = 35 * np.ones(dim)
-        opt_con2 = 40 * np.ones(dim)
+        opt2 = 35 * np.ones(D)
+        opt_con2 = 40 * np.ones(D)
 
         def task1_func(x):
             obj, con = C_Rosenbrock1(x, M1, opt1, opt_con1)
@@ -1215,14 +1289,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-50,
             upper_bound=50
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-50,
             upper_bound=50
@@ -1230,17 +1304,27 @@ class CMT:
 
         return problem
 
-    def CMT8(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+    def CMT8(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 8: Griewank (Type 2 constraint) + Weierstrass (Type 3 constraint).
 
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
+
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = np.zeros(dim)
-        opt_con1 = -30 * np.ones(dim)
+        opt1 = np.zeros(D)
+        opt_con1 = -30 * np.ones(D)
 
         M2 = np.array([[1.0]])
-        opt2 = np.zeros(dim)
-        opt_con2 = 0.2 * np.ones(dim)
+        opt2 = np.zeros(D)
+        opt_con2 = 0.2 * np.ones(D)
 
         def task1_func(x):
             obj, con = C_Griewank2(x, M1, opt1, opt_con1)
@@ -1269,14 +1353,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-100,
             upper_bound=100
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-0.5,
             upper_bound=0.5
@@ -1284,18 +1368,27 @@ class CMT:
 
         return problem
 
+    def CMT9(self, D: int = 50) -> MTOP:
+        """
+        CMT Problem 9: Rastrigin (Type 4 constraint) + Schwefel (Type 2 constraint).
 
-    def CMT9(self, dim: Optional[int] = None) -> MTOP:
-        if dim is None:
-            dim = self.default_dim
+        Parameters
+        ----------
+        D : int, optional
+            Number of decision variables (default is 50).
 
+        Returns
+        -------
+        MTOP
+            A Multi-Task Optimization Problem instance.
+        """
         M1 = np.array([[1.0]])
-        opt1 = -10 * np.ones(dim)
-        opt_con1 = np.zeros(dim)
+        opt1 = -10 * np.ones(D)
+        opt_con1 = np.zeros(D)
 
         M2 = np.array([[1.0]])
-        opt2 = np.zeros(dim)
-        opt_con2 = 100 * np.ones(dim)
+        opt2 = np.zeros(D)
+        opt_con2 = 100 * np.ones(D)
 
         def task1_func(x):
             obj, con = C_Rastrigin4(x, M1, opt1, opt_con1)
@@ -1324,14 +1417,14 @@ class CMT:
         problem = MTOP()
         problem.add_task(
             objective_func=task1_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task1_constraint,
             lower_bound=-50,
             upper_bound=50
         )
         problem.add_task(
             objective_func=task2_objective,
-            dim=dim,
+            dim=D,
             constraint_func=task2_constraint,
             lower_bound=-500,
             upper_bound=500

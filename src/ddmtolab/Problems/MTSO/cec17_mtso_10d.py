@@ -14,6 +14,12 @@ class CEC17MTSO_10D:
     relationships as the original 50D CEC17 MTSO set but are configured with
     a reduced search space dimensionality (D=10) for both tasks.
 
+    Notes
+    -----
+    Fixed parameters by benchmark definition:
+    - D=10 (decision variables)
+    - K=2 (number of tasks)
+
     Attributes
     ----------
     data_dir : str

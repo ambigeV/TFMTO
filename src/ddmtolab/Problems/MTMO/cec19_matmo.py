@@ -6,10 +6,17 @@ from ddmtolab.Methods.mtop import MTOP
 
 class CEC19_MaTMO:
     """
-    Implementation of CEC19 MaTMO benchmark problems P1-P6.
+    Implementation of CEC19 MaTMO (Many-Task Multi-Objective) benchmark problems P1-P6.
 
     CRITICAL: P1, P4, P6 use DTLZ formulation
               P2, P3, P5 use ZDT formulation
+
+    Notes
+    -----
+    Fixed parameters by benchmark definition:
+    - D=50 (decision variables)
+    - M=2 (number of objectives)
+    - K is configurable (default is 10)
 
     Attributes
     ----------
@@ -101,7 +108,7 @@ class CEC19_MaTMO:
 
         return h
 
-    def P1(self, task_num=10) -> MTOP:
+    def P1(self, K=10) -> MTOP:
         """
         P1: Sphere + Circular PF (DTLZ formulation)
 
@@ -121,7 +128,7 @@ class CEC19_MaTMO:
 
         problem = MTOP()
 
-        for task_id in range(1, task_num + 1):
+        for task_id in range(1, K + 1):
             shift_vector, rotation_matrix = self._load_shift_rotation(problem_id, task_id)
 
             def create_task_func(sv, rm):
@@ -143,7 +150,7 @@ class CEC19_MaTMO:
 
         return problem
 
-    def P2(self, task_num=10) -> MTOP:
+    def P2(self, K=10) -> MTOP:
         """
         P2: Mean + Concave PF (ZDT formulation)
 
@@ -165,7 +172,7 @@ class CEC19_MaTMO:
 
         problem = MTOP()
 
-        for task_id in range(1, task_num + 1):
+        for task_id in range(1, K + 1):
             shift_vector, rotation_matrix = self._load_shift_rotation(problem_id, task_id)
 
             def create_task_func(sv, rm):
@@ -187,7 +194,7 @@ class CEC19_MaTMO:
 
         return problem
 
-    def P3(self, task_num=10) -> MTOP:
+    def P3(self, K=10) -> MTOP:
         """
         P3: Rosenbrock + Concave PF (ZDT formulation)
 
@@ -209,7 +216,7 @@ class CEC19_MaTMO:
 
         problem = MTOP()
 
-        for task_id in range(1, task_num + 1):
+        for task_id in range(1, K + 1):
             shift_vector, rotation_matrix = self._load_shift_rotation(problem_id, task_id)
 
             def create_task_func(sv, rm):
@@ -231,7 +238,7 @@ class CEC19_MaTMO:
 
         return problem
 
-    def P4(self, task_num=10) -> MTOP:
+    def P4(self, K=10) -> MTOP:
         """
         P4: Rastrigin + Circular PF (DTLZ formulation)
 
@@ -251,7 +258,7 @@ class CEC19_MaTMO:
 
         problem = MTOP()
 
-        for task_id in range(1, task_num + 1):
+        for task_id in range(1, K + 1):
             shift_vector, rotation_matrix = self._load_shift_rotation(problem_id, task_id)
 
             def create_task_func(sv, rm):
@@ -273,7 +280,7 @@ class CEC19_MaTMO:
 
         return problem
 
-    def P5(self, task_num=10) -> MTOP:
+    def P5(self, K=10) -> MTOP:
         """
         P5: Ackley + Convex PF (ZDT formulation)
 
@@ -295,7 +302,7 @@ class CEC19_MaTMO:
 
         problem = MTOP()
 
-        for task_id in range(1, task_num + 1):
+        for task_id in range(1, K + 1):
             shift_vector, rotation_matrix = self._load_shift_rotation(problem_id, task_id)
 
             def create_task_func(sv, rm):
@@ -317,7 +324,7 @@ class CEC19_MaTMO:
 
         return problem
 
-    def P6(self, task_num=10) -> MTOP:
+    def P6(self, K=10) -> MTOP:
         """
         P6: Griewank + Circular PF (DTLZ formulation)
 
@@ -337,7 +344,7 @@ class CEC19_MaTMO:
 
         problem = MTOP()
 
-        for task_id in range(1, task_num + 1):
+        for task_id in range(1, K + 1):
             shift_vector, rotation_matrix = self._load_shift_rotation(problem_id, task_id)
 
             def create_task_func(sv, rm):

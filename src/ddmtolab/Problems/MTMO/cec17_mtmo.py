@@ -13,6 +13,12 @@ class CEC17MTMO:
     with shared variables, designed to test knowledge transfer in the presence of
     multiple conflicting objectives. All tasks are minimization problems.
 
+    Notes
+    -----
+    Fixed parameters by benchmark definition:
+    - K=2 (number of tasks)
+    - D and M vary by problem (see individual method docstrings)
+
     Attributes
     ----------
     data_dir : str

@@ -24,11 +24,23 @@ class CEC10_CSO:
         Tolerance for equality constraints (default: 1e-4).
     data_dir : str
         The directory path for problem data files.
+    max_dim : int
+        Maximum allowed dimension (30, due to offset vector size).
     """
+
+    max_dim = 30  # Offset vectors have 30 elements
 
     def __init__(self):
         self.delta = 1e-4
         self.data_dir = 'data_cec10cso'
+
+    def _validate_dim(self, dim: int) -> int:
+        """Validate and cap dimension to max_dim."""
+        if dim > self.max_dim:
+            import warnings
+            warnings.warn(f"CEC10_CSO: dim={dim} exceeds max_dim={self.max_dim}, capping to {self.max_dim}")
+            return self.max_dim
+        return dim
 
     def P1(self, dim=10) -> MTOP:
         """
@@ -42,13 +54,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 1.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P1
@@ -141,13 +154,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 2.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P2
@@ -235,13 +249,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 3.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P3
@@ -328,13 +343,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 4.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P4
@@ -431,13 +447,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 5.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P5
@@ -522,14 +539,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 6.
         """
-
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P6
@@ -630,13 +647,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 7.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P7
@@ -724,13 +742,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 8.
         """
+        dim = self._validate_dim(dim)
         import scipy.io
         import os
         delta = self.delta
@@ -835,13 +854,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 9.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P9
@@ -928,13 +948,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 10.
         """
+        dim = self._validate_dim(dim)
         import scipy.io
         import os
         delta = self.delta
@@ -1039,13 +1060,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 11.
         """
+        dim = self._validate_dim(dim)
         import scipy.io
         import os
         delta = self.delta
@@ -1148,13 +1170,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 12.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P12
@@ -1239,13 +1262,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 13.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P13
@@ -1335,13 +1359,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 14.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P14
@@ -1432,13 +1457,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 15.
         """
+        dim = self._validate_dim(dim)
         import scipy.io
         import os
         delta = self.delta
@@ -1547,13 +1573,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 16.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P16
@@ -1644,13 +1671,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 17.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P17
@@ -1738,13 +1766,14 @@ class CEC10_CSO:
         Parameters
         ----------
         dim : int, optional
-            The dimensionality of the search space (default is 10 or 30).
+            The dimensionality of the search space (default is 10, max is 30).
 
         Returns
         -------
         MTOP
             A Multi-Task Optimization Problem instance containing Problem 18.
         """
+        dim = self._validate_dim(dim)
         delta = self.delta
 
         # Offset vector for P18

@@ -19,7 +19,7 @@ class DTLZ:
     and k complexity variables (x[M-1:]).
     """
 
-    def DTLZ1(self, M=3, dim=None) -> MTOP:
+    def DTLZ1(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ1** problem.
 
@@ -30,7 +30,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M + k - 1,
             where k=5 for DTLZ1 (default is None).
 
@@ -40,14 +40,14 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ1 task.
         """
         k = 5
-        if dim is None:
-            dim = M + k - 1
+        if D is None:
+            D = M + k - 1
 
         def T1(x):
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
             xM = x[:, M - 1:]
-            g = 100 * (dim - M + 1 + np.sum((xM - 0.5) ** 2 - np.cos(20 * np.pi * (xM - 0.5)), axis=1))
+            g = 100 * (D - M + 1 + np.sum((xM - 0.5) ** 2 - np.cos(20 * np.pi * (xM - 0.5)), axis=1))
             obj = np.zeros((n_samples, M))
             for i in range(M):
                 obj[:, i] = 0.5 * (1 + g)
@@ -57,13 +57,13 @@ class DTLZ:
                     obj[:, i] *= (1 - x[:, M - i - 1])
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ2(self, M=3, dim=None) -> MTOP:
+    def DTLZ2(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ2** problem.
 
@@ -74,7 +74,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M + k - 1,
             where k=10 for DTLZ2 (default is None).
 
@@ -84,8 +84,8 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ2 task.
         """
         k = 10
-        if dim is None:
-            dim = M + k - 1
+        if D is None:
+            D = M + k - 1
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -101,13 +101,13 @@ class DTLZ:
                     obj[:, i] *= np.sin(x[:, M - i - 1] * np.pi / 2)
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ3(self, M=3, dim=None) -> MTOP:
+    def DTLZ3(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ3** problem.
 
@@ -118,7 +118,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M + k - 1,
             where k=10 for DTLZ3 (default is None).
 
@@ -128,8 +128,8 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ3 task.
         """
         k = 10
-        if dim is None:
-            dim = M + k - 1
+        if D is None:
+            D = M + k - 1
         def T1(x):
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
@@ -144,13 +144,13 @@ class DTLZ:
                     obj[:, i] *= np.sin(x[:, M - i - 1] * np.pi / 2)
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ4(self, M=3, dim=None, alpha=100) -> MTOP:
+    def DTLZ4(self, M=3, D=None, alpha=100) -> MTOP:
         """
         Generates the **DTLZ4** problem.
 
@@ -162,7 +162,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M + k - 1,
             where k=10 for DTLZ4 (default is None).
         alpha : int, optional
@@ -174,8 +174,8 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ4 task.
         """
         k = 10
-        if dim is None:
-            dim = M + k - 1
+        if D is None:
+            D = M + k - 1
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -193,13 +193,13 @@ class DTLZ:
                     obj[:, i] *= np.sin(x_modified[:, M - i - 1] * np.pi / 2)
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ5(self, M=3, dim=None) -> MTOP:
+    def DTLZ5(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ5** problem.
 
@@ -210,7 +210,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M + k - 1,
             where k=10 for DTLZ5 (default is None).
 
@@ -220,8 +220,8 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ5 task.
         """
         k = 10
-        if dim is None:
-            dim = M + k - 1
+        if D is None:
+            D = M + k - 1
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -241,13 +241,13 @@ class DTLZ:
                     obj[:, i] *= np.sin(x_modified[:, M - i - 1] * np.pi / 2)
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ6(self, M=3, dim=None) -> MTOP:
+    def DTLZ6(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ6** problem.
 
@@ -258,7 +258,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M + k - 1,
             where k=10 for DTLZ6 (default is None).
 
@@ -268,8 +268,8 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ6 task.
         """
         k = 10
-        if dim is None:
-            dim = M + k - 1
+        if D is None:
+            D = M + k - 1
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -289,13 +289,13 @@ class DTLZ:
                     obj[:, i] *= np.sin(x_modified[:, M - i - 1] * np.pi / 2)
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ7(self, M=3, dim=None) -> MTOP:
+    def DTLZ7(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ7** problem.
 
@@ -306,7 +306,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M + k - 1,
             where k=20 for DTLZ7 (default is None).
 
@@ -316,8 +316,8 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ7 task.
         """
         k = 20
-        if dim is None:
-            dim = M + k - 1
+        if D is None:
+            D = M + k - 1
 
         def T1(x):
             x = np.atleast_2d(x)
@@ -334,13 +334,13 @@ class DTLZ:
             obj[:, M - 1] = (1 + g) * h
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ8(self, M=3, dim=None) -> MTOP:
+    def DTLZ8(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ8** problem (Constrained).
 
@@ -351,7 +351,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M * k,
             where k=10 for DTLZ8 (default is None).
 
@@ -361,29 +361,29 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ8 task.
         """
         k = 10
-        if dim is None:
-            dim = M * k
+        if D is None:
+            D = M * k
 
         def T1(x):
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
-            D = x.shape[1]
+            n_vars = x.shape[1]
             obj = np.zeros((n_samples, M))
             # Calculate objective f_m as the mean of the m-th block of decision variables
             for m in range(M):
-                start_idx = m * D // M
-                end_idx = (m + 1) * D // M
+                start_idx = m * n_vars // M
+                end_idx = (m + 1) * n_vars // M
                 obj[:, m] = np.mean(x[:, start_idx:end_idx], axis=1)
             return obj
 
         def C1(x):
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
-            D = x.shape[1]
+            n_vars = x.shape[1]
             obj = np.zeros((n_samples, M))
             for m in range(M):
-                start_idx = m * D // M
-                end_idx = (m + 1) * D // M
+                start_idx = m * n_vars // M
+                end_idx = (m + 1) * n_vars // M
                 obj[:, m] = np.mean(x[:, start_idx:end_idx], axis=1)
 
             cons = np.zeros((n_samples, M))
@@ -400,14 +400,14 @@ class DTLZ:
                 cons[:, M - 1] = 1 - 2 * obj[:, M - 1] - np.sum(sorted_obj[:, :2], axis=1)
             return cons
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
         # DTLZ8 is a constrained problem (C1 is the constraint function)
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def DTLZ9(self, M=2, dim=None) -> MTOP:
+    def DTLZ9(self, M=2, D=None) -> MTOP:
         """
         Generates the **DTLZ9** problem (Constrained).
 
@@ -418,7 +418,7 @@ class DTLZ:
         ----------
         M : int, optional
             Number of objectives (default is 3).
-        dim : int, optional
+        D : int, optional
             Number of decision variables. If None, it is set to M * k,
             where k=10 for DTLZ9 (default is None).
 
@@ -428,20 +428,20 @@ class DTLZ:
             A Multi-Task Optimization Problem instance containing the DTLZ9 task.
         """
         k = 10
-        if dim is None:
-            dim = M * k
+        if D is None:
+            D = M * k
 
         def T1(x):
             x = np.atleast_2d(x)
             n_samples = x.shape[0]
-            D = x.shape[1]
+            n_vars = x.shape[1]
             # Transform decision variables using power of 0.1
             x_transformed = x ** 0.1
             obj = np.zeros((n_samples, M))
             # Calculate objective f_m as the sum of the transformed m-th block
             for m in range(M):
-                start_idx = m * D // M
-                end_idx = (m + 1) * D // M
+                start_idx = m * n_vars // M
+                end_idx = (m + 1) * n_vars // M
                 obj[:, m] = np.sum(x_transformed[:, start_idx:end_idx], axis=1)
             return obj
 
@@ -453,11 +453,11 @@ class DTLZ:
             cons = 1 - np.tile(obj[:, M - 1:M] ** 2, (1, M - 1)) - obj[:, :M - 1] ** 2
             return cons
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
         # DTLZ9 is a constrained problem with constraint function C1
-        problem.add_task(objective_func=T1, dim=dim, constraint_func=C1, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, constraint_func=C1, lower_bound=lb, upper_bound=ub)
         return problem
 
 

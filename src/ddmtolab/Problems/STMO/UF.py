@@ -24,10 +24,10 @@ class UF:
     Notes
     -----
     UF1-UF7 have M=2 objectives, UF8-UF10 have M=3 objectives.
-    The decision space dimension can be adjusted via the `dim` parameter.
+    The decision space dimension can be adjusted via the `D` parameter.
     """
 
-    def UF1(self, dim=30) -> MTOP:
+    def UF1(self, D=30) -> MTOP:
         """
         Generates the **UF1** problem.
 
@@ -35,7 +35,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -67,13 +67,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, -np.ones(dim - 1)])
-        ub = np.ones(dim)
+        lb = np.hstack([0, -np.ones(D - 1)])
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF2(self, dim=30) -> MTOP:
+    def UF2(self, D=30) -> MTOP:
         """
         Generates the **UF2** problem.
 
@@ -81,7 +81,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -121,13 +121,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, -np.ones(dim - 1)])
-        ub = np.ones(dim)
+        lb = np.hstack([0, -np.ones(D - 1)])
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF3(self, dim=30) -> MTOP:
+    def UF3(self, D=30) -> MTOP:
         """
         Generates the **UF3** problem.
 
@@ -135,7 +135,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -174,13 +174,13 @@ class UF:
 
             return obj
 
-        lb = np.zeros(dim)
-        ub = np.ones(dim)
+        lb = np.zeros(D)
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF4(self, dim=30) -> MTOP:
+    def UF4(self, D=30) -> MTOP:
         """
         Generates the **UF4** problem.
 
@@ -188,7 +188,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -221,13 +221,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, -2 * np.ones(dim - 1)])
-        ub = np.hstack([1, 2 * np.ones(dim - 1)])
+        lb = np.hstack([0, -2 * np.ones(D - 1)])
+        ub = np.hstack([1, 2 * np.ones(D - 1)])
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF5(self, dim=30) -> MTOP:
+    def UF5(self, D=30) -> MTOP:
         """
         Generates the **UF5** problem.
 
@@ -235,7 +235,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -273,13 +273,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, -np.ones(dim - 1)])
-        ub = np.ones(dim)
+        lb = np.hstack([0, -np.ones(D - 1)])
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF6(self, dim=30) -> MTOP:
+    def UF6(self, D=30) -> MTOP:
         """
         Generates the **UF6** problem.
 
@@ -287,7 +287,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -337,13 +337,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, -np.ones(dim - 1)])
-        ub = np.ones(dim)
+        lb = np.hstack([0, -np.ones(D - 1)])
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF7(self, dim=30) -> MTOP:
+    def UF7(self, D=30) -> MTOP:
         """
         Generates the **UF7** problem.
 
@@ -351,7 +351,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -381,13 +381,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, -np.ones(dim - 1)])
-        ub = np.ones(dim)
+        lb = np.hstack([0, -np.ones(D - 1)])
+        ub = np.ones(D)
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF8(self, dim=30) -> MTOP:
+    def UF8(self, D=30) -> MTOP:
         """
         Generates the **UF8** problem.
 
@@ -395,7 +395,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -432,13 +432,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, 0, -2 * np.ones(dim - 2)])
-        ub = np.hstack([1, 1, 2 * np.ones(dim - 2)])
+        lb = np.hstack([0, 0, -2 * np.ones(D - 2)])
+        ub = np.hstack([1, 1, 2 * np.ones(D - 2)])
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF9(self, dim=30) -> MTOP:
+    def UF9(self, D=30) -> MTOP:
         """
         Generates the **UF9** problem.
 
@@ -446,7 +446,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -484,13 +484,13 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, 0, -2 * np.ones(dim - 2)])
-        ub = np.hstack([1, 1, 2 * np.ones(dim - 2)])
+        lb = np.hstack([0, 0, -2 * np.ones(D - 2)])
+        ub = np.hstack([1, 1, 2 * np.ones(D - 2)])
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
-    def UF10(self, dim=30) -> MTOP:
+    def UF10(self, D=30) -> MTOP:
         """
         Generates the **UF10** problem.
 
@@ -499,7 +499,7 @@ class UF:
 
         Parameters
         ----------
-        dim : int, optional
+        D : int, optional
             Number of decision variables (default is 30).
 
         Returns
@@ -536,10 +536,10 @@ class UF:
 
             return obj
 
-        lb = np.hstack([0, 0, -2 * np.ones(dim - 2)])
-        ub = np.hstack([1, 1, 2 * np.ones(dim - 2)])
+        lb = np.hstack([0, 0, -2 * np.ones(D - 2)])
+        ub = np.hstack([1, 1, 2 * np.ones(D - 2)])
         problem = MTOP()
-        problem.add_task(objective_func=T1, dim=dim, lower_bound=lb, upper_bound=ub)
+        problem.add_task(objective_func=T1, dim=D, lower_bound=lb, upper_bound=ub)
         return problem
 
 

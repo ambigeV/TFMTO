@@ -323,13 +323,11 @@ class CEC19MTMO:
     with different configurations designed to test knowledge transfer in multi-objective
     optimization scenarios.
 
-    Parameters
-    ----------
-    None
-
-    Attributes
-    ----------
-    None
+    Notes
+    -----
+    Fixed parameters by benchmark definition:
+    - K=2 (number of tasks)
+    - D and M vary by problem (see individual method docstrings)
     """
 
     def __init__(self):
