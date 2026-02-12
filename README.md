@@ -1,7 +1,7 @@
 # Data-Driven Multitask Optimization Laboratory
 
 <p align="center">
-  <img src="docs/source/_static/logo.svg" alt="DDMTOLab Logo" width="530">
+  <img src="https://raw.githubusercontent.com/JiangtaoShen/DDMTOLab/main/docs/source/_static/logo.svg" alt="DDMTOLab Logo" width="530">
 </p>
 
 <p align="center">
@@ -35,13 +35,13 @@ Whether you're working on expensive black-box optimization, multiobjective optim
 
 ## ✨ Features
 
-- 🚀 **Comprehensive Algorithms** - 60+ algorithms for expensive/inexpensive, single/multitask, single/multiobjective optimization
+- 🚀 **Comprehensive Algorithms** - 60+ algorithms for expensive/inexpensive, single/multitask, single/multiobjective, unconstrained/constrained optimization
 - 📊 **Rich Problem Suite** - 180+ benchmark problems and real-world applications
-- 🤖 **Data-Driven Optimization** - Surrogate modelling (GP, BO) for expensive optimization
+- 🤖 **Data-Driven Optimization** - Surrogate modelling for expensive optimization
 - 🔧 **Flexible Framework** - Simple API and intuitive workflow for rapid prototyping
 - 🔌 **Fully Extensible** - Easy to add custom algorithms and problems
-- 📈 **Powerful Analysis Tools** - Built-in visualization and statistical analysis
 - ⚡ **Parallel Computing** - Multi-core support for batch experiments
+- 📈 **Powerful Analysis Tools** - Built-in visualization and statistical analysis
 - 📝 **Complete Documentation** - Comprehensive [documentation](https://jiangtaoshen.github.io/DDMTOLab/) and API reference
 
 ## 🚀 Quick Start
@@ -143,7 +143,7 @@ animation = create_optimization_animation(max_nfes=100, merge=2, title='BO vs MT
 ```
 
 <p align="center">
-  <img src="docs/source/_static/animation.gif"
+  <img src="https://raw.githubusercontent.com/JiangtaoShen/DDMTOLab/main/docs/source/_static/animation.gif"
        alt="BO and MTBO on CEC17-MTSO-10D-P1 Animation"
        width="100%">
 </p>

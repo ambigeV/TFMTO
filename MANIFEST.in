@@ -2,13 +2,9 @@
 include README.md
 include LICENSE
 include requirements.txt
-include requirements-dev.txt
 
 # Include source directory
-recursive-include src *.py
-
-# Include docs (images and documentation files)
-recursive-include docs *.rst *.md *.py *.png *.gif *.jpg *.svg
+recursive-include src *.py *.txt
 
 # Exclude unnecessary files
 global-exclude __pycache__
@@ -26,5 +22,12 @@ prune .pytest_cache
 prune .tox
 prune *.egg-info
 
-# Exclude data directories (if you have them)
+# Exclude non-package directories
+prune .claude
+prune ui
+prune tests
+prune docs
+prune demos
 prune Data
+exclude CLAUDE.md
+exclude nul
