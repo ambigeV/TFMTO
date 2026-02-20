@@ -32,6 +32,15 @@ class MO_SCP:
         The directory path for problem data files.
     """
 
+    problem_information = {
+        'n_cases': 2,
+        'n_tasks': '[4, 5]',
+        'n_dims': '[75, 105]',
+        'n_objs': '2',
+        'n_cons': '0',
+        'type': 'real_world',
+    }
+
     def __init__(self):
         """Initialize MO_SCP problem."""
         self.data_dir = 'data_mo_scp'

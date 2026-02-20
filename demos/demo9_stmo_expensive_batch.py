@@ -26,24 +26,24 @@ if __name__ == '__main__':
     # =========================================================================
     # Uncomment below to run batch experiments
 
-    # batch_exp = BatchExperiment(base_path='./Data', clear_folder=True)
-    #
-    # # Add DTLZ problems with 3 objectives
-    # problems = DTLZ()
-    # batch_exp.add_problem(problems.DTLZ1, 'DTLZ1', M=3, D=10)
-    # batch_exp.add_problem(problems.DTLZ2, 'DTLZ2', M=3, D=10)
-    #
-    # # Add surrogate-assisted algorithms
-    # # NSGA-II: baseline MOEA
-    # # ParEGO: efficient global optimization for MOO
-    # # K-RVEA: Kriging-assisted reference vector EA
-    # # DSAEA-PS: data-driven surrogate-assisted EA with Pareto selection
-    # batch_exp.add_algorithm(NSGA_II, 'NSGA-II', n=10, max_nfes=200)
-    # batch_exp.add_algorithm(ParEGO, 'ParEGO', n_initial=100, max_nfes=200, disable_tqdm=False)
-    # batch_exp.add_algorithm(K_RVEA, 'K-RVEA', n_initial=100, max_nfes=200, disable_tqdm=False)
-    # batch_exp.add_algorithm(DSAEA_PS, 'DSAEA-PS', n_initial=100, max_nfes=200, disable_tqdm=False)
-    #
-    # batch_exp.run(n_runs=3, verbose=True, max_workers=6)
+    batch_exp = BatchExperiment(base_path='./Data', clear_folder=True)
+
+    # Add DTLZ problems with 3 objectives
+    problems = DTLZ()
+    batch_exp.add_problem(problems.DTLZ1, 'DTLZ1', M=3, D=10)
+    batch_exp.add_problem(problems.DTLZ2, 'DTLZ2', M=3, D=10)
+
+    # Add surrogate-assisted algorithms
+    # NSGA-II: baseline MOEA
+    # ParEGO: efficient global optimization for MOO
+    # K-RVEA: Kriging-assisted reference vector EA
+    # DSAEA-PS: data-driven surrogate-assisted EA with Pareto selection
+    batch_exp.add_algorithm(NSGA_II, 'NSGA-II', n=10, max_nfes=200)
+    batch_exp.add_algorithm(ParEGO, 'ParEGO', n_initial=100, max_nfes=200, disable_tqdm=False)
+    batch_exp.add_algorithm(K_RVEA, 'K-RVEA', n_initial=100, max_nfes=200, disable_tqdm=False)
+    batch_exp.add_algorithm(DSAEA_PS, 'DSAEA-PS', n_initial=100, max_nfes=200, disable_tqdm=False)
+
+    batch_exp.run(n_runs=3, verbose=True, max_workers=6)
 
     # =========================================================================
     # Statistical Analysis

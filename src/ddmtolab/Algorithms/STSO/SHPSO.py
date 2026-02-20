@@ -19,8 +19,6 @@ import numpy as np
 from tqdm import tqdm
 from scipy.interpolate import RBFInterpolator
 from ddmtolab.Methods.Algo_Methods.algo_utils import *
-from ddmtolab.Algorithms.STSO.SL_PSO import SL_PSO
-from ddmtolab.Methods.mtop import MTOP
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -36,7 +34,7 @@ class SHPSO:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
@@ -83,7 +81,7 @@ class SHPSO:
         self.problem = problem
         self.n_initial = n_initial if n_initial is not None else 100
         self.max_nfes = max_nfes if max_nfes is not None else 300
-        self.ps = ps if ps is not None else 20
+        self.ps = ps if ps is not None else 50
         self.mu = mu
         self.save_data = save_data
         self.save_path = save_path
@@ -93,7 +91,6 @@ class SHPSO:
         self.c1 = 2.05  # Cognitive coefficient
         self.c2 = 2.05  # Social coefficient
         self.w = 0.7298  # Inertia weight (constriction factor)
-        self.slpso_max_gen = 50
 
     def optimize(self):
         """
@@ -118,8 +115,8 @@ class SHPSO:
         nfes_per_task = n_initial_per_task.copy()
 
         # Initialize history: reorganize initial data into task-specific lists
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
+        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
+        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
 
         # Historical database for each task
         hx = [decs[i].copy() for i in range(nt)]  # Historical positions
@@ -206,7 +203,11 @@ class SHPSO:
                 bestp_old = bestp[i].copy()
 
                 # ===== Upper Level: Optimize surrogate model using SL-PSO =====
-                bestp_new = self._optimize_surrogate_slpso(rbf_model, hx[i], dim)
+                # MATLAB passes ghx (top-gs samples) to SLPSO for search bounds
+                idx_sorted = np.argsort(hf[i])
+                n_select = min(gs, len(hf[i]))
+                ghx = hx[i][idx_sorted[:n_select]]
+                bestp_new = self._optimize_surrogate_slpso(rbf_model, ghx, dim)
 
                 # Exact evaluate the surrogate optimum
                 besty_new_arr, _ = evaluation_single(problem, bestp_new.reshape(1, -1), i)
@@ -214,12 +215,7 @@ class SHPSO:
                 nfes_per_task[i] += 1
                 pbar.update(1)
 
-                # Update history database
-                if not is_duplicate(bestp_new, hx[i]):
-                    hx[i] = np.vstack([hx[i], bestp_new])
-                    hf[i] = np.concatenate([hf[i], [besty_new]])
-
-                # Update surrogate optimum
+                # Update surrogate optimum (MATLAB: compare before adding to history)
                 if besty_new < besty_old:
                     besty[i] = besty_new
                     bestp[i] = bestp_new.copy()
@@ -227,9 +223,13 @@ class SHPSO:
                     besty[i] = besty_old
                     bestp[i] = bestp_old.copy()
 
-                # Update RBF model if new optimum is better
-                if besty_new < besty_old:
-                    rbf_model = self._build_rbf_model(hx[i], hf[i], gs, dim)
+                # Update history database with the WINNER (matching MATLAB)
+                if not is_duplicate(bestp[i], hx[i]):
+                    hx[i] = np.vstack([hx[i], bestp[i]])
+                    hf[i] = np.concatenate([hf[i], [besty[i]]])
+
+                # Rebuild RBF model with updated database (matching MATLAB: ghf(end) > besty)
+                rbf_model = self._build_rbf_model(hx[i], hf[i], gs, dim)
 
                 # ===== Lower Level: PSO guided by surrogate optimum =====
                 # Determine guidance strategy
@@ -264,23 +264,16 @@ class SHPSO:
                 pos[i] = np.where(out_lower, 0.25 * np.random.rand(ps, dim), pos[i])
                 pos[i] = np.where(out_upper, 1 - 0.25 * np.random.rand(ps, dim), pos[i])
 
-                # ===== Prescreening: Select top candidates for evaluation =====
+                # ===== Prescreening: e-pbest strategy (matching MATLAB) =====
                 # Predict fitness using surrogate model
                 e_pred = rbf_model(pos[i]).flatten()
 
-                # Sort particles by predicted fitness (ascending, best first)
-                sorted_idx = np.argsort(e_pred)
-
-                # Select top (n_sample - 1) candidates (since surrogate optimum already uses 1)
-                n_prescreen = self.mu - 1
+                # Select candidates where surrogate predicts improvement over personal best
                 candidates_to_eval = []
-
-                for idx in sorted_idx:
-                    if len(candidates_to_eval) >= n_prescreen:
-                        break
-                    # Check if not duplicate in history
-                    if not is_duplicate(pos[i][idx], hx[i]):
-                        candidates_to_eval.append(idx)
+                for idx in range(ps):
+                    if e_pred[idx] < pbestval[i][idx]:
+                        if not is_duplicate(pos[i][idx], hx[i]):
+                            candidates_to_eval.append(idx)
 
                 # Exact evaluate prescreened candidates
                 for idx in candidates_to_eval:
@@ -344,7 +337,7 @@ class SHPSO:
 
         # Build RBF interpolator
         try:
-            rbf_interpolator = RBFInterpolator(ghx, ghf, kernel='gaussian', epsilon=1.0 / spread)
+            rbf_interpolator = RBFInterpolator(ghx, ghf, kernel='gaussian', epsilon=np.sqrt(np.log(2)) / spread)
         except:
             rbf_interpolator = RBFInterpolator(ghx, ghf, kernel='thin_plate_spline')
 
@@ -356,29 +349,103 @@ class SHPSO:
 
         return rbf_model
 
-    # Optimize surrogate model using SL-PSO
-    def _optimize_surrogate_slpso(self, rbf_model, hx, dim):
+    # Optimize surrogate model using inline SLPSO (matching MATLAB exactly)
+    def _optimize_surrogate_slpso(self, rbf_model, ghx, dim):
+        """
+        Find near-optimum of RBF surrogate using Social Learning PSO.
 
-        # Create surrogate problem wrapper
-        def surrogate_func(x):
-            return rbf_model(x)
+        Key difference from general SL_PSO: search bounds are restricted to
+        [min(ghx), max(ghx)] per dimension, matching MATLAB's implementation.
+        This prevents SLPSO from exploring regions where the Gaussian RBF
+        extrapolates to spurious low values.
+        """
+        # MATLAB: lu = [min(ghx); max(ghx)]
+        lb = ghx.min(axis=0)
+        ub = ghx.max(axis=0)
 
-        surrogate_problem = MTOP()
-        surrogate_problem.add_task(objective_func=surrogate_func, dim=dim)
+        # SLPSO parameters (matching MATLAB)
+        M = 100
+        beta = 0.01
+        m = M + int(np.floor(dim / 10))
+        c3 = dim / M * beta
+        maxgen = 50 * dim
+        minerror = 1e-6
 
-        # Population size and generations for SL-PSO
-        n_pop = 100
-        max_gen = self.slpso_max_gen
-        max_nfes = n_pop * max_gen
+        # Learning probability: PL(i) = (1 - (i-1)/m)^log(sqrt(ceil(d/M)))
+        PL = np.array([(1 - i / m) ** np.log(np.sqrt(np.ceil(dim / M))) for i in range(m)])
 
-        # Run SL-PSO
-        slpso = SL_PSO(surrogate_problem, n=n_pop, max_nfes=max_nfes, save_data=False)
-        results = slpso.optimize()
+        # Initialize population with LHS in [lb, ub]
+        p = lb + (ub - lb) * np.random.rand(m, dim)
+        v = np.zeros((m, dim))
 
-        # Get best solution
-        best_pos = results.best_decs[0].flatten()
+        bestever = 1e200
+        best_pos = np.zeros(dim)
+        flag_er = 0
 
-        # Clip to [0, 1]
+        for gen in range(maxgen):
+            best_old = bestever
+
+            # Evaluate fitness using surrogate model
+            fitness = rbf_model(p).flatten()
+
+            # Sort descending (worst first, best last — matching MATLAB)
+            rank = np.argsort(-fitness)
+            fitness = fitness[rank]
+            p = p[rank]
+            v = v[rank]
+
+            # Best in current population (last element after descending sort)
+            besty = fitness[-1]
+            bestp = p[-1].copy()
+
+            if besty < bestever:
+                bestever = besty
+                best_pos = bestp.copy()
+
+            # Early stopping: 20 consecutive gens with improvement <= minerror
+            error = abs(best_old - bestever)
+            if error <= minerror:
+                flag_er += 1
+            else:
+                flag_er = 0
+            if flag_er >= 20:
+                break
+
+            # Center position
+            center = np.mean(p, axis=0)
+
+            # Random coefficients
+            randco1 = np.random.rand(m, dim)
+            randco2 = np.random.rand(m, dim)
+            randco3 = np.random.rand(m, dim)
+
+            # Social learning: select demonstrators from better particles
+            # MATLAB: winidx = i + ceil(rand*(m-i)), selecting from [i+1, m] (1-indexed)
+            idx = np.arange(m).reshape(-1, 1)
+            max_range = m - 1 - idx  # max offset for each particle
+            offsets = np.ceil(np.random.rand(m, dim) * max_range).astype(int)
+            winidx = idx + offsets
+            winidx = np.clip(winidx, 0, m - 1)
+
+            # Get winner positions (per-dimension indexing)
+            pwin = np.zeros((m, dim))
+            for j in range(dim):
+                pwin[:, j] = p[winidx[:, j], j]
+
+            # Learning mask
+            lpmask_1d = np.random.rand(m) < PL
+            lpmask_1d[-1] = False  # Best particle doesn't learn
+            lpmask = np.tile(lpmask_1d.reshape(-1, 1), (1, dim))
+
+            # Velocity and position update
+            v1 = randco1 * v + randco2 * (pwin - p) + c3 * randco3 * (center - p)
+            p1 = p + v1
+
+            v = np.where(lpmask, v1, v)
+            p = np.where(lpmask, p1, p)
+
+            # Boundary handling: clip to [lb, ub]
+            p = np.clip(p, lb, ub)
+
         best_pos = np.clip(best_pos, 0.0, 1.0)
-
         return best_pos

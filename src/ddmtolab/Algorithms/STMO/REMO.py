@@ -41,12 +41,12 @@ class REMO:
     Dictionary containing algorithm capabilities (e.g., supported objectives, constraints).
     """
     algorithm_information = {
-        'n_tasks': '1-N',
+        'n_tasks': '[1, N]',
         'dims': 'unequal',
         'objs': 'unequal',
-        'n_objs': '2-M',
+        'n_objs': '[2, M]',
         'cons': 'unequal',
-        'n_cons': '0-C',
+        'n_cons': '[0, C]',
         'expensive': 'True',
         'knowledge_transfer': 'False',
         'n': 'unequal',
@@ -103,7 +103,7 @@ class REMO:
         n_per_task = []
         for t in range(nt):
             if isinstance(self.raw_n, int) and self.raw_n == 50:
-                D = problem.n_vars[t]
+                D = problem.dims[t]
                 val = 11 * D - 1 if D <= 10 else 100
                 n_per_task.append(val)
             else:

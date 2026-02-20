@@ -44,7 +44,7 @@ class EEI_BO_plus:
     """
 
     algorithm_information = {
-        'n_tasks': '2-K',
+        'n_tasks': '[2, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
@@ -133,7 +133,8 @@ class EEI_BO_plus:
                     disable=self.disable_tqdm)
 
         params_per_task = [None] * nt
-        modeflag_per_task = [0] * nt
+        modeflag_per_task = [0] * nt  # 0=no transfer, 1=transfer
+        mode_counter_per_task = [1] * nt  # counter starts at 1 (matching MATLAB)
 
         while sum(nfes_per_task) < sum(max_nfes_per_task):
             # Identify tasks that have not exhausted their evaluation budget
@@ -164,17 +165,25 @@ class EEI_BO_plus:
 
 
                 if modeflag_per_task[i] == 0:
-                    task_id = i
-                elif modeflag_per_task[i] == 1:
+                    # No transfer: use own CMA-ES distribution
+                    mu = params_per_task[i]['mu']
+                    sigma = params_per_task[i]['sigma']
+                    C = params_per_task[i]['C']
+                else:
+                    # Transfer mode: use adapted params from another task
                     other_tasks = [t for t in range(nt) if t != i and params_per_task[t] is not None]
-                    if other_tasks and len(active_tasks) > 1:
-                        task_id = np.random.choice(other_tasks)
+                    if other_tasks:
+                        source = np.random.choice(other_tasks)
+                        mu, sigma, C = _adapt_distribution_params(
+                            params_per_task[source]['mu'],
+                            params_per_task[source]['sigma'],
+                            params_per_task[source]['C'],
+                            dims[source], dims[i]
+                        )
                     else:
-                        task_id = i
-
-                mu = params_per_task[task_id]['mu']
-                sigma = params_per_task[task_id]['sigma']
-                C = params_per_task[task_id]['C']
+                        mu = params_per_task[i]['mu']
+                        sigma = params_per_task[i]['sigma']
+                        C = params_per_task[i]['C']
 
                 # Select next candidate using Evolutionary Expected Improvement
                 candidate = eei_bo_next_point(decs[i], objs[i], dims[i], mu, sigma, C, self.n2, self.max_nfes2,
@@ -187,8 +196,14 @@ class EEI_BO_plus:
                 decs[i], objs[i] = vstack_groups((decs[i], candidate), (objs[i], new_objs))
 
                 nfes_per_task[i] += 1
-                if nfes_per_task[i] % self.switch_interval == 0:
-                    modeflag_per_task[i] = 1 if modeflag_per_task[i] == 0 else 0
+
+                # Mode switching: 6 no-transfer + 1 transfer (matching MATLAB 6:1 pattern)
+                if modeflag_per_task[i] == 0 and mode_counter_per_task[i] == self.switch_interval:
+                    modeflag_per_task[i] = 1
+                    mode_counter_per_task[i] = 0
+                elif modeflag_per_task[i] == 1:
+                    modeflag_per_task[i] = 0
+                mode_counter_per_task[i] += 1
 
                 pbar.update(1)
 
@@ -332,3 +347,48 @@ def eei_bo_next_point(decs, objs, dim, mu, sigma, C, n2, max_nfes2, data_type=to
     result = DE(problem, n=n2, max_nfes=max_nfes2, F=0.5, CR=0.9, save_data=False, disable_tqdm=True).optimize()
 
     return result.best_decs
+
+
+def _adapt_distribution_params(mu_source, sigma_source, C_source, dim_source, dim_target):
+    """
+    Adapt CMA-ES distribution parameters for cross-task transfer with different dimensions.
+
+    Matches MATLAB MT_EEI_BO.m dimension handling logic. In [0,1] space (DDMTOLab),
+    no bound rescaling is needed — only dimension adjustment via truncation or padding.
+
+    Parameters
+    ----------
+    mu_source : ndarray
+        Mean vector from source task
+    sigma_source : float
+        Step size from source task
+    C_source : ndarray
+        Covariance matrix from source task
+    dim_source : int
+        Dimension of source task
+    dim_target : int
+        Dimension of target task
+
+    Returns
+    -------
+    mu_new, sigma_new, C_new : tuple
+        Adapted distribution parameters
+    """
+    if dim_source == dim_target:
+        return mu_source.copy(), sigma_source, C_source.copy()
+
+    # Compute full covariance in [0,1] space
+    Sigma_source = sigma_source ** 2 * C_source
+
+    if dim_source > dim_target:
+        # Source is higher-dim: truncate to first dim_target dimensions
+        mu_new = mu_source[:dim_target].copy()
+        C_new = Sigma_source[:dim_target, :dim_target]
+    else:
+        # Target is higher-dim: pad mean with random [0,1], pad covariance with identity
+        mu_new = np.concatenate([mu_source, np.random.rand(dim_target - dim_source)])
+        C_new = np.eye(dim_target)
+        C_new[:dim_source, :dim_source] = Sigma_source
+
+    # Return sigma=1.0 since covariance already includes sigma^2
+    return mu_new, 1.0, C_new

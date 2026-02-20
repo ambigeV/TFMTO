@@ -12,6 +12,15 @@ class WFG:
     of multi-objective optimization algorithms, including bias, flatness, and mixed Pareto fronts.
     """
 
+    problem_information = {
+        'n_cases': 9,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': 'M',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     # =============================================================================
     # Transformation Functions
     # =============================================================================

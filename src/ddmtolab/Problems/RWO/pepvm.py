@@ -32,6 +32,15 @@ class PEPVM:
     None required for this benchmark.
     """
 
+    problem_information = {
+        'n_cases': 1,
+        'n_tasks': '3',
+        'n_dims': '[5, 7]',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'real_world',
+    }
+
     def __init__(self):
         pass
 

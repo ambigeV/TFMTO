@@ -27,6 +27,15 @@ class SOPM:
     - Constraints: Monotonically decreasing switching angles
     """
 
+    problem_information = {
+        'n_cases': 2,
+        'n_tasks': '3',
+        'n_dims': '[25, 30]',
+        'n_objs': '2',
+        'n_cons': '[24, 29]',
+        'type': 'real_world',
+    }
+
     def __init__(self):
         """Initialize SOPM MTMO problem suite."""
         pass

@@ -1,10 +1,7 @@
 """File and folder management utilities."""
 
-import os
 import shutil
 from pathlib import Path
-from typing import List, Dict, Optional
-import glob
 
 
 class FileManager:
@@ -38,53 +35,6 @@ class FileManager:
         """Remove all files in Data/ and Results/."""
         self.clean_data()
         self.clean_results()
-
-    def scan_data(self) -> Dict[str, List[str]]:
-        """
-        Scan Data/ for algorithm/problem combinations.
-
-        Returns:
-            Dict mapping algorithm names to list of pkl files.
-        """
-        result = {}
-        if not self.data_path.exists():
-            return result
-
-        for algo_dir in self.data_path.iterdir():
-            if algo_dir.is_dir():
-                pkl_files = list(algo_dir.glob("*.pkl"))
-                if pkl_files:
-                    result[algo_dir.name] = [str(f) for f in pkl_files]
-        return result
-
-    def scan_results(self) -> Dict[str, List[str]]:
-        """
-        Scan Results/ for generated files.
-
-        Returns:
-            Dict mapping file types to list of file paths.
-        """
-        result = {
-            "tables": [],
-            "plots": [],
-            "animations": [],
-            "other": [],
-        }
-        if not self.results_path.exists():
-            return result
-
-        for f in self.results_path.rglob("*"):
-            if f.is_file():
-                suffix = f.suffix.lower()
-                if suffix in [".xlsx", ".xls", ".tex", ".csv"]:
-                    result["tables"].append(str(f))
-                elif suffix in [".png", ".pdf", ".svg", ".jpg", ".jpeg"]:
-                    result["plots"].append(str(f))
-                elif suffix in [".gif", ".mp4"]:
-                    result["animations"].append(str(f))
-                else:
-                    result["other"].append(str(f))
-        return result
 
     def get_pkl_count(self) -> int:
         """Count .pkl files in Data/."""

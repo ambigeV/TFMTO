@@ -17,6 +17,15 @@ class CF:
     University of Essex, Colchester, UK, Tech. Rep. CES-487, 2009.
     """
 
+    problem_information = {
+        'n_cases': 10,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': '[2, 3]',
+        'n_cons': '1',
+        'type': 'synthetic',
+    }
+
     def CF1(self, M=2, D=None) -> MTOP:
         """
         Generates the **CF1** problem.

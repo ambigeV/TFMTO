@@ -475,6 +475,15 @@ class CEC21MTMO:
         Instance of the functions helper class.
     """
 
+    problem_information = {
+        'n_cases': 10,
+        'n_tasks': '2',
+        'n_dims': '50',
+        'n_objs': '2',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def __init__(self):
         self.data_dir = 'data_cec21mtmo'
         self.funcs = CEC21MTMOFunctions()

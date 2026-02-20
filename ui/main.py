@@ -3,6 +3,10 @@
 import sys
 from pathlib import Path
 
+# Ensure 'from main import ...' resolves to this module (not a duplicate)
+# when this file is run as __main__
+sys.modules.setdefault('main', sys.modules[__name__])
+
 # Setup paths
 _ui_dir = Path(__file__).resolve().parent
 _project_root = _ui_dir.parent
@@ -245,13 +249,23 @@ def main():
                 )
         dpg.add_spacer(height=5)
 
-        # Main tab bar
+        # Main tab bar - use section font (20pt) for tab labels only
+        _tab_font = _fonts.get("section")
         with dpg.tab_bar(tag="main_tabs"):
-            with dpg.tab(label="  Test Mode  ", tag="test_tab"):
+            with dpg.tab(label="  Test Mode  ", tag="test_tab") as _tab1:
                 test_mode.create(parent="test_tab", base_path=base_path)
-
-            with dpg.tab(label="  Batch Experiment  ", tag="batch_tab"):
+            with dpg.tab(label="  Batch Experiment  ", tag="batch_tab") as _tab2:
                 batch_mode.create(parent="batch_tab", base_path=base_path)
+
+        # Bind font to tab buttons after content is created with default font
+        if _tab_font and _fonts.get("default"):
+            dpg.bind_item_font(_tab1, _tab_font)
+            dpg.bind_item_font(_tab2, _tab_font)
+            # Restore default font on content containers
+            for child in dpg.get_item_children(_tab1, 1) or []:
+                dpg.bind_item_font(child, _fonts["default"])
+            for child in dpg.get_item_children(_tab2, 1) or []:
+                dpg.bind_item_font(child, _fonts["default"])
 
     dpg.setup_dearpygui()
     dpg.show_viewport()

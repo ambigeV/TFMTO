@@ -853,6 +853,15 @@ class CMT:
     with various function combinations and constraint types.
     """
 
+    problem_information = {
+        'n_cases': 9,
+        'n_tasks': '2',
+        'n_dims': 'D',
+        'n_objs': '1',
+        'n_cons': '1',
+        'type': 'synthetic',
+    }
+
     def __init__(self):
         pass
 

@@ -19,6 +19,15 @@ class DTLZ:
     and k complexity variables (x[M-1:]).
     """
 
+    problem_information = {
+        'n_cases': 9,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': 'M',
+        'n_cons': '[0, M]',
+        'type': 'synthetic',
+    }
+
     def DTLZ1(self, M=3, D=None) -> MTOP:
         """
         Generates the **DTLZ1** problem.

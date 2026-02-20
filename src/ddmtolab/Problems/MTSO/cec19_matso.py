@@ -23,6 +23,15 @@ class CEC19MaTSO:
         The directory path for problem data files.
     """
 
+    problem_information = {
+        'n_cases': 6,
+        'n_tasks': 'K',
+        'n_dims': '50',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def __init__(self):
         self.dim = 50
         self.data_dir = 'data_cec19matso'

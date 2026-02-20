@@ -37,7 +37,7 @@ class TLRBF:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
@@ -139,6 +139,9 @@ class TLRBF:
                     # ===== Local Search =====
                     candidate_np = self._local_search(current_decs[i], current_objs[i], dim)
 
+                # Ensure uniqueness before evaluation
+                candidate_np = self._ensure_uniqueness(candidate_np, current_decs[i], dim)
+
                 # Evaluate the candidate solution
                 obj, _ = evaluation_single(problem, candidate_np, i)
 
@@ -182,7 +185,7 @@ class TLRBF:
         # Use Gaussian RBF
         try:
             rbf_model = RBFInterpolator(X, Y, kernel='gaussian', epsilon=1.0 / spread)
-        except:
+        except Exception:
             # Fallback to thin_plate_spline if gaussian fails
             rbf_model = RBFInterpolator(X, Y, kernel='thin_plate_spline')
 
@@ -269,19 +272,18 @@ class TLRBF:
                 Y_clusters.append(objs_i[idx_sorted])
                 mean_objs.append(np.mean(objs_i[idx_sorted]))
 
-            # Probabilistic cluster selection (prefer clusters with lower mean objective)
+            # Probabilistic cluster selection (MATLAB: [~,idx]=sort(mper,'descend'); pro=idx/K)
             mean_objs = np.array(mean_objs)
-            # Rank clusters by mean objective (1 = best)
-            ranks = np.argsort(np.argsort(mean_objs)) + 1
-            # Probability proportional to rank (higher rank = worse cluster = lower prob)
-            probs = ranks / no_clusters
-            probs = probs / probs.sum()
+            idx_desc = np.argsort(-mean_objs)  # descending sort indices
+            pro = np.zeros(no_clusters)
+            for pos in range(no_clusters):
+                pro[pos] = (idx_desc[pos] + 1) / no_clusters  # MATLAB 1-indexed
 
-            # Select cluster using rejection sampling
+            # Rejection sampling (MATLAB: while rand > pro(sid))
             selected_cluster = None
             while selected_cluster is None:
                 sid = np.random.randint(0, no_clusters)
-                if np.random.rand() <= probs[sid]:
+                if np.random.rand() <= pro[sid]:
                     selected_cluster = sid
 
             X_subregion = X_clusters[selected_cluster]
@@ -308,7 +310,7 @@ class TLRBF:
         # Find k nearest neighbors to the best point
         idx_min = np.argmin(objs_i)
         dist = cdist(decs_i, decs_i[idx_min:idx_min + 1], metric='euclidean').flatten()
-        idx_sorted = np.argsort(dist)[:k + 1]  # +1 to include the best point itself
+        idx_sorted = np.argsort(dist)[:k]  # k points total including best (matches MATLAB)
 
         X_local = decs_i[idx_sorted]
         Y_local = objs_i[idx_sorted]
@@ -320,8 +322,8 @@ class TLRBF:
         lb_local = np.min(X_local, axis=0)
         ub_local = np.max(X_local, axis=0)
 
-        # Optimize using GA on surrogate (10 generations for local search)
-        candidate = self._optimize_surrogate(rbf_model, lb_local, ub_local, dim, max_gen=10)
+        # Optimize using GA on surrogate (50 generations, matching MATLAB)
+        candidate = self._optimize_surrogate(rbf_model, lb_local, ub_local, dim, max_gen=50)
 
         return candidate
 
@@ -360,3 +362,14 @@ class TLRBF:
         best_solution = np.clip(best_solution, 0.0, 1.0)
 
         return best_solution
+
+    def _ensure_uniqueness(self, candidate, X, dim, epsilon=5e-3, max_trials=50):
+        """Ensure candidate is not too close to existing samples (Chebyshev distance)."""
+        scales = np.linspace(0.1, 1.0, max_trials)
+        for t in range(max_trials):
+            dist = cdist(candidate, X, metric='chebyshev').min()
+            if dist >= epsilon:
+                break
+            perturbation = scales[t] * (np.random.rand(1, dim) - 0.5)
+            candidate = np.clip(candidate + perturbation, 0.0, 1.0)
+        return candidate

@@ -432,7 +432,7 @@ For maintainability and platform compatibility, optimization problems should be 
 - ``STMO``: Single-task multiobjective
 - ``MTSO``: Multitask single-objective
 - ``MTMO``: Multitask multiobjective
-- ``WRP``: Real-world problems
+- ``RWO``: Real-world optimization problems
 
 Problem Class Definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -756,6 +756,12 @@ DDMTOLab includes real-world optimization problems in the ``Problems/RWO/`` dire
    * - ``PKACP``
      - STMO
      - Power Keeping & Anti-Collision Path Planning
+   * - ``NN_Training``
+     - STSO
+     - Neural Network Weight Training via Neuroevolution
+   * - ``TSP``
+     - STSO
+     - Traveling Salesman Problem
 
 See Also
 --------

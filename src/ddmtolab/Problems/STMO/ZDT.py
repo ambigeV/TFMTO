@@ -25,6 +25,15 @@ class ZDT:
     can be adjusted via the `D` parameter.
     """
 
+    problem_information = {
+        'n_cases': 6,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': '2',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def ZDT1(self, D=30) -> MTOP:
         """
         Generates the **ZDT1** problem.

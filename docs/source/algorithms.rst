@@ -436,7 +436,7 @@ You can easily implement custom algorithms by following the three construction r
 Available Algorithms
 --------------------
 
-DDMTOLab provides 60+ optimization algorithms organized into four categories:
+DDMTOLab provides 90+ optimization algorithms organized into four categories:
 
 STSO (Single-Task Single-Objective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -493,6 +493,12 @@ Classical evolutionary algorithms and surrogate-assisted methods for single-obje
      - Efficient Surrogate-Assisted Optimization
    * - ``TLRBF``
      - Two-Layer RBF Surrogate-Assisted Optimization
+   * - ``AutoSAEA``
+     - Surrogate-Assisted EA with Auto-Configuration
+   * - ``DDEA_MESS``
+     - Data-Driven EA with Multi-Evolutionary Sampling Strategy
+   * - ``LSADE``
+     - Lipschitz Surrogate-Assisted Differential Evolution
 
 STMO (Single-Task Multiobjective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -547,6 +553,44 @@ Multiobjective evolutionary algorithms and surrogate-assisted methods.
      - Reference-based Multiobjective Optimization
    * - ``DSAEA_PS``
      - Data-driven Surrogate-Assisted EA with Pareto Selection
+   * - ``ADSAPSO``
+     - Adaptive Dropout Surrogate-Assisted PSO
+   * - ``CSEA``
+     - Classification-based Surrogate-assisted EA
+   * - ``DISK``
+     - Distribution-Informed Surrogate-assisted Kriging
+   * - ``DRLSAEA``
+     - Deep Reinforcement Learning Surrogate-Assisted EA
+   * - ``DirHV_EI``
+     - Direction-based Hypervolume Expected Improvement
+   * - ``EDN_ARMOEA``
+     - Efficient Dropout Neural Network based AR-MOEA
+   * - ``EIM_EGO``
+     - Expected Improvement Matrix based EGO
+   * - ``EM_SAEA``
+     - Ensemble Model Surrogate-Assisted EA
+   * - ``KTS``
+     - Kriging-Assisted Two-Archive Search
+   * - ``MGSAEA``
+     - Multigranularity Surrogate-Assisted EA
+   * - ``MMRAEA``
+     - Multi-Model Ranking Aggregation EA
+   * - ``MOEA_D_EGO``
+     - MOEA/D with Efficient Global Optimization
+   * - ``MultiObjectiveEGO``
+     - Multiobjective Efficient Global Optimization
+   * - ``PCSAEA``
+     - Pairwise Comparison Surrogate-Assisted EA
+   * - ``PEA``
+     - Pareto-based Efficient Algorithm
+   * - ``PIEA``
+     - Performance Indicator-based EA
+   * - ``SAEA_DBLL``
+     - Surrogate-Assisted EA with Direction-Based Local Learning
+   * - ``SSDE``
+     - Self-Organizing Surrogate-Assisted Non-Dominated Sorting DE
+   * - ``TEA``
+     - Two-phase EA with Probabilistic Dominance
 
 MTSO (Multitask Single-Objective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

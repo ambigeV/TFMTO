@@ -36,7 +36,7 @@ class ESAO:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',

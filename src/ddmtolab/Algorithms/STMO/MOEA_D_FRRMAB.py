@@ -36,10 +36,10 @@ class MOEA_D_FRRMAB:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'unequal',
-        'n_objs': '2-M',
+        'n_objs': '[2, M]',
         'cons': 'unequal',
         'n_cons': '0',
         'expensive': 'False',

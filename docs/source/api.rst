@@ -54,6 +54,27 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. autoclass:: ddmtolab.Algorithms.STSO.AutoSAEA.AutoSAEA
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. autoclass:: ddmtolab.Algorithms.STSO.DDEA_MESS.DDEA_MESS
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. autoclass:: ddmtolab.Algorithms.STSO.LSADE.LSADE
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
 Multitask Single-Objective (MTSO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -103,6 +124,41 @@ Single-Task Multiobjective (STMO)
    :exclude-members: algorithm_information, get_algorithm_information
 
 .. autoclass:: ddmtolab.Algorithms.STMO.IBEA.IBEA
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. autoclass:: ddmtolab.Algorithms.STMO.KTA2.KTA2
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. autoclass:: ddmtolab.Algorithms.STMO.DSAEA_PS.DSAEA_PS
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. autoclass:: ddmtolab.Algorithms.STMO.KTS.KTS
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. autoclass:: ddmtolab.Algorithms.STMO.DirHV_EI.DirHV_EI
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. autoclass:: ddmtolab.Algorithms.STMO.MOEA_D_EGO.MOEA_D_EGO
    :members: optimize
    :undoc-members:
    :show-inheritance:

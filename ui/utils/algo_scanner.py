@@ -262,84 +262,7 @@ def get_algorithm_params_from_scan(category: str, algo_display_name: str) -> Dic
     # Ensure algorithms are scanned
     all_params = scan_all_algorithms()
 
-    # Map display names to file names
-    display_to_file = {
-        # STSO
-        'GA': 'GA',
-        'DE': 'DE',
-        'PSO': 'PSO',
-        'AO': 'AO',
-        'BO': 'BO',
-        'CMA-ES': 'CMA_ES',
-        'MA-ES': 'MA_ES',
-        'IPOP-CMA-ES': 'IPOP_CMA_ES',
-        'sep-CMA-ES': 'sep_CMA_ES',
-        'xNES': 'xNES',
-        'OpenAI-ES': 'OpenAI_ES',
-        'CSO': 'CSO',
-        'EO': 'EO',
-        'GWO': 'GWO',
-        'SA-COSO': 'SA_COSO',
-        'GL-SADE': 'GL_SADE',
-        'KL-PSO': 'KL_PSO',
-        'SL-PSO': 'SL_PSO',
-        'SHPSO': 'SHPSO',
-        'ESAO': 'ESAO',
-        'EEI-BO': 'EEI_BO',
-        'TLRBF': 'TLRBF',
-        # STMO
-        'NSGA-II': 'NSGA_II',
-        'NSGA-III': 'NSGA_III',
-        'NSGA-II-SDR': 'NSGA_II_SDR',
-        'MOEA/D': 'MOEA_D',
-        'MOEA/D-STM': 'MOEA_D_STM',
-        'MOEA/D-FRRMAB': 'MOEA_D_FRRMAB',
-        'MOEA/DD': 'MOEA_DD',
-        'IBEA': 'IBEA',
-        'RVEA': 'RVEA',
-        'SPEA2': 'SPEA2',
-        'C-TAEA': 'C_TAEA',
-        'Two_Arch2': 'TwoArch2',
-        'KTA2': 'KTA2',
-        'K-RVEA': 'K_RVEA',
-        'ParEGO': 'ParEGO',
-        'REMO': 'REMO',
-        'DSAEA-PS': 'DSAEA_PS',
-        'MCEA-D': 'MCEA_D',
-        'CCMO': 'CCMO',
-        'MSEA': 'MSEA',
-        'CPS-MOEA': 'CPS_MOEA',
-        # MTSO
-        'MFEA': 'MFEA',
-        'MFEA-II': 'MFEA_II',
-        'G-MFEA': 'G_MFEA',
-        'MTEA-AD': 'MTEA_AD',
-        'MTEA-SaO': 'MTEA_SaO',
-        'MKTDE': 'MKTDE',
-        'SELF': 'SELF',
-        'EMEA': 'EMEA',
-        'RAMTEA': 'RAMTEA',
-        'LCB-EMT': 'LCB_EMT',
-        'MUMBO': 'MUMBO',
-        'EEI-BO+': 'EEI_BO_plus',
-        'BO-LCB-BCKT': 'BO_LCB_BCKT',
-        'BO-LCB-CKT': 'BO_LCB_CKT',
-        'EBS': 'EBS',
-        'SREMTO': 'SREMTO',
-        'MTBO': 'MTBO',
-        # MTMO
-        'MO-MFEA': 'MO_MFEA',
-        'MO-MFEA-II': 'MO_MFEA_II',
-        'MO-EMEA': 'MO_EMEA',
-        'EMT-ET': 'EMT_ET',
-        'EMT-PD': 'EMT_PD',
-        'MTDE-MKTA': 'MTDE_MKTA',
-        'MO-MTEA-SaO': 'MO_MTEA_SaO',
-        'ParEGO-KT': 'ParEGO_KT',
-        'MTEA-D-DN': 'MTEA_D_DN',
-    }
-
-    file_name = display_to_file.get(algo_display_name, algo_display_name)
+    file_name = DISPLAY_TO_FILE.get(algo_display_name, algo_display_name)
     key = f"{category}/{file_name}"
 
     if key in all_params:
@@ -390,24 +313,7 @@ def get_algorithm_info(category: str, algo_display_name: str) -> Dict[str, str]:
     if cache_key in _INFO_CACHE:
         return _INFO_CACHE[cache_key]
 
-    # Map display names to file names
-    display_to_file = {
-        'CMA-ES': 'CMA_ES', 'MA-ES': 'MA_ES', 'IPOP-CMA-ES': 'IPOP_CMA_ES',
-        'sep-CMA-ES': 'sep_CMA_ES', 'OpenAI-ES': 'OpenAI_ES', 'SA-COSO': 'SA_COSO',
-        'GL-SADE': 'GL_SADE', 'KL-PSO': 'KL_PSO', 'SL-PSO': 'SL_PSO', 'EEI-BO': 'EEI_BO',
-        'NSGA-II': 'NSGA_II', 'NSGA-III': 'NSGA_III', 'NSGA-II-SDR': 'NSGA_II_SDR',
-        'MOEA/D': 'MOEA_D', 'MOEA/D-STM': 'MOEA_D_STM', 'MOEA/D-FRRMAB': 'MOEA_D_FRRMAB',
-        'MOEA/DD': 'MOEA_DD', 'C-TAEA': 'C_TAEA', 'K-RVEA': 'K_RVEA',
-        'DSAEA-PS': 'DSAEA_PS', 'MCEA-D': 'MCEA_D', 'CPS-MOEA': 'CPS_MOEA',
-        'MFEA-II': 'MFEA_II', 'G-MFEA': 'G_MFEA', 'MTEA-AD': 'MTEA_AD',
-        'MTEA-SaO': 'MTEA_SaO', 'LCB-EMT': 'LCB_EMT', 'EEI-BO+': 'EEI_BO_plus',
-        'MO-MFEA': 'MO_MFEA', 'MO-MFEA-II': 'MO_MFEA_II', 'MO-EMEA': 'MO_EMEA',
-        'EMT-ET': 'EMT_ET', 'EMT-PD': 'EMT_PD', 'MTDE-MKTA': 'MTDE_MKTA',
-        'MO-MTEA-SaO': 'MO_MTEA_SaO', 'ParEGO-KT': 'ParEGO_KT', 'MTEA-D-DN': 'MTEA_D_DN',
-        'Two_Arch2': 'TwoArch2', 'BO-LCB-BCKT': 'BO_LCB_BCKT', 'BO-LCB-CKT': 'BO_LCB_CKT',
-    }
-
-    file_name = display_to_file.get(algo_display_name, algo_display_name)
+    file_name = DISPLAY_TO_FILE.get(algo_display_name, algo_display_name)
 
     # Find algo path
     current = Path(__file__).resolve().parent
@@ -453,23 +359,9 @@ def format_algorithm_info(info: Dict[str, str]) -> str:
     if not info:
         return "No information available"
 
-    labels = {
-        'n_tasks': 'Tasks',
-        'dims': 'Dimensions',
-        'objs': 'Objectives',
-        'n_objs': 'Num Objectives',
-        'cons': 'Constraints',
-        'n_cons': 'Num Constraints',
-        'expensive': 'Expensive',
-        'knowledge_transfer': 'Knowledge Transfer',
-        'n': 'Population',
-        'max_nfes': 'Max NFEs',
-    }
-
     lines = []
     for key, value in info.items():
-        label = labels.get(key, key)
-        lines.append(f"{label}: {value}")
+        lines.append(f"{key}: {value}")
 
     return "\n".join(lines)
 
@@ -509,6 +401,9 @@ FILE_TO_DISPLAY = {
     'MO_MTEA_SaO': 'MO-MTEA-SaO', 'ParEGO_KT': 'ParEGO-KT', 'MTEA_D_DN': 'MTEA-D-DN',
     'TwoArch2': 'Two_Arch2', 'BO_LCB_BCKT': 'BO-LCB-BCKT', 'BO_LCB_CKT': 'BO-LCB-CKT',
 }
+
+# Reverse mapping: display name -> file name
+DISPLAY_TO_FILE = {v: k for k, v in FILE_TO_DISPLAY.items()}
 
 
 def _get_display_name(file_name: str, class_name: str) -> str:

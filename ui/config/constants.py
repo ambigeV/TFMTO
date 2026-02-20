@@ -25,6 +25,7 @@ FONT_SIZE_SECTION = 20
 
 # Categories
 CATEGORIES = ["STSO", "STMO", "MTSO", "MTMO", "RWO"]
+ALGO_CATEGORIES = ["STSO", "STMO", "MTSO", "MTMO"]
 
 # Metrics for multi-objective problems
 METRICS = ["IGD", "HV", "IGDp", "GD", "DeltaP", "Spacing", "Spread"]

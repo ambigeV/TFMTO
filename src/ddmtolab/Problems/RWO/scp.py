@@ -36,6 +36,15 @@ class SCP:
         The directory path for problem data files.
     """
 
+    problem_information = {
+        'n_cases': 1,
+        'n_tasks': '11',
+        'n_dims': '[75, 105]',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'real_world',
+    }
+
     def __init__(self, Nmin=25, Nmax=35):
         """
         Initialize SCP problem.

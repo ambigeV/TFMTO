@@ -27,6 +27,15 @@ class UF:
     The decision space dimension can be adjusted via the `D` parameter.
     """
 
+    problem_information = {
+        'n_cases': 10,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': '[2, 3]',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def UF1(self, D=30) -> MTOP:
         """
         Generates the **UF1** problem.

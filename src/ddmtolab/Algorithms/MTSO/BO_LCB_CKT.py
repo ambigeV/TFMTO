@@ -49,7 +49,7 @@ class BO_LCB_CKT:
     """
 
     algorithm_information = {
-        'n_tasks': '2-K',
+        'n_tasks': '[2, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
@@ -313,8 +313,8 @@ class BO_LCB_CKT:
         for i in range(num_sources):
             def objective(theta):
                 # Adapt target solutions in unified space
+                # No clipping: allow GP extrapolation (matching MATLAB obj_ada.m)
                 X_adapted = solutions_target_uni - theta
-                X_adapted = np.clip(X_adapted, 0, 1)
 
                 try:
                     # Predict using source GP
@@ -466,8 +466,8 @@ class BO_LCB_CKT:
 
         for i in range(num_sources):
             # Adapt target solutions in unified space
+            # No clipping: allow GP extrapolation (matching MATLAB knowledge_competition.m)
             X_adapted = decs_target_uni - ada_vectors[i]
-            X_adapted = np.clip(X_adapted, 0, 1)
 
             try:
                 objs_val, _ = gp_predict(
@@ -511,71 +511,86 @@ class BO_LCB_CKT:
 
     def _improvement_external(self, objs_source, objs_val, objs_target, similarity):
         """
-        Estimate external improvement (same as before).
-        """
-        similarity = max(0, similarity)
+        Estimate external improvement using exponential decay model.
 
-        if similarity < 1e-6:
+        Matches MATLAB improvement_external.m:
+        - Fits pure exponential y(t) = a * exp(-b*t) to sorted-descending convergence curves
+        - Estimates time savings from source knowledge transfer
+        - Computes analogized improvement on target curve
+
+        Parameters
+        ----------
+        objs_source : ndarray
+            Source task true objectives (unsorted)
+        objs_val : ndarray
+            Source GP predictions on target data
+        objs_target : ndarray
+            Target task true objectives (unsorted)
+        similarity : float
+            Rank-based similarity between source and target
+
+        Returns
+        -------
+        improvement : float
+            Estimated external improvement (non-negative)
+        """
+        if similarity < 0:
             return 0.0
 
+        # Sort descending (matching MATLAB: sort(...,'descend'))
         objs_source_sorted = np.sort(objs_source)[::-1]
         objs_target_sorted = np.sort(objs_target)[::-1]
 
         n_source = len(objs_source_sorted)
         n_target = len(objs_target_sorted)
 
-        # Fit exponential decay for source
-        gamma_o_source = np.min(objs_source_sorted)
+        # Pure exponential model: y(t) = a * exp(-b*t)
+        # Fit: log(y) = log(a) - b*t  (requires y > 0)
+        # MATLAB: coe = [ones(n,1), (1:n)'] \ log(objs)
+        #         ps = [exp(coe(1)), -coe(2)]
+
+        # Source curve fit
+        if np.any(objs_source_sorted <= 0):
+            return 0.0
         t_source = np.arange(1, n_source + 1)
-        y_shifted_source = objs_source_sorted - gamma_o_source + 1e-10
-
         try:
-            coeffs_source = np.polyfit(t_source, np.log(y_shifted_source), 1)
-            lambda_source = -coeffs_source[0]
-            gamma_i_source = np.exp(coeffs_source[1])
-
-            if lambda_source <= 0:
-                return 0.0
+            # polyfit: log(y) = coeffs[0]*t + coeffs[1]
+            coeffs_source = np.polyfit(t_source, np.log(objs_source_sorted), 1)
+            a_source = np.exp(coeffs_source[1])   # exp(intercept)
+            b_source = -coeffs_source[0]           # -slope
         except:
             return 0.0
 
-        # Fit exponential decay for target
-        gamma_o_target = np.min(objs_target_sorted)
+        # Target curve fit
+        if np.any(objs_target_sorted <= 0):
+            return 0.0
         t_target = np.arange(1, n_target + 1)
-        y_shifted_target = objs_target_sorted - gamma_o_target + 1e-10
-
         try:
-            coeffs_target = np.polyfit(t_target, np.log(y_shifted_target), 1)
-            lambda_target = -coeffs_target[0]
-            gamma_i_target = np.exp(coeffs_target[1])
-
-            if lambda_target <= 0:
-                return 0.0
+            coeffs_target = np.polyfit(t_target, np.log(objs_target_sorted), 1)
+            a_target = np.exp(coeffs_target[1])
+            b_target = -coeffs_target[0]
         except:
             return 0.0
 
-        # Calculate time interval
+        # Time position of min(objs_val) on source curve
+        # MATLAB: tv = max(0, -log(min(objs_val)/ps(1)) / ps(2))
         min_val = np.min(objs_val)
-
         try:
-            tau_v = (1 / lambda_source) * np.log(
-                gamma_i_source / (min_val - gamma_o_source + 1e-10)
-            )
-            tau_v = max(0, tau_v)
+            if min_val <= 0 or a_source <= 0 or b_source <= 0:
+                tv = 0.0
+            else:
+                tv = -np.log(min_val / a_source) / b_source
+                tv = max(0.0, tv)
         except:
-            tau_v = 0
+            tv = 0.0
 
-        tau_max = n_source
-        delta_tau = tau_max - tau_v
-
-        # Analogize to target
-        tau_current = n_target
-        tau_analogized = similarity * (tau_current + delta_tau)
-
-        predicted_obj = gamma_o_target + gamma_i_target * np.exp(-lambda_target * tau_analogized)
+        # Analogized time and predicted improvement
+        # MATLAB: imp = sim*(min(objs_target) - decay_target(sim*(n_target+n_source-tv), pt))
+        analogized_time = similarity * (n_target + n_source - tv)
+        predicted_obj = a_target * np.exp(-b_target * analogized_time)
         improvement = similarity * (np.min(objs_target) - predicted_obj)
 
-        return max(0, improvement)
+        return max(0.0, improvement)
 
     def _compute_ranks(self, values):
         """

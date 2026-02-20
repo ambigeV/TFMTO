@@ -33,12 +33,12 @@ class MOEA_D:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'unequal',
-        'n_objs': '2-M',
+        'n_objs': '[2, M]',
         'cons': 'unequal',
-        'n_cons': '0-C',
+        'n_cons': '[0, C]',
         'expensive': 'False',
         'knowledge_transfer': 'False',
         'n': 'unequal',

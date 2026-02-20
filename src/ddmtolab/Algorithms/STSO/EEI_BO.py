@@ -44,7 +44,7 @@ class EEI_BO:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
@@ -60,7 +60,7 @@ class EEI_BO:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n_initial=None, max_nfes=None, n1=50, max_nfes1=500, n2=30, max_nfes2=600,
+    def __init__(self, problem, n_initial=None, max_nfes=None, n1=50, max_nfes1=500, n2=30, max_nfes2=6000,
                  save_data=True, save_path='./Data', name='EEI-BO', disable_tqdm=True):
         """
         Initialize EEI-BO algorithm.

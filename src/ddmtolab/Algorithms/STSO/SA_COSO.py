@@ -35,7 +35,7 @@ class SA_COSO:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
@@ -324,8 +324,8 @@ class SA_COSO:
                             self.c2 * r2 * (gbest_fes - swarm['pos']) +
                             self.c3 * r3 * (gbest_rbf - swarm['pos']))
 
-        # Velocity clamping
-        vel_new = np.clip(vel_new, -1.0, 1.0)
+        # Velocity clamping (±0.5 in [0,1] space, matching MATLAB ±0.5*(ub-lb))
+        vel_new = np.clip(vel_new, -0.5, 0.5)
         vel[:] = vel_new
 
         # Position update
@@ -395,7 +395,7 @@ class SA_COSO:
 
                 # Update velocity (delta) and position
                 delta[j] = np.random.rand(dim) * delta[j] + np.random.rand(dim) * (chosen - swarm['pos'][j])
-                delta[j] = np.clip(delta[j], -1.0, 1.0)
+                delta[j] = np.clip(delta[j], -0.5, 0.5)
                 swarm['pos'][j] = swarm['pos'][j] + delta[j]
 
         # Boundary handling

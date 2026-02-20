@@ -30,6 +30,15 @@ class PKACP:
         Directory for task parameter files (in user's home directory)
     """
 
+    problem_information = {
+        'n_cases': 1,
+        'n_tasks': 'K',
+        'n_dims': 'D',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'real_world',
+    }
+
     def __init__(self):
         """Initialize PKACP problem."""
         # Use user's home directory for storing generated parameters

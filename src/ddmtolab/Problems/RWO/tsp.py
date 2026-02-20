@@ -123,6 +123,15 @@ class TSP:
            Princeton University Press.
     """
 
+    problem_information = {
+        'n_cases': 6,
+        'n_tasks': '1',
+        'n_dims': '[20, 200]',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'real_world',
+    }
+
     _PROBLEM_NAMES = {
         1: 'Random-20', 2: 'Circle-30', 3: 'Clustered-50',
         4: 'Random-50', 5: 'Random-100', 6: 'Random-200',

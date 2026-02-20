@@ -78,13 +78,16 @@ class TemplateAlgorithm:
     # Algorithm Information (REQUIRED for UI detection)
     # =========================================================================
     algorithm_information = {
-        'n_tasks': 'single',      # 'single' or 'multi' or 'any'
-        'dims': 'equal',          # 'equal' or 'unequal' (for multi-task)
-        'objs': 'single',         # 'single' or 'multi'
-        'n_objs': 'equal',        # 'equal' or 'unequal' (for multi-task MO)
-        'cons': 'none',           # 'none' or 'supported'
-        'expensive': False,       # True for surrogate-assisted algorithms
-        'knowledge_transfer': False,  # True for transfer learning algorithms
+        'n_tasks': '[1, K]',      # '[1, K]' for single-task, '[2, K]' for multi-task
+        'dims': 'unequal',        # 'equal' or 'unequal' (for multi-task)
+        'objs': 'unequal',        # 'equal' or 'unequal'
+        'n_objs': '1',            # '1' single-obj, '[2, M]' multi-obj, '[2, 3]' 2-3 objs
+        'cons': 'unequal',        # 'equal' or 'unequal'
+        'n_cons': '[0, C]',       # '0' no constraints, '[0, C]' supports constraints
+        'expensive': 'False',     # 'True' for surrogate-assisted algorithms
+        'knowledge_transfer': 'False',  # 'True' for transfer learning algorithms
+        'n': 'unequal',
+        'max_nfes': 'unequal'
     }
 
     def __init__(
@@ -281,13 +284,16 @@ class TemplateMultiTaskAlgorithm:
     """
 
     algorithm_information = {
-        'n_tasks': 'multi',       # Handles multiple tasks
-        'dims': 'equal',          # 'equal' or 'unequal' dimensions across tasks
-        'objs': 'single',         # 'single' or 'multi'
-        'n_objs': 'equal',
-        'cons': 'none',
-        'expensive': False,
-        'knowledge_transfer': True,  # Uses transfer learning
+        'n_tasks': '[2, K]',      # Multi-task: handles 2 or more tasks
+        'dims': 'unequal',        # 'equal' or 'unequal' dimensions across tasks
+        'objs': 'unequal',        # 'equal' or 'unequal'
+        'n_objs': '1',       # '1' single-obj, '[2, M]' multi-obj
+        'cons': 'unequal',
+        'n_cons': '[0, C]',
+        'expensive': 'False',
+        'knowledge_transfer': 'True',  # Uses transfer learning
+        'n': 'equal',
+        'max_nfes': 'equal'
     }
 
     def __init__(
@@ -335,13 +341,16 @@ class TemplateSurrogateAlgorithm:
     """
 
     algorithm_information = {
-        'n_tasks': 'single',
-        'dims': 'equal',
-        'objs': 'single',
-        'n_objs': 'equal',
-        'cons': 'none',
-        'expensive': True,        # Uses surrogate model
-        'knowledge_transfer': False,
+        'n_tasks': '[1, K]',
+        'dims': 'unequal',
+        'objs': 'unequal',
+        'n_objs': '1',
+        'cons': 'equal',
+        'n_cons': '0',
+        'expensive': 'True',      # Uses surrogate model
+        'knowledge_transfer': 'False',
+        'n_initial': 'unequal',
+        'max_nfes': 'unequal'
     }
 
     def __init__(

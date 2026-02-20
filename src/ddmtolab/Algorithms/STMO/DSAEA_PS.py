@@ -1,29 +1,32 @@
 """
-Dual Surrogate assisted Evolutionary Algorithm based on Parallel Search (DSAEA-PS)
+Dual-Surrogate Assisted Evolutionary Algorithm with Portfolio Strategy (DSAEA-PS)
 
 This module implements DSAEA-PS for computationally expensive multi/many-objective optimization.
+It uses two types of surrogates (Kriging for objective prediction and RBF for dominance relation
+prediction) combined with a portfolio of three environmental selection strategies (IBEA, RVEA,
+NSGA-II/CSDR) to balance convergence and diversity.
 
 References
 ----------
-    [1] Shen, Jiangtao, et al. "A dual surrogate assisted evolutionary algorithm based on parallel search for expensive multi/many-objective optimization." Applied Soft Computing 148 (2023): 110879.
+    [1] J. Shen, P. Wang, Y. Tian, and H. Dong. A dual surrogate assisted evolutionary algorithm
+        based on parallel search for expensive multi/many-objective optimization. Applied Soft
+        Computing, 2023, 148: 110879.
 
 Notes
 -----
 Author: Jiangtao Shen
-Date: 2025.01.12
+Date: 2026.02.18
 Version: 1.0
 """
 from tqdm import tqdm
 import time
 import torch
 import numpy as np
-from scipy.interpolate import RBFInterpolator
+from scipy.spatial.distance import cdist
 from ddmtolab.Methods.Algo_Methods.algo_utils import *
 from ddmtolab.Methods.Algo_Methods.bo_utils import mo_gp_build, mo_gp_predict
-from ddmtolab.Algorithms.STMO.RVEA import RVEA
-from ddmtolab.Algorithms.STMO.IBEA import IBEA
-from ddmtolab.Algorithms.STMO.NSGA_II_SDR import NSGA_II_SDR, nd_sort_sdr
-from ddmtolab.Methods.mtop import MTOP
+from ddmtolab.Methods.Algo_Methods.uniform_point import uniform_point
+from ddmtolab.Algorithms.STMO.RVEA import rvea_selection
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -31,12 +34,11 @@ warnings.filterwarnings("ignore")
 
 class DSAEA_PS:
     """
-    Dual surrogate assisted evolutionary algorithm based on parallel search for expensive
+    Dual-Surrogate Assisted Evolutionary Algorithm with Portfolio Strategy for expensive
     multi/many-objective optimization.
 
-    This algorithm uses two types of surrogate models:
-    1. Gaussian Process (GP) models for each objective
-    2. RBF model for predicting SDR-based front numbers
+    Uses Kriging models for objective prediction and an RBF model for dominance relation
+    prediction, combined with three environmental selection strategies (IBEA, RVEA, CSDR).
 
     Attributes
     ----------
@@ -45,10 +47,10 @@ class DSAEA_PS:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'unequal',
-        'n_objs': '2-M',
+        'n_objs': '[2, M]',
         'cons': 'equal',
         'n_cons': '0',
         'expensive': 'True',
@@ -75,17 +77,17 @@ class DSAEA_PS:
         max_nfes : int or List[int], optional
             Maximum number of function evaluations per task (default: 200)
         n : int or List[int], optional
-            Population size per task (default: 100)
+            Population size (number of reference vectors) per task (default: 100)
         wmax : int, optional
-            Number of generations for surrogate optimization (default: 20)
+            Number of inner surrogate evolution generations (default: 20)
         mu : int, optional
-            Number of re-evaluated solutions at each generation (default: 5)
+            Number of re-evaluated solutions per iteration (default: 5)
         save_data : bool, optional
             Whether to save optimization data (default: True)
         save_path : str, optional
-            Path to save results (default: './TestData')
+            Path to save results (default: './Data')
         name : str, optional
-            Name for the experiment (default: 'DSAEAPS_test')
+            Name for the experiment (default: 'DSAEA-PS')
         disable_tqdm : bool, optional
             Whether to disable progress bar (default: True)
         """
@@ -124,12 +126,26 @@ class DSAEA_PS:
         max_nfes_per_task = par_list(self.max_nfes, nt)
         n_per_task = par_list(self.n, nt)
 
-        # Generate initial samples using Latin Hypercube Sampling
+        # Generate uniformly distributed reference vectors for each task
+        V0 = []
+        for i in range(nt):
+            v_i, actual_n = uniform_point(n_per_task[i], n_objs[i])
+            V0.append(v_i)
+            n_per_task[i] = actual_n
+
+        # Generate identity matrix reference vectors (for diversity checking)
+        v0 = [np.eye(n_objs[i]) for i in range(nt)]
+
+        # Initialize with LHS
         decs = initialization(problem, n_initial_per_task, method='lhs')
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # Reorganize initial data into task-specific history lists
+        # A1: archive of all evaluated solutions
+        arc_decs = [d.copy() for d in decs]
+        arc_objs = [o.copy() for o in objs]
+
+        # History tracking
         all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
         all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
 
@@ -142,95 +158,105 @@ class DSAEA_PS:
                 break
 
             for i in active_tasks:
-                m = n_objs[i]
+                M = n_objs[i]
                 dim = dims[i]
+                N = n_per_task[i]
 
-                # ===== Step 1: Build surrogate models =====
-                # Build GP models for each objective using mo_gp_build
-                gp_models = mo_gp_build(decs[i], objs[i], data_type)
+                A1Dec = arc_decs[i].copy()
+                A1Obj = arc_objs[i].copy()
 
-                # Normalize objectives and compute SDR front numbers for RBF training
-                objs_norm, _, _ = normalize(objs[i], axis=0, method='minmax')
-                front_no_sdr, _ = nd_sort_sdr(objs_norm, len(objs[i]))
+                # Scale reference vectors by objective range
+                obj_range = A1Obj.max(axis=0) - A1Obj.min(axis=0)
+                obj_range = np.maximum(obj_range, 1e-10)
+                V = V0[i] * obj_range
+                v = v0[i] * obj_range
 
-                # Build RBF model for predicting front numbers
-                rbf_model = RBFInterpolator(decs[i], front_no_sdr)
+                # === Build dominance relation model (RBF on CSDR front numbers) ===
+                DA1Obj = _normalize_csdr(A1Obj)
+                front_no_dom, _ = _nd_sort_csdr(DA1Obj, len(A1Dec))
+                dmodel = rbf_build(A1Dec, front_no_dom.astype(float))
 
-                # ===== Step 2: Optimize surrogates using RVEA, IBEA, NSGA-II-SDR =====
-                # Create surrogate problem wrapper using mo_gp_predict
-                def surrogate_func(x, models=gp_models, dtype=data_type):
-                    return mo_gp_predict(models, x, dtype, mse=False)
+                # === Build Kriging (GP) models for each objective ===
+                models = mo_gp_build(A1Dec, A1Obj, data_type)
 
-                surrogate_problem = MTOP()
-                surrogate_problem.add_task(objective_func=surrogate_func, dim=dim)
+                # === Inner optimization: 3 parallel MOEAs on surrogates ===
+                pop_dec_1, pop_obj_1 = _moea_inner(
+                    A1Dec.copy(), models, self.wmax, N, M, data_type,
+                    strategy='ibea'
+                )
+                pop_dec_2, pop_obj_2 = _moea_inner(
+                    A1Dec.copy(), models, self.wmax, N, M, data_type,
+                    strategy='rvea', V=V
+                )
+                pop_dec_3, pop_obj_3 = _moea_inner(
+                    A1Dec.copy(), models, self.wmax, N, M, data_type,
+                    strategy='csdr'
+                )
 
-                # Run RVEA on surrogate
-                rvea = RVEA(surrogate_problem, n=n_per_task[i], max_nfes=n_per_task[i] * self.wmax, disable_tqdm=True)
-                results_rvea = rvea.optimize()
-                pop_decs_1 = results_rvea.best_decs[0]
-                pop_objs_1 = results_rvea.best_objs[0]
+                # === Combine results from all 3 MOEAs ===
+                CPopDec = np.vstack([pop_dec_1, pop_dec_2, pop_dec_3])
+                CPopObj = np.vstack([pop_obj_1, pop_obj_2, pop_obj_3])
 
-                # Run IBEA on surrogate
-                ibea = IBEA(surrogate_problem, n=n_per_task[i], max_nfes=n_per_task[i] * self.wmax, disable_tqdm=True)
-                results_ibea = ibea.optimize()
-                pop_decs_2 = results_ibea.best_decs[0]
-                pop_objs_2 = results_ibea.best_objs[0]
+                # Normalize combined objectives using CSDR
+                CPopObj_norm = _normalize_csdr(CPopObj)
+                FN, max_FN = _nd_sort_csdr(CPopObj_norm, np.inf)
 
-                # Run NSGA-II-SDR on surrogate
-                nsgaiisdr = NSGA_II_SDR(surrogate_problem, n=n_per_task[i], max_nfes=n_per_task[i] * self.wmax, disable_tqdm=True)
-                results_nsgaiisdr = nsgaiisdr.optimize()
-                pop_decs_3 = results_nsgaiisdr.best_decs[0]
-                pop_objs_3 = results_nsgaiisdr.best_objs[0]
+                # === Predict dominance front numbers via RBF model ===
+                NP = CPopDec.shape[0]
+                FNO = np.zeros(NP)
+                for j in range(NP):
+                    FNO[j] = rbf_predict(dmodel, A1Dec, CPopDec[j:j + 1, :])
 
-                # Merge populations
-                C_pop_decs = np.vstack([pop_decs_1, pop_decs_2, pop_decs_3])
-                C_pop_objs = np.vstack([pop_objs_1, pop_objs_2, pop_objs_3])
-
-                # ===== Step 3: Dual front number computation =====
-                # Normalize merged population objectives
-                C_pop_objs_norm, _, _ = normalize(C_pop_objs, axis=0, method='minmax')
-
-                # Front number based on GP (SDR sorting)
-                FN_GP, max_FN = nd_sort_sdr(C_pop_objs_norm, len(C_pop_objs))
-
-                # Predict front numbers using RBF model
-                FN_RBF_raw = rbf_model(C_pop_decs)
-
-                # Cluster RBF predictions into max_FN classes
-                FN_RBF = self._cluster_front_numbers(FN_RBF_raw, max_FN)
-
-                # ===== Step 4: Selection based on dual front numbers =====
-                # Create bi-objective matrix: [FN_GP + FN_RBF, |FN_GP - FN_RBF|]
-                ss = np.column_stack([FN_GP + FN_RBF, np.abs(FN_GP - FN_RBF)])
-
-                # Perform standard non-dominated sorting on ss
-                front_no_ss, _ = nd_sort(ss, len(ss))
-
-                # Get first front indices
-                index_F1 = np.where(front_no_ss == 1)[0]
-
-                # ===== Step 5: Select mu solutions for re-evaluation =====
-                if len(index_F1) <= self.mu:
-                    pop_new_decs = C_pop_decs[index_F1]
+                # Map predicted front numbers to discrete levels using kmeans
+                if max_FN > 1 and NP > max_FN:
+                    from sklearn.cluster import KMeans
+                    km = KMeans(n_clusters=max_FN, n_init=10, random_state=0)
+                    labels = km.fit_predict(FNO.reshape(-1, 1))
+                    centers = km.cluster_centers_.flatten()
+                    # Assign front number: cluster with smallest center gets front 1, etc.
+                    sorted_center_idx = np.argsort(centers)
+                    rank_map = np.zeros(max_FN, dtype=int)
+                    for r, idx in enumerate(sorted_center_idx):
+                        rank_map[idx] = r + 1
+                    FNO_mapped = rank_map[labels].astype(float)
                 else:
-                    # Use IBEA-based selection
-                    F1_decs = C_pop_decs[index_F1]
-                    F1_objs = C_pop_objs[index_F1]
-                    pop_new_decs = self._se_ibea(F1_decs, F1_objs, objs[i], self.mu)
+                    FNO_mapped = np.ones(NP)
+
+                # === Combine FN and FNO into 2-objective problem ===
+                # Row 0: FN + FNO_mapped (sum), Row 1: |FN - FNO_mapped| (difference)
+                ss = np.column_stack([FN + FNO_mapped, np.abs(FN - FNO_mapped)])
+                front_no_ss, _ = nd_sort(ss, NP)
+                indexF1 = np.where(front_no_ss == 1)[0]
+
+                # === Select mu infill points ===
+                if len(indexF1) > self.mu:
+                    PopNew = _se_ibea(CPopDec, CPopObj, A1Obj, self.mu)
+                else:
+                    PopNew = CPopDec[indexF1]
 
                 # Remove duplicates
-                pop_new_decs = remove_duplicates(pop_new_decs, decs[i])
+                PopNew = remove_duplicates(PopNew, decs[i])
 
-                if pop_new_decs.shape[0] > 0:
-                    # Evaluate new solutions
-                    new_objs, _ = evaluation_single(problem, pop_new_decs, i)
+                if PopNew.shape[0] > 0:
+                    # Limit to remaining budget
+                    remaining = max_nfes_per_task[i] - nfes_per_task[i]
+                    if PopNew.shape[0] > remaining:
+                        PopNew = PopNew[:remaining]
 
-                    # Update archive
-                    decs[i] = np.vstack([decs[i], pop_new_decs])
+                    # Re-evaluate with expensive function
+                    new_objs, _ = evaluation_single(problem, PopNew, i)
+
+                    # Update archive (merge and deduplicate)
+                    arc_decs[i], arc_objs[i] = merge_archive(
+                        arc_decs[i], arc_objs[i], PopNew, new_objs
+                    )
+
+                    # Update cumulative dataset
+                    decs[i] = np.vstack([decs[i], PopNew])
                     objs[i] = np.vstack([objs[i], new_objs])
 
-                    nfes_per_task[i] += pop_new_decs.shape[0]
-                    pbar.update(pop_new_decs.shape[0])
+                    nfes_per_task[i] += PopNew.shape[0]
+                    pbar.update(PopNew.shape[0])
 
                     append_history(all_decs[i], decs[i], all_objs[i], objs[i])
 
@@ -244,111 +270,344 @@ class DSAEA_PS:
 
         return results
 
-    def _cluster_front_numbers(self, fn_raw, max_fn):
-        """
-        Cluster continuous front number predictions into discrete classes.
 
-        Parameters
-        ----------
-        fn_raw : np.ndarray
-            Raw front number predictions from RBF model
-        max_fn : int
-            Maximum number of fronts (clusters)
+# =============================================================================
+# CSDR-based Non-Dominated Sorting (NDSort_CSDR)
+# =============================================================================
 
-        Returns
-        -------
-        fn_clustered : np.ndarray
-            Clustered front numbers (1 to max_fn)
-        """
-        if max_fn <= 1 or len(fn_raw) <= max_fn:
-            return np.ones(len(fn_raw), dtype=int)
+def _normalize_csdr(objs):
+    """
+    Normalize objectives for CSDR-based sorting.
 
-        # K-means clustering
-        kmeans = KMeans(n_clusters=max_fn, random_state=42, n_init=10)
-        labels = kmeans.fit_predict(fn_raw.reshape(-1, 1))
-        centers = kmeans.cluster_centers_.flatten()
+    Translates to origin and optionally scales by range if the range ratio
+    is not too extreme (matching the MATLAB 0.05*max(range) < min(range) check).
 
-        # Assign front numbers based on cluster center ordering
-        fn_clustered = np.zeros(len(fn_raw), dtype=int)
-        sorted_center_indices = np.argsort(centers)
+    Parameters
+    ----------
+    objs : np.ndarray
+        Objective values, shape (N, M)
 
-        for rank, center_idx in enumerate(sorted_center_indices):
-            fn_clustered[labels == center_idx] = rank + 1
+    Returns
+    -------
+    norm_objs : np.ndarray
+        Normalized objective values
+    """
+    zmin = objs.min(axis=0)
+    zmax = objs.max(axis=0)
+    norm_objs = objs - zmin
+    obj_range = zmax - zmin
+    if obj_range.max() > 0 and 0.05 * obj_range.max() < obj_range.min():
+        norm_objs = norm_objs / np.maximum(obj_range, 1e-10)
+    return norm_objs
 
-        return fn_clustered
 
-    def _se_ibea(self, pop_decs, pop_objs, archive_objs, mu):
-        """
-        IBEA-based selection for infill points.
+def _nd_sort_csdr(objs, n_sort):
+    """
+    CSDR-based non-dominated sorting.
 
-        Parameters
-        ----------
-        pop_decs : np.ndarray
-            Candidate decision variables, shape (N_pop, D)
-        pop_objs : np.ndarray
-            Candidate objective values, shape (N_pop, M)
-        archive_objs : np.ndarray
-            Archive objective values, shape (N_archive, M)
-        mu : int
-            Number of solutions to select
+    Uses both Pareto dominance and angle-based dominance relation to sort
+    solutions into fronts, matching the MATLAB NDSort_CSDR implementation.
 
-        Returns
-        -------
-        selected_decs : np.ndarray
-            Selected decision variables, shape (mu, D)
-        """
-        kappa = 0.05
+    Parameters
+    ----------
+    objs : np.ndarray
+        Objective values (already normalized), shape (N, M)
+    n_sort : float
+        Number of solutions to sort (use np.inf for all)
 
-        # Combined normalization
-        combined_objs = np.vstack([archive_objs, pop_objs])
-        combined_norm, _, _ = normalize(combined_objs, axis=0, method='minmax')
+    Returns
+    -------
+    front_no : np.ndarray
+        Front number for each solution, shape (N,)
+    max_fno : int
+        Maximum front number assigned
+    """
+    N, M = objs.shape
+    if N == 0:
+        return np.array([]), 0
 
-        n_archive = len(archive_objs)
-        archive_objs_norm = combined_norm[:n_archive]
-        pop_objs_norm = combined_norm[n_archive:]
+    # Compute pairwise cosine similarity (matching MATLAB: 1 - pdist2(...,'cosine'))
+    cosine = 1 - cdist(objs, objs, metric='cosine')
+    np.fill_diagonal(cosine, 0)
+    angle = np.arccos(np.clip(cosine, -1, 1))
 
-        # SDR-based front filtering
-        if n_archive > 0:
-            fn_archive, _ = nd_sort_sdr(archive_objs_norm, n_archive)
-            archive_objs_norm = archive_objs_norm[fn_archive == 1]
+    # Compute threshold angle: 50th percentile of minimum angles
+    min_angles = np.sort(np.unique(np.min(angle, axis=1)))
+    idx = min(int(np.ceil(0.5 * N)) - 1, len(min_angles) - 1)
+    min_a = min_angles[max(0, idx)]
+    min_a = max(min_a, 1e-10)
 
-        fn_pop, _ = nd_sort_sdr(pop_objs_norm, len(pop_objs_norm))
-        nd_mask = fn_pop == 1
-        pop_objs_norm = pop_objs_norm[nd_mask]
-        pop_decs_filtered = pop_decs[nd_mask]
+    # Theta matrix for angle-based dominance
+    theta = np.maximum(1.0, angle / min_a)
 
-        n_pop = len(pop_objs_norm)
-        if n_pop <= mu:
-            return pop_decs_filtered
+    # NormP: sum of objectives for each solution
+    norm_p = np.sum(objs, axis=1)
 
-        # Combined objectives: pop first, then archive
-        n_archive = len(archive_objs_norm)
-        C_objs = np.vstack([pop_objs_norm, archive_objs_norm]) if n_archive > 0 else pop_objs_norm
+    # Build dominance matrix
+    dominate = np.zeros((N, N), dtype=bool)
 
-        # Calculate IBEA fitness
-        fitness, I, C = ibea_fitness(C_objs, kappa)
+    for ii in range(N - 1):
+        for jj in range(ii + 1, N):
+            # Check Pareto dominance (matching MATLAB IfDominate)
+            a_leq_b = np.all(objs[ii] <= objs[jj])
+            b_leq_a = np.all(objs[jj] <= objs[ii])
+            are_equal = np.all(objs[ii] == objs[jj])
 
-        # Track remaining indices (True = remaining)
-        N = len(C_objs)
-        remaining = np.ones(N, dtype=bool)
-        n_pop_remaining = n_pop
+            if a_leq_b and not are_equal:
+                dominate[ii, jj] = True
+            elif b_leq_a and not are_equal:
+                dominate[jj, ii] = True
 
-        while n_pop_remaining > mu:
-            # Get indices of remaining solutions
-            remaining_idx = np.where(remaining)[0]
+            # Check angle-based dominance
+            if norm_p[ii] * theta[ii, jj] < norm_p[jj]:
+                dominate[ii, jj] = True
+            elif norm_p[jj] * theta[jj, ii] < norm_p[ii]:
+                dominate[jj, ii] = True
 
-            # Find and remove solution with minimum fitness
-            x = remaining_idx[np.argmin(fitness[remaining_idx])]
-            remaining[x] = False
+    # Assign front numbers
+    front_no = np.full(N, np.inf)
+    max_fno = 0
+    n_target = min(n_sort, N) if np.isfinite(n_sort) else N
 
-            # Update fitness after removal
-            if C[x] > 1e-10:
-                fitness += np.exp(-I[x, :] / C[x] / kappa)
+    while np.sum(front_no != np.inf) < n_target:
+        max_fno += 1
+        # Solutions not dominated by any unassigned solution
+        current = np.where(
+            (~np.any(dominate, axis=0)) & (front_no == np.inf)
+        )[0]
+        if len(current) == 0:
+            break
+        front_no[current] = max_fno
+        dominate[current, :] = False
 
-            # Update count if removed from pop (first n_pop elements)
-            if x < n_pop:
-                n_pop_remaining -= 1
+    return front_no, max_fno
 
-        # Return selected solutions from pop
-        selected_idx = np.where(remaining[:n_pop])[0]
-        return pop_decs_filtered[selected_idx]
+
+# =============================================================================
+# Inner MOEA on Surrogates (MOEAK)
+# =============================================================================
+
+def _moea_inner(pop_decs, models, wmax, N, M, data_type, strategy='ibea', V=None):
+    """
+    Run inner surrogate-based MOEA for wmax generations.
+
+    Parameters
+    ----------
+    pop_decs : np.ndarray
+        Initial population decisions, shape (n, d)
+    models : list
+        List of M GP models for objective prediction
+    wmax : int
+        Number of inner generations
+    N : int
+        Population size
+    M : int
+        Number of objectives
+    data_type : torch.dtype
+        Data type for GP prediction
+    strategy : str
+        Selection strategy: 'ibea', 'rvea', or 'csdr'
+    V : np.ndarray, optional
+        Reference vectors (required for 'rvea')
+
+    Returns
+    -------
+    pop_decs : np.ndarray
+        Final population decisions
+    pop_objs : np.ndarray
+        Final predicted objectives
+    """
+    for w in range(1, wmax + 1):
+        # Generate offspring via GA operators
+        off_decs = ga_generation(pop_decs, muc=20.0, mum=20.0)
+
+        # Merge parent and offspring
+        pop_decs = np.vstack([pop_decs, off_decs])
+
+        # Predict objectives using GP models
+        pop_objs = mo_gp_predict(models, pop_decs, data_type, mse=False)
+
+        # Environmental selection
+        if strategy == 'ibea':
+            index = _es_ibea(pop_objs, N)
+        elif strategy == 'rvea':
+            theta = (w / wmax) ** 2
+            cons_zero = np.zeros((pop_decs.shape[0], 1))
+            index = rvea_selection(pop_objs, cons_zero, V, theta)
+        elif strategy == 'csdr':
+            index = _es_csdr(pop_objs, N)
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+
+        pop_decs = pop_decs[index]
+        pop_objs = pop_objs[index]
+
+    return pop_decs, pop_objs
+
+
+# =============================================================================
+# IBEA Environmental Selection
+# =============================================================================
+
+def _es_ibea(pop_objs, N):
+    """
+    IBEA-based environmental selection.
+
+    Parameters
+    ----------
+    pop_objs : np.ndarray
+        Objective values, shape (n, M)
+    N : int
+        Number to select
+
+    Returns
+    -------
+    index : np.ndarray
+        Selected indices
+    """
+    n = pop_objs.shape[0]
+    if n <= N:
+        return np.arange(n)
+
+    fitness, I, C = ibea_fitness(pop_objs, kappa=0.05)
+    choose = list(range(n))
+
+    while len(choose) > N:
+        fit_values = fitness[choose]
+        min_idx = np.argmin(fit_values)
+        to_remove = choose[min_idx]
+
+        if C[to_remove] > 1e-10:
+            fitness += np.exp(-I[to_remove, :] / C[to_remove] / 0.05)
+
+        choose.pop(min_idx)
+
+    return np.array(choose)
+
+
+# =============================================================================
+# CSDR Environmental Selection (ES_CSDR from MATLAB)
+# =============================================================================
+
+def _es_csdr(pop_objs, N):
+    """
+    NSGA-II/CSDR-based environmental selection.
+
+    Uses CSDR non-dominated sorting + crowding distance.
+
+    Parameters
+    ----------
+    pop_objs : np.ndarray
+        Objective values, shape (n, M)
+    N : int
+        Number to select
+
+    Returns
+    -------
+    index : np.ndarray
+        Selected indices
+    """
+    n = pop_objs.shape[0]
+    if n <= N:
+        return np.arange(n)
+
+    # Normalize for CSDR
+    norm_objs = _normalize_csdr(pop_objs)
+
+    # CSDR-based sorting
+    front_no, max_fno = _nd_sort_csdr(norm_objs, N)
+
+    # Select solutions from fronts < max_fno
+    Next = front_no < max_fno
+    remaining_needed = N - np.sum(Next)
+
+    if remaining_needed > 0:
+        # Use crowding distance for the last front
+        last_front = np.where(front_no == max_fno)[0]
+        cd = crowding_distance(norm_objs, front_no)
+        sorted_last = last_front[np.argsort(-cd[last_front])]
+        Next[sorted_last[:remaining_needed]] = True
+
+    return np.where(Next)[0]
+
+
+# =============================================================================
+# Se_IBEA: Select infill points using IBEA fitness
+# =============================================================================
+
+def _se_ibea(pop_decs, pop_objs, A1Obj, mu):
+    """
+    Select mu infill points from predicted population using IBEA fitness,
+    combining with archive data for normalization.
+
+    Parameters
+    ----------
+    pop_decs : np.ndarray
+        Population decisions, shape (NP, D)
+    pop_objs : np.ndarray
+        Population predicted objectives, shape (NP, M)
+    A1Obj : np.ndarray
+        Archive objectives, shape (NA, M)
+    mu : int
+        Number to select
+
+    Returns
+    -------
+    PopNew : np.ndarray
+        Selected decision variables, shape (mu, D)
+    """
+    # Normalize using combined range
+    zmin = np.minimum(A1Obj.min(axis=0), pop_objs.min(axis=0))
+    zmax = np.maximum(A1Obj.max(axis=0), pop_objs.max(axis=0))
+    obj_range = zmax - zmin
+
+    A1Obj_norm = A1Obj - zmin
+    PopObj_norm = pop_objs - zmin
+    if obj_range.max() > 0 and 0.05 * obj_range.max() < obj_range.min():
+        A1Obj_norm = A1Obj_norm / np.maximum(obj_range, 1e-10)
+        PopObj_norm = PopObj_norm / np.maximum(obj_range, 1e-10)
+
+    # CSDR sort to get front-1 of archive and population separately
+    FN_A1, _ = _nd_sort_csdr(A1Obj_norm, np.inf)
+    FN_pop, _ = _nd_sort_csdr(PopObj_norm, np.inf)
+
+    A1Obj_f1 = A1Obj_norm[FN_A1 == 1]
+    PopObj_f1 = PopObj_norm[FN_pop == 1]
+    PopDec_f1 = pop_decs[FN_pop == 1]
+
+    if PopObj_f1.shape[0] == 0:
+        # Fallback: select mu from population by IBEA
+        idx = _es_ibea(PopObj_norm, min(mu, pop_decs.shape[0]))
+        return pop_decs[idx]
+
+    # Combine front-1 populations for IBEA fitness computation
+    CObj = np.vstack([PopObj_f1, A1Obj_f1])
+    n_pop = PopObj_f1.shape[0]
+    n_a1 = A1Obj_f1.shape[0]
+
+    if n_pop <= mu:
+        return PopDec_f1
+
+    kappa = 0.05
+    fitness, I, C = ibea_fitness(CObj, kappa=kappa)
+
+    # Remove worst solutions, preferring to remove from pop_f1
+    next_pop = list(range(n_pop))
+    next_a1 = list(range(n_pop, n_pop + n_a1))
+    all_next = next_pop + next_a1
+
+    while len(next_pop) > mu:
+        fit_values = fitness[all_next]
+        min_idx = np.argmin(fit_values)
+        to_remove_global = all_next[min_idx]
+
+        if C[to_remove_global] > 1e-10:
+            fitness += np.exp(-I[to_remove_global, :] / C[to_remove_global] / kappa)
+
+        if to_remove_global < n_pop:
+            next_pop.remove(to_remove_global)
+        else:
+            next_a1.remove(to_remove_global)
+        all_next = next_pop + next_a1
+
+    return PopDec_f1[next_pop]

@@ -18,6 +18,15 @@ class MW:
     IEEE Transactions on Evolutionary Computation, 2019, 23(6): 972-986.
     """
 
+    problem_information = {
+        'n_cases': 14,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': '[2, 3]',
+        'n_cons': '[1, 3]',
+        'type': 'synthetic',
+    }
+
     def MW1(self, M=2, D=None) -> MTOP:
         """
         Generates the **MW1** problem.

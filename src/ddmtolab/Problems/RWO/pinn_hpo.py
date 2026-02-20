@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import time
-from ddmtolab.Problems.RWO.PINN_HPO.pinnhpo_utils import get_data_2d, plot_func_2d
+from ddmtolab.Problems.RWO.data_pinn_hpo.pinnhpo_utils import get_data_2d, plot_func_2d
 from ddmtolab.Problems.BasicFunctions.basic_functions import *
 from ddmtolab.Methods.mtop import MTOP
 import warnings
@@ -920,6 +920,15 @@ class PINN_HPO:
     - x[4]: Grid size (integer, [10, 200])
     - x[5]: Learning rate (float, [1e-5, 0.1])
     """
+
+    problem_information = {
+        'n_cases': 12,
+        'n_tasks': '[2, 4]',
+        'n_dims': '6',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'real_world',
+    }
 
     @staticmethod
     def _evaluate_convection(x, beta, test_name, device):

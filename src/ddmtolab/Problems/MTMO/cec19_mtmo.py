@@ -330,6 +330,15 @@ class CEC19MTMO:
     - D and M vary by problem (see individual method docstrings)
     """
 
+    problem_information = {
+        'n_cases': 10,
+        'n_tasks': '2',
+        'n_dims': '50',
+        'n_objs': '2',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def __init__(self):
         pass
 

@@ -20,9 +20,7 @@ from utils.algo_scanner import (
     discover_all_algorithms, get_discovered_algorithm_names,
     get_discovered_algorithm_class, get_discovered_algorithm_module_info,
 )
-
-# Categories available in the system
-CATEGORIES = ["STSO", "STMO", "MTSO", "MTMO", "RWO"]
+from config.constants import CATEGORIES
 
 
 def get_algorithm_names(category: str) -> List[str]:
@@ -105,77 +103,6 @@ def is_multi_objective(category: str) -> bool:
 def is_multi_task(category: str) -> bool:
     """Check if a category is multi-task."""
     return category in ["MTSO", "MTMO", "RWO"]
-
-
-def get_algorithm_parameters(category: str, name: str) -> Dict[str, Dict]:
-    """
-    Extract algorithm parameters from its __init__ signature.
-
-    Returns:
-        Dict mapping param_name to {type, default, description}
-    """
-    import inspect
-
-    # Parameters to exclude (handled separately or internal)
-    EXCLUDE_PARAMS = {'problem', 'save_data', 'save_path', 'name', 'disable_tqdm', 'self'}
-
-    try:
-        algo_cls = get_algorithm_class(category, name)
-        sig = inspect.signature(algo_cls.__init__)
-        params = {}
-
-        for param_name, param in sig.parameters.items():
-            if param_name in EXCLUDE_PARAMS:
-                continue
-
-            # Get default value
-            default = param.default if param.default != inspect.Parameter.empty else None
-
-            # Infer type from default value
-            if default is not None:
-                if isinstance(default, bool):
-                    param_type = 'bool'
-                elif isinstance(default, int):
-                    param_type = 'int'
-                elif isinstance(default, float):
-                    param_type = 'float'
-                elif isinstance(default, str):
-                    param_type = 'str'
-                else:
-                    param_type = 'any'
-            else:
-                param_type = 'int'  # Default assumption
-
-            params[param_name] = {
-                'type': param_type,
-                'default': default,
-                'description': param_name,  # Use param name directly
-            }
-
-        return params
-    except Exception:
-        # Return basic params if extraction fails
-        return {
-            'n': {'type': 'int', 'default': 100, 'description': 'n'},
-            'max_nfes': {'type': 'int', 'default': 10000, 'description': 'max_nfes'},
-        }
-
-
-def get_all_algorithms() -> Dict[str, List[str]]:
-    """Return all algorithms grouped by category."""
-    result = {}
-    for cat in CATEGORIES:
-        result[cat] = get_algorithm_names(cat)
-    return result
-
-
-def get_all_algorithm_names() -> List[Tuple[str, str]]:
-    """Return list of (category, name) for all algorithms."""
-    result = []
-    for cat in CATEGORIES:
-        for name in get_algorithm_names(cat):
-            result.append((cat, name))
-    return result
 
 
 def get_problem_settings(category: str, suite: str) -> Optional[dict]:

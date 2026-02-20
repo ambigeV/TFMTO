@@ -12,7 +12,7 @@ Notes
 Author: Jiangtao Shen
 Email: j.shen5@exeter.ac.uk
 Date: 2026.01.09
-Version: 1.0
+Version: 2.0
 """
 from tqdm import tqdm
 from ddmtolab.Methods.Algo_Methods.bo_utils import bo_next_point_lcb
@@ -37,8 +37,8 @@ class BO_LCB_BCKT:
     """
 
     algorithm_information = {
-        'n_tasks': '2-K',
-        'dims': 'heterogeneous',
+        'n_tasks': '[2, K]',
+        'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
         'cons': 'equal',
@@ -56,32 +56,6 @@ class BO_LCB_BCKT:
     def __init__(self, problem, n_initial=None, max_nfes=None, gen_gap=10,
                  sigma_I_sq=0.05 ** 2, save_data=True, save_path='./Data',
                  name='BO-LCB-BCKT', disable_tqdm=True, padding='zero'):
-        """
-        Initialize BO-LCB-BCKT algorithm.
-
-        Parameters
-        ----------
-        problem : MTOP
-            Multi-task optimization problem instance
-        n_initial : int, optional
-            Number of initial samples per task (default: 50)
-        max_nfes : int, optional
-            Maximum number of function evaluations per task (default: 100)
-        gen_gap : int, optional
-            Knowledge transfer trigger frequency (default: 10)
-        sigma_I_sq : float, optional
-            Base variance for prior and likelihood (default: 0.0025)
-        save_data : bool, optional
-            Whether to save optimization data (default: True)
-        save_path : str, optional
-            Path to save results (default: './TestData')
-        name : str, optional
-            Name for the experiment (default: 'BO_LCB_BCKT_test')
-        disable_tqdm : bool, optional
-            Whether to disable progress bar (default: True)
-        padding : str, optional
-            Padding strategy for unified space ('zero' or 'random', default: 'zero')
-        """
         self.problem = problem
         self.n_initial = n_initial if n_initial is not None else 50
         self.max_nfes = max_nfes if max_nfes is not None else 100
@@ -96,15 +70,6 @@ class BO_LCB_BCKT:
         self.d_max = np.max(problem.dims)
 
     def optimize(self):
-        """
-        Execute the BO-LCB-BCKT algorithm.
-
-        Returns
-        -------
-        Results
-            Optimization results containing decision variables, objectives,
-            runtime, and transfer actions
-        """
         data_type = torch.float
         start_time = time.time()
         problem = self.problem
@@ -114,43 +79,39 @@ class BO_LCB_BCKT:
         n_initial = self.n_initial
         max_nfes = self.max_nfes
         gen_gap = self.gen_gap
+        sigma2_sim = 0.05 ** 2
 
         # ======================== Phase 1: Initialization ========================
-        # Generate initial samples in real space (Latin Hypercube Sampling)
         decs_real = initialization(problem, n_initial, method='lhs')
         objs_real, _ = evaluation(problem, decs_real)
 
-        # Transform to unified space for optimization
+        # Transform to unified space
         decs_uni = space_transfer(problem, decs_real, type='uni', padding=self.padding)
 
-        # Reorganize into task-specific history lists (unified space for optimization)
+        # Reorganize into task-specific history
         all_decs_uni = reorganize_initial_data(decs_uni, nt, [n_initial] * nt)
         all_objs = reorganize_initial_data(objs_real, nt, [n_initial] * nt)
 
-        # Also keep real space history for saving results
-        all_decs_real = reorganize_initial_data(decs_real, nt, [n_initial] * nt)
-
         # Current working data (unified space)
-        decs = [all_decs_uni[i][-1].copy() for i in range(nt)]  # Current unified decs
-        objs = [all_objs[i][-1].copy() for i in range(nt)]  # Current objs
+        decs = [all_decs_uni[i][-1].copy() for i in range(nt)]
+        objs = [all_objs[i][-1].copy() for i in range(nt)]
 
-        # Initialize evaluation counters
+        # Evaluation counters
         nfes_per_task = [n_initial] * nt
         total_nfes = sum(nfes_per_task)
 
-        # Initialize Bayesian transferability tracking
-        T_history = [[[] for _ in range(nt)] for _ in range(nt)]
-        R_history = [[[] for _ in range(nt)] for _ in range(nt)]
-        k_transfer = np.zeros((nt, nt), dtype=int)
+        # Bayesian transferability: MUs and SIGMA2s (MATLAB-style conjugate Gaussian)
+        MUs = np.full((nt, nt), np.nan)
+        SIGMA2s = np.full((nt, nt), np.nan)
 
-        # Initialize transfer decision history
+        # Transfer decision history
         transfer_actions = [[] for _ in range(nt)]
 
-        # Cache for pending transfer info
-        pending_transfer_info = [None] * nt
-
-        # Initialize GP model cache
+        # GP model cache
         gp_models = [None] * nt
+
+        # gen_gap in total FEs (MATLAB: gen_gap = no_tasks * paras.gen_gap)
+        gen_gap_total = nt * gen_gap
 
         pbar = tqdm(total=max_nfes * nt, initial=total_nfes,
                     desc=f"{self.name}", disable=self.disable_tqdm)
@@ -161,102 +122,98 @@ class BO_LCB_BCKT:
             if not active_tasks:
                 break
 
-            # ---------- Step 1: Single-Task Optimization (BO-LCB) in unified space ----------
-            solutions_in = []
-            improvements_in = []
+            # ---------- Step 1: Single-Task Optimization (BO-LCB) ----------
+            solutions_in = {}
+            improvements_in = {}
 
             for i in active_tasks:
-                # Optimize using LCB in unified space (d_max dimensions)
                 candidate_uni, gp_model = bo_next_point_lcb(
                     d_max, decs[i], objs[i], data_type=data_type
                 )
-                solutions_in.append(candidate_uni)
-
-                # Cache GP model
+                solutions_in[i] = candidate_uni
                 gp_models[i] = gp_model
 
-                # Calculate internal improvement (Eq. 1)
-                imp_in = improvement_internal(
-                    gp_model, decs[i], objs[i], candidate_uni,
-                    acquisition='lcb', data_type=data_type
+                imp_in = _improvement_internal(
+                    gp_model, decs[i], objs[i], candidate_uni, data_type=data_type
                 )
-                improvements_in.append(imp_in)
+                improvements_in[i] = imp_in
 
-            # ---------- Step 2: Bayesian Competitive Knowledge Transfer (unified space) ----------
-            solutions_candidate = []
+            # ---------- Step 2: Bayesian Competitive Knowledge Transfer ----------
+            solutions_candidate = {}
+            trigger_transfer = (total_nfes % gen_gap_total == 0)
 
-            for idx, target_idx in enumerate(active_tasks):
-                if nfes_per_task[target_idx] % gen_gap == 0 and nfes_per_task[target_idx] > n_initial:
-                    # Execute knowledge competition in unified space
+            for target_idx in active_tasks:
+                if trigger_transfer:
+                    # Save old MUs/SIGMA2s for rollback
+                    MUs_old = MUs.copy()
+                    SIGMA2s_old = SIGMA2s.copy()
+
+                    # Execute knowledge competition
                     (solution_ex, improvement_ex, source_idx,
-                     delta_p, similarity) = knowledge_competition(
+                     impn) = _knowledge_competition(
                         decs, objs, gp_models, target_idx,
-                        T_history, R_history, k_transfer,
-                        self.sigma_I_sq, data_type
+                        MUs, SIGMA2s, sigma2_sim, data_type
                     )
 
-                    if improvements_in[idx] >= improvement_ex:
-                        solutions_candidate.append(solutions_in[idx])
+                    if improvements_in[target_idx] >= improvement_ex:
+                        # Internal wins: use internal solution, rollback Bayesian update
+                        solutions_candidate[target_idx] = solutions_in[target_idx]
                         transfer_actions[target_idx].append(0)
-                        pending_transfer_info[target_idx] = None
+                        MUs[source_idx, target_idx] = MUs_old[source_idx, target_idx]
+                        SIGMA2s[source_idx, target_idx] = SIGMA2s_old[source_idx, target_idx]
                     else:
-                        solutions_candidate.append(solution_ex)
+                        # External wins: use transferred solution
+                        solutions_candidate[target_idx] = solution_ex
                         transfer_actions[target_idx].append(source_idx + 1)
-                        pending_transfer_info[target_idx] = {
-                            'source_idx': source_idx,
-                            'delta_p': delta_p,
-                            'similarity': similarity,
-                            'min_target_before': np.min(objs[target_idx])
-                        }
+
+                        # Hidden evaluation for Bayesian update (MATLAB behavior)
+                        cand_real = solution_ex[:, :dims[target_idx]]
+                        obj_hidden, _ = evaluation_single(problem, cand_real, target_idx)
+                        obj_hidden_val = obj_hidden.flatten()[0]
+
+                        # Compute actual transferability
+                        min_target = np.min(objs[target_idx])
+                        max_target = np.max(objs[target_idx])
+                        if max_target != 0:
+                            imp_actual = (min_target - obj_hidden_val) / max_target
+                        else:
+                            imp_actual = 0.0
+
+                        if impn != 0:
+                            mu_transfer = imp_actual / impn
+                        else:
+                            mu_transfer = 0.0
+
+                        # Second Bayesian update with decaying variance
+                        sigma2_transfer = sigma2_sim * np.exp(
+                            -(total_nfes - n_initial * nt) / gen_gap_total
+                        )
+                        _bayesian_update_gaussian(
+                            MUs, SIGMA2s, source_idx, target_idx,
+                            mu_transfer, sigma2_transfer
+                        )
                 else:
-                    solutions_candidate.append(solutions_in[idx])
+                    solutions_candidate[target_idx] = solutions_in[target_idx]
                     transfer_actions[target_idx].append(0)
-                    pending_transfer_info[target_idx] = None
 
-            # ---------- Step 3: Evaluation in real space and Database Update ----------
-            for idx, target_idx in enumerate(active_tasks):
-                candidate_uni = solutions_candidate[idx]
+            # ---------- Step 3: Evaluation and Database Update ----------
+            for target_idx in active_tasks:
+                candidate_uni = solutions_candidate[target_idx]
 
-                # Ensure uniqueness in unified space
-                candidate_uni = ensure_unique(candidate_uni, decs[target_idx], epsilon=5e-3)
+                # Ensure uniqueness (Chebyshev distance, matching MATLAB)
+                candidate_uni = _ensure_unique(candidate_uni, decs[target_idx])
 
                 # Transform to real space for evaluation
                 candidate_real = candidate_uni[:, :dims[target_idx]]
-
-                # real evaluation in real space
                 obj, _ = evaluation_single(problem, candidate_real, target_idx)
 
-                # Update unified space database
+                # Update database
                 decs[target_idx] = np.vstack([decs[target_idx], candidate_uni])
                 objs[target_idx] = np.vstack([objs[target_idx], obj])
 
-                # Store cumulative history in unified space (for optimization continuity)
+                # Store history
                 append_history(all_decs_uni[target_idx], decs[target_idx],
                                all_objs[target_idx], objs[target_idx])
-
-                # Store cumulative history in real space (for result saving)
-                # Get current real-space decs by transforming unified decs
-                current_decs_real = decs[target_idx][:, :dims[target_idx]]
-                all_decs_real[target_idx].append(current_decs_real.copy())
-
-                # ---------- Step 4: Bayesian Update (if transfer occurred) ----------
-                if pending_transfer_info[target_idx] is not None:
-                    info = pending_transfer_info[target_idx]
-                    source_idx = info['source_idx']
-                    delta_p = info['delta_p']
-                    similarity = info['similarity']
-                    min_target_before = info['min_target_before']
-
-                    new_obj_value = obj[0, 0] if obj.ndim > 1 else obj[0]
-
-                    if delta_p != 0:
-                        T_k = (min_target_before - new_obj_value) / delta_p
-                    else:
-                        T_k = 0.0
-
-                    T_history[source_idx][target_idx].append(T_k)
-                    R_history[source_idx][target_idx].append(similarity)
-                    k_transfer[source_idx, target_idx] += 1
 
                 nfes_per_task[target_idx] += 1
                 total_nfes += 1
@@ -266,7 +223,6 @@ class BO_LCB_BCKT:
         runtime = time.time() - start_time
 
         # ======================== Phase 3: Build Results (real space) ========================
-        # Transform all_decs back to real space for saving
         final_decs_real = []
         for i in range(nt):
             task_decs_real = []
@@ -275,13 +231,12 @@ class BO_LCB_BCKT:
                 task_decs_real.append(dec_real)
             final_decs_real.append(task_decs_real)
 
-        # Build results with real space decision variables
         results = build_save_results(
             all_decs=final_decs_real,
             all_objs=all_objs,
             runtime=runtime,
             max_nfes=nfes_per_task,
-            bounds=problem.bounds,  # real space bounds
+            bounds=problem.bounds,
             save_path=self.save_path,
             filename=self.name,
             save_data=self.save_data
@@ -294,168 +249,157 @@ class BO_LCB_BCKT:
 
 # ==================== Utility Functions ====================
 
-def ensure_unique(candidate, decs, epsilon=5e-3, max_trials=50):
-    """
-    Ensure candidate solution is unique from database solutions.
-    """
+def _ensure_unique(candidate, decs, epsilon=5e-3, max_trials=50):
+    """Ensure uniqueness using Chebyshev distance (matching MATLAB)."""
+    scales = np.linspace(0.1, 1.0, max_trials)
     for trial in range(max_trials):
         distances = np.max(np.abs(candidate - decs), axis=1)
         min_dist = np.min(distances)
-
         if min_dist >= epsilon:
             break
-
-        scale = np.linspace(0.1, 1.0, max_trials)[trial]
-        perturbation = scale * (np.random.rand(candidate.shape[1]) - 0.5)
-        candidate = candidate + perturbation
-        candidate = np.clip(candidate, 0, 1)
-
+        perturbation = scales[trial] * (np.random.rand(candidate.shape[1]) - 0.5)
+        candidate = np.clip(candidate + perturbation, 0, 1)
     return candidate
 
 
-def knowledge_competition(decs, objs, gp_models, target_idx,
-                          T_history, R_history, k_transfer,
-                          sigma_I_sq, data_type):
-    """
-    Execute Bayesian Competitive Knowledge Transfer.
+def _bayesian_update_gaussian(MUs, SIGMA2s, source_idx, target_idx,
+                              observation, sigma2_obs):
+    """Standard conjugate Gaussian Bayesian update: MU/SIGMA2 in-place."""
+    mu_old = MUs[source_idx, target_idx]
+    s2_old = SIGMA2s[source_idx, target_idx]
+    MUs[source_idx, target_idx] = (
+        (mu_old * sigma2_obs + observation * s2_old) / (sigma2_obs + s2_old)
+    )
+    SIGMA2s[source_idx, target_idx] = (
+        s2_old * sigma2_obs / (s2_old + sigma2_obs)
+    )
 
-    All operations are performed in unified space.
+
+def _knowledge_competition(decs, objs, gp_models, target_idx,
+                           MUs, SIGMA2s, sigma2_sim, data_type):
+    """
+    Execute Bayesian Competitive Knowledge Transfer (matching MATLAB knowledge_competition.m).
+
+    Returns (solution_ex, improvement_ex, source_idx, impn).
+    MUs and SIGMA2s are updated IN-PLACE with similarity observations.
     """
     nt = len(decs)
     Xt = decs[target_idx]
     Yt = objs[target_idx].flatten()
+    dim = Xt.shape[1]
 
     improvements = np.full(nt, -np.inf)
-    delta_ps = np.full(nt, 0.0)
-    similarities = np.full(nt, 0.0)
-    solutions_external = []
+    impns = np.full(nt, -np.inf)
+    solutions_external = [None] * nt
 
     for source_idx in range(nt):
         if source_idx == target_idx:
-            solutions_external.append(None)
             continue
 
         Xs = decs[source_idx]
         Ys = objs[source_idx].flatten()
 
-        # Calculate Task Similarity in unified space
-        similarity, Yval = compute_similarity_ssrc(
-            Xs, Ys, gp_models[source_idx], Xt, Yt, data_type
+        # Compute similarity (SSRC) using source GP predictions on target data
+        similarity, objs_val = _compute_similarity_ssrc(
+            gp_models[source_idx], Xt, Yt, data_type
         )
-        similarities[source_idx] = similarity
 
-        # Calculate Δp^ij
-        delta_p = compute_delta_p(Ys, Yval, Yt)
-        delta_ps[source_idx] = delta_p
-
-        # Bayesian Inference of Transferability
-        k = k_transfer[source_idx, target_idx]
-
-        if k == 0:
-            tau_hat = similarity
-            sigma_k_sq = sigma_I_sq
+        # Bayesian update with similarity as observation
+        if np.isnan(MUs[source_idx, target_idx]):
+            # First encounter: initialize
+            MUs[source_idx, target_idx] = similarity
+            SIGMA2s[source_idx, target_idx] = sigma2_sim
         else:
-            tau_hat, sigma_k_sq = bayesian_update_tau(
-                T_history[source_idx][target_idx],
-                R_history[source_idx][target_idx],
-                k, sigma_I_sq
+            # Subsequent: conjugate Gaussian update
+            _bayesian_update_gaussian(
+                MUs, SIGMA2s, source_idx, target_idx,
+                similarity, sigma2_sim
             )
 
-        transferability = np.random.normal(tau_hat, np.sqrt(sigma_k_sq))
-
-        improvement = compute_external_improvement(
-            delta_p, transferability, np.max(Yt)
+        # Sample transferability from posterior
+        transferability = np.random.normal(
+            MUs[source_idx, target_idx],
+            np.sqrt(SIGMA2s[source_idx, target_idx])
         )
-        improvements[source_idx] = improvement
 
-        # Best solution from source task in unified space
+        # Compute external improvement (matching MATLAB improvement_external.m)
+        imp, impn = _improvement_external(Ys, objs_val, Yt, transferability)
+        improvements[source_idx] = imp
+        impns[source_idx] = impn
+
+        # Best solution from source task
         best_idx = np.argmin(Ys)
-        solutions_external.append(Xs[best_idx:best_idx + 1])
+        solutions_external[source_idx] = Xs[best_idx:best_idx + 1]
 
-    source_idx = np.argmax(improvements)
-    improvement_ex = improvements[source_idx]
-    solution_ex = solutions_external[source_idx]
-    delta_p = delta_ps[source_idx]
-    similarity = similarities[source_idx]
-
-    return solution_ex, improvement_ex, source_idx, delta_p, similarity
+    # Select best source
+    best_source = np.argmax(improvements)
+    return (solutions_external[best_source], improvements[best_source],
+            best_source, impns[best_source])
 
 
-def bayesian_update_tau(T_history_ij, R_history_ij, k, sigma_I_sq):
-    """
-    Bayesian update of transferability τ.
-    """
-    epsilon = sum(np.exp(l) for l in range(1, k + 1))
-    omega = epsilon / (k + epsilon)
-
-    weighted_T = sum(
-        (np.exp(l) / epsilon) * T_history_ij[l - 1]
-        for l in range(1, k + 1)
-    )
-
-    avg_R = sum(R_history_ij) / k
-    tau_hat = omega * weighted_T + (1 - omega) * avg_R
-    sigma_k_sq = sigma_I_sq / (k + epsilon)
-
-    return tau_hat, sigma_k_sq
-
-
-def compute_similarity_ssrc(Xs, Ys, gp_source, Xt, Yt, data_type):
+def _compute_similarity_ssrc(gp_source, Xt, Yt, data_type):
     """
     Compute Surrogate-based Spearman Rank Correlation (SSRC).
 
-    All inputs should be in unified space.
+    The GP from bo_next_point_lcb is trained on -objs, so predictions are negated back.
+    Returns (similarity, objs_val) where objs_val is in ORIGINAL (non-negated) space.
     """
     Xt_torch = torch.tensor(Xt, dtype=data_type)
     with torch.no_grad():
         posterior = gp_source.posterior(Xt_torch)
-        objs_val = posterior.mean.cpu().numpy().flatten()
+        # GP predicts -obj, negate back to original space
+        objs_val = -posterior.mean.cpu().numpy().flatten()
 
-    ranks_target = np.argsort(np.argsort(Yt)) + 1
-    ranks_val = np.argsort(np.argsort(objs_val)) + 1
+    # Spearman rank correlation
+    if len(Yt) < 3:
+        return 0.0, objs_val
 
-    similarity, _ = spearmanr(ranks_target, ranks_val)
-
+    similarity, _ = spearmanr(Yt, objs_val)
     if np.isnan(similarity):
         similarity = 0.0
 
     return similarity, objs_val
 
 
-def compute_delta_p(objs_source, objs_val, objs_target):
+def _improvement_external(objs_source, objs_val, objs_target, transferability):
     """
-    Calculate Δp^ij.
+    Calculate external improvement (matching MATLAB improvement_external.m).
+
+    Parameters
+    ----------
+    objs_source : source task true objectives (flattened)
+    objs_val : source GP predictions on target data (original space)
+    objs_target : target task true objectives (flattened)
+    transferability : sampled Bayesian transferability
+
+    Returns
+    -------
+    imp : external improvement
+    impn_source : normalized source improvement (used for actual transferability calc)
     """
-    min_val = np.min(objs_val)
-    min_source = np.min(objs_source)
-    max_target = np.max(objs_target)
-    max_source = np.max(objs_source)
+    combined = np.concatenate([objs_source, objs_val])
+    max_combined = np.max(combined)
 
-    if max_source != 0:
-        delta_p = (min_val - min_source) * (max_target / max_source)
-    else:
-        delta_p = 0.0
+    if max_combined == 0:
+        return -np.inf, 0.0
 
-    return delta_p
+    impn_source = (np.min(objs_val) - np.min(objs_source)) / max_combined
+
+    if impn_source < 0:
+        return -np.inf, impn_source
+
+    imp = transferability * impn_source * np.max(objs_target)
+    return imp, impn_source
 
 
-def compute_external_improvement(delta_p, transferability, max_target):
+def _improvement_internal(gp_model, decs, objs, candidate,
+                          data_type=torch.float, kappa=2.0):
     """
-    Calculate external improvement Δ_ex^ij.
+    Calculate internal improvement (LCB-based).
+
+    The GP predicts -obj, so we negate back to compute LCB in original space:
+    LCB_orig = -mu_gp - kappa * sigma_gp
     """
-    improvement = transferability * delta_p
-    return improvement
-
-
-def improvement_internal(gp_model, decs, objs, candidate, acquisition='lcb',
-                         data_type=torch.float):
-    """
-    Calculate internal improvement Δ_in^j.
-
-    All inputs should be in unified space.
-    """
-    objs = objs.flatten()
-
     X_db_torch = torch.tensor(decs, dtype=data_type)
     with torch.no_grad():
         posterior_db = gp_model.posterior(X_db_torch)
@@ -468,16 +412,9 @@ def improvement_internal(gp_model, decs, objs, candidate, acquisition='lcb',
         mu_cand = posterior_cand.mean.cpu().numpy().flatten()
         std_cand = posterior_cand.variance.sqrt().cpu().numpy().flatten()
 
-    if acquisition == 'lcb':
-        kappa = 2.0
-        acq_db = mu_db - kappa * std_db
-        acq_cand = mu_cand - kappa * std_cand
-    elif acquisition == 'plain':
-        acq_db = mu_db
-        acq_cand = mu_cand
-    else:
-        raise ValueError(f"Unknown acquisition function: {acquisition}")
+    # LCB in original space: obj ≈ -mu_gp, so LCB = -mu_gp - kappa * sigma
+    lcb_db = -mu_db - kappa * std_db
+    lcb_cand = -mu_cand - kappa * std_cand
 
-    improvement = np.min(acq_db) - acq_cand[0]
-
+    improvement = np.min(lcb_db) - lcb_cand[0]
     return improvement

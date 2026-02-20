@@ -12,6 +12,20 @@ warnings.filterwarnings("ignore")
 
 
 class ParEGO_KT:
+    algorithm_information = {
+        'n_tasks': '[2, K]',
+        'dims': 'unequal',
+        'objs': 'unequal',
+        'n_objs': '[2, M]',
+        'cons': 'equal',
+        'n_cons': '0',
+        'expensive': 'True',
+        'knowledge_transfer': 'True',
+        'n_initial': 'unequal',
+        'n_weights': 'unequal',
+        'max_nfes': 'unequal'
+    }
+
     def __init__(self, problem, n_initial=None, n_weights=None, max_nfes=None, rho=0.05,
                  save_data=True, save_path='./Data', name='ParEGO-KT', disable_tqdm=True):
         """

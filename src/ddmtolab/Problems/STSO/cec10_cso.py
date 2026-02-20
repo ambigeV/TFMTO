@@ -28,6 +28,15 @@ class CEC10_CSO:
         Maximum allowed dimension (30, due to offset vector size).
     """
 
+    problem_information = {
+        'n_cases': 18,
+        'n_tasks': '1',
+        'n_dims': '[10, 30]',
+        'n_objs': '1',
+        'n_cons': '[1, 5]',
+        'type': 'synthetic',
+    }
+
     max_dim = 30  # Offset vectors have 30 elements
 
     def __init__(self):

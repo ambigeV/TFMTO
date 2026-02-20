@@ -11,6 +11,15 @@ class MTMO_DTLZ:
     within a multi-task optimization framework.
     """
 
+    problem_information = {
+        'n_cases': 1,
+        'n_tasks': '2',
+        'n_dims': 'D',
+        'n_objs': 'M',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def P1(self, M=3, D=10) -> MTOP:
         """
         Generates Problem 1: **T1 (DTLZ2) vs T2 (DTLZ3)**.

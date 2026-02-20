@@ -26,6 +26,15 @@ class CEC17MTSO:
         The directory path for problem data files.
     """
 
+    problem_information = {
+        'n_cases': 9,
+        'n_tasks': '2',
+        'n_dims': '50',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def __init__(self):
         self.data_dir = 'data_cec17mtso'
 

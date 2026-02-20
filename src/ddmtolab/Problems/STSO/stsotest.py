@@ -40,6 +40,15 @@ class STSOtest:
     problem instances.
     """
 
+    problem_information = {
+        'n_cases': 9,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def __init__(self):
         pass
 

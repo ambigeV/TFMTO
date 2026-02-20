@@ -176,6 +176,10 @@ def _scan_module(module_path: str) -> Dict[str, Tuple[str, str, List[str], Dict]
         if name in SKIP_CLASSES:
             continue
 
+        # Only include classes with problem_information metadata
+        if not hasattr(obj, 'problem_information'):
+            continue
+
         # Scan class for methods
         methods, method_params = _scan_class(obj)
 
@@ -351,16 +355,3 @@ def create_problem_from_scan(category: str, suite: str, method: str, **kwargs):
         return method_func(**kwargs)
     except TypeError:
         return method_func()
-
-
-# Legacy functions for compatibility
-def get_problem_params(problem_class, method_name: str) -> Dict[str, Dict]:
-    """Get parameters for a specific problem method (legacy)."""
-    try:
-        instance = problem_class()
-        method = getattr(instance, method_name, None)
-        if method and callable(method):
-            return scan_problem_method(method)
-    except Exception:
-        pass
-    return {}

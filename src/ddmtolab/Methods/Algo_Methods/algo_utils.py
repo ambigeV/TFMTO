@@ -1847,3 +1847,346 @@ def is_duplicate(x, X, epsilon=1e-10):
                 final_unique.append(i)
 
         return results
+
+
+# =============================================================================
+# RBF Model (Multiquadric)
+# =============================================================================
+
+def rbf_build(X_train, Y_train, bf_c=1.0):
+    """
+    Build an RBF (Multiquadric) interpolation model.
+
+    Parameters
+    ----------
+    X_train : np.ndarray
+        Training inputs, shape (n, d)
+    Y_train : np.ndarray
+        Training outputs, shape (n,) or (n, 1)
+    bf_c : float
+        Multiquadric parameter (default: 1.0)
+
+    Returns
+    -------
+    model : dict
+        RBF model containing coefficients and parameters
+    """
+    Y_train = Y_train.flatten()
+    n = X_train.shape[0]
+    mean_y = np.mean(Y_train)
+
+    # Compute MQ distance matrix
+    dist_sq = cdist(X_train, X_train, metric='sqeuclidean')
+    dist_matrix = np.sqrt(dist_sq + bf_c ** 2)
+
+    # Solve for coefficients
+    try:
+        coefs = np.linalg.solve(dist_matrix, Y_train - mean_y)
+    except np.linalg.LinAlgError:
+        coefs = np.linalg.lstsq(dist_matrix, Y_train - mean_y, rcond=None)[0]
+
+    return {
+        'n': n,
+        'mean_y': mean_y,
+        'bf_c': bf_c,
+        'coefs': coefs
+    }
+
+
+def rbf_predict(model, X_train, X_query):
+    """
+    Predict using RBF model.
+
+    Parameters
+    ----------
+    model : dict
+        RBF model from rbf_build
+    X_train : np.ndarray
+        Training inputs, shape (n, d)
+    X_query : np.ndarray
+        Query points, shape (nq, d)
+
+    Returns
+    -------
+    Y_pred : np.ndarray
+        Predicted values, shape (nq,)
+    """
+    bf_c = model['bf_c']
+
+    # MQ distance from query to training points
+    dist_sq = cdist(X_query, X_train, metric='sqeuclidean')
+    dist_matrix = np.sqrt(dist_sq + bf_c ** 2)
+
+    Y_pred = model['mean_y'] + dist_matrix @ model['coefs']
+    return Y_pred
+
+
+# =============================================================================
+# dsmerge: Merge duplicate design sites
+# =============================================================================
+
+def dsmerge(S, Y, ds=1e-14):
+    """
+    Merge data for duplicate/near-duplicate design sites.
+
+    Finds clusters of points within threshold distance in normalized space
+    and merges them by averaging.
+
+    Parameters
+    ----------
+    S : np.ndarray
+        Design sites, shape (m, n)
+    Y : np.ndarray
+        Responses, shape (m,) or (m, 1)
+    ds : float
+        Threshold for near-duplicate detection (default: 1e-14)
+
+    Returns
+    -------
+    mS : np.ndarray
+        Merged design sites
+    mY : np.ndarray
+        Merged responses
+    """
+    S = S.copy()
+    Y = Y.flatten().copy()
+
+    more = True
+    while more:
+        m = S.shape[0]
+        if m <= 1:
+            break
+
+        # Normalize sites
+        mean_s = np.mean(S, axis=0)
+        std_s = np.std(S, axis=0)
+        std_s[std_s == 0] = 1.0
+        sc_s = (S - mean_s) / std_s
+
+        # Compute pairwise Euclidean distances
+        D = cdist(sc_s, sc_s, metric='euclidean')
+        np.fill_diagonal(D, np.inf)
+
+        # Count near-duplicates for each point
+        mult = np.sum(D < ds, axis=0)
+
+        if np.max(mult) == 0:
+            break
+
+        ladr = []
+        while np.max(mult) > 0:
+            jj = np.argmax(mult)
+            ladr.append(jj)
+
+            # Find neighbors
+            ngb = np.where(D[:, jj] < ds)[0]
+            if len(ngb) == 0:
+                mult[jj] = 0
+                continue
+
+            # Merge: average S and Y at the center point
+            all_pts = np.concatenate([[jj], ngb])
+            S[jj] = np.mean(S[all_pts], axis=0)
+            Y[jj] = np.mean(Y[all_pts])
+
+            mult[ngb] = 0
+            mult[jj] = 0
+
+        if len(ladr) == 0:
+            break
+
+        # Remove neighbors that were merged (not centers)
+        keep = list(set(range(m)))
+        for center in ladr:
+            ngb = np.where(D[:, center] < ds)[0]
+            for n_idx in ngb:
+                if n_idx != center and n_idx in keep:
+                    keep.remove(n_idx)
+
+        keep = sorted(keep)
+        S = S[keep]
+        Y = Y[keep]
+
+        # Check if any more duplicates
+        if len(S) <= 1:
+            break
+        mean_s2 = np.mean(S, axis=0)
+        std_s2 = np.std(S, axis=0)
+        std_s2[std_s2 == 0] = 1.0
+        sc_s2 = (S - mean_s2) / std_s2
+        D2 = cdist(sc_s2, sc_s2, metric='euclidean')
+        np.fill_diagonal(D2, np.inf)
+        if np.min(D2) >= ds:
+            more = False
+
+    return S, Y
+
+
+# =============================================================================
+# Archive Update
+# =============================================================================
+
+def merge_archive(arc_decs, arc_objs, new_decs, new_objs):
+    """
+    Update archive by merging and removing duplicates.
+
+    Parameters
+    ----------
+    arc_decs, arc_objs : np.ndarray
+        Current archive
+    new_decs, new_objs : np.ndarray
+        New solutions
+
+    Returns
+    -------
+    merged_decs, merged_objs : np.ndarray
+        Updated archive
+    """
+    merged_decs = np.vstack([arc_decs, new_decs])
+    merged_objs = np.vstack([arc_objs, new_objs])
+    _, unique_idx = np.unique(merged_decs, axis=0, return_index=True)
+    unique_idx = np.sort(unique_idx)
+    return merged_decs[unique_idx], merged_objs[unique_idx]
+
+
+# =============================================================================
+# SPEA2 Fitness
+# =============================================================================
+
+def spea2_fitness(pop_obj, pop_con=None):
+    """
+    Calculate SPEA2 fitness with constrained dominance.
+
+    Parameters
+    ----------
+    pop_obj : np.ndarray, shape (N, M)
+    pop_con : np.ndarray, shape (N, C), optional
+        Constraint violation values (positive = violation).
+
+    Returns
+    -------
+    fitness : np.ndarray, shape (N,)
+        SPEA2 fitness values. Lower is better; < 1 means non-dominated.
+    """
+    N = pop_obj.shape[0]
+    if N == 0:
+        return np.array([])
+
+    if pop_con is not None:
+        CV = np.sum(np.maximum(0, pop_con), axis=1) if pop_con.ndim == 2 else np.maximum(0, pop_con)
+    else:
+        CV = np.zeros(N)
+
+    # Constrained dominance relation
+    dominate = np.zeros((N, N), dtype=bool)
+    for i in range(N - 1):
+        for j in range(i + 1, N):
+            if CV[i] < CV[j]:
+                dominate[i, j] = True
+            elif CV[i] > CV[j]:
+                dominate[j, i] = True
+            else:
+                better_i = np.any(pop_obj[i] < pop_obj[j])
+                worse_i = np.any(pop_obj[i] > pop_obj[j])
+                if better_i and not worse_i:
+                    dominate[i, j] = True
+                elif worse_i and not better_i:
+                    dominate[j, i] = True
+
+    # Strength S(i)
+    S = np.sum(dominate, axis=1)
+
+    # Raw fitness R(i)
+    R = np.zeros(N, dtype=float)
+    for i in range(N):
+        dominators = np.where(dominate[:, i])[0]
+        R[i] = np.sum(S[dominators])
+
+    # Density D(i)
+    dist = cdist(pop_obj, pop_obj)
+    np.fill_diagonal(dist, np.inf)
+    dist_sorted = np.sort(dist, axis=1)
+    k = max(1, int(np.floor(np.sqrt(N))))
+    D = 1.0 / (dist_sorted[:, min(k - 1, N - 1)] + 2.0)
+
+    return R + D
+
+
+# =============================================================================
+# SPEA2 Truncation (Lexicographic)
+# =============================================================================
+
+def spea2_truncation(pop_obj, N):
+    """
+    Select N solutions by iteratively removing the most crowded.
+    Uses SPEA2-style lexicographic nearest-neighbor comparison.
+
+    Parameters
+    ----------
+    pop_obj : np.ndarray, shape (n, M)
+        Objectives.
+    N : int
+        Number of solutions to keep.
+
+    Returns
+    -------
+    selected : np.ndarray
+        Indices of selected solutions.
+    """
+    n = pop_obj.shape[0]
+    if n <= N:
+        return np.arange(n)
+
+    dist = cdist(pop_obj, pop_obj)
+    np.fill_diagonal(dist, np.inf)
+
+    deleted = np.zeros(n, dtype=bool)
+    while np.sum(~deleted) > N:
+        remaining = np.where(~deleted)[0]
+        sub_dist = dist[np.ix_(remaining, remaining)]
+        sorted_dist = np.sort(sub_dist, axis=1)
+        rank = np.lexsort(sorted_dist[:, ::-1].T)
+        deleted[remaining[rank[0]]] = True
+
+    return np.where(~deleted)[0]
+
+
+# =============================================================================
+# SPEA2 Truncation (Fast, Min-Distance)
+# =============================================================================
+
+def spea2_truncation_fast(pop_obj, N):
+    """
+    Select N solutions by iteratively removing the one with smallest
+    nearest-neighbor distance.
+
+    Parameters
+    ----------
+    pop_obj : np.ndarray, shape (n, M)
+        Objectives.
+    N : int
+        Number of solutions to keep.
+
+    Returns
+    -------
+    selected : np.ndarray
+        Indices of selected solutions.
+    """
+    n = pop_obj.shape[0]
+    if n <= N:
+        return np.arange(n)
+
+    dist = cdist(pop_obj, pop_obj)
+    np.fill_diagonal(dist, np.inf)
+
+    deleted = np.zeros(n, dtype=bool)
+    K = n - N
+
+    for _ in range(K):
+        remaining = np.where(~deleted)[0]
+        sub_dist = dist[np.ix_(remaining, remaining)]
+        min_dists = np.min(sub_dist, axis=1)
+        worst = np.argmin(min_dists)
+        deleted[remaining[worst]] = True
+
+    return np.where(~deleted)[0]

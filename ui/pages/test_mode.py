@@ -24,49 +24,21 @@ from utils.problem_scanner import (
 from utils.runner import RunStatus
 from utils.file_manager import FileManager
 from utils.backup_manager import BackupManager
-from utils.settings_builder import SettingsBuilder
 from config.default_params import PROBLEM_PARAMS, FIXED_DIMENSION_SUITES, FIXED_OBJECTIVES_SUITES
 from config.constants import (
-    CATEGORIES, METRICS, TABLE_FORMATS, FIGURE_FORMATS, STATISTIC_TYPES,
+    CATEGORIES, ALGO_CATEGORIES, METRICS, TABLE_FORMATS, FIGURE_FORMATS, STATISTIC_TYPES,
     COLOR_TITLE, COLOR_ERROR, COLOR_SUCCESS, COLOR_SECTION,
 )
 from components.dpg_helpers import (
     load_image_to_texture, show_error_modal, show_info_modal,
     show_confirm_dialog, format_time, get_texture_registry,
     copy_text_to_clipboard, _on_copy_error_click,
+    get_disabled_btn_theme as _get_disabled_btn_theme,
+    parse_param_value as _parse_param_value,
+    open_file_location as _open_file_location,
+    copy_image_to_clipboard as _copy_image_to_clipboard,
+    open_algo_source as _open_algo_source,
 )
-
-# Theme for reorder arrow buttons (created lazily)
-_arrow_btn_theme = None
-
-def _get_arrow_btn_theme():
-    """Get or create the arrow button theme."""
-    global _arrow_btn_theme
-    if _arrow_btn_theme is None or not dpg.does_item_exist(_arrow_btn_theme):
-        with dpg.theme() as _arrow_btn_theme:
-            with dpg.theme_component(dpg.mvButton):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, (180, 180, 180))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (150, 150, 150))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (120, 120, 120))
-                dpg.add_theme_color(dpg.mvThemeCol_Text, (40, 40, 40))
-    return _arrow_btn_theme
-
-
-# Theme for disabled run button (created lazily)
-_disabled_btn_theme = None
-
-def _get_disabled_btn_theme():
-    """Get or create the disabled button theme."""
-    global _disabled_btn_theme
-    if _disabled_btn_theme is None or not dpg.does_item_exist(_disabled_btn_theme):
-        with dpg.theme() as _disabled_btn_theme:
-            with dpg.theme_component(dpg.mvButton):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, (100, 100, 100))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (100, 100, 100))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (100, 100, 100))
-                dpg.add_theme_color(dpg.mvThemeCol_Text, (160, 160, 160))
-    return _disabled_btn_theme
-
 
 # Module state
 _state = {
@@ -75,7 +47,6 @@ _state = {
     "running": False,
     "file_manager": None,
     "backup_manager": None,
-    "settings_builder": None,
     "current_prob_category": "STSO",
     "current_algo_category": "STSO",
     "current_suite": "",
@@ -97,7 +68,6 @@ def _init_managers(base_path: str):
     """Initialize file and backup managers."""
     _state["file_manager"] = FileManager(base_path)
     _state["backup_manager"] = BackupManager(base_path)
-    _state["settings_builder"] = SettingsBuilder()
     _state["file_manager"].ensure_structure()
 
     # Pre-scan algorithms on startup
@@ -264,84 +234,6 @@ def _move_algo_down(sender, app_data, user_data):
     _update_algo_params_display()
 
 
-def _get_algo_source_path(algo_name: str) -> Path:
-    """Get the source file path for an algorithm."""
-    cat = _state["current_algo_category"]
-
-    # Get file name from display name
-    display_to_file = {
-        'CMA-ES': 'CMA_ES', 'MA-ES': 'MA_ES', 'IPOP-CMA-ES': 'IPOP_CMA_ES',
-        'sep-CMA-ES': 'sep_CMA_ES', 'OpenAI-ES': 'OpenAI_ES', 'SA-COSO': 'SA_COSO',
-        'GL-SADE': 'GL_SADE', 'KL-PSO': 'KL_PSO', 'SL-PSO': 'SL_PSO', 'EEI-BO': 'EEI_BO',
-        'NSGA-II': 'NSGA_II', 'NSGA-III': 'NSGA_III', 'NSGA-II-SDR': 'NSGA_II_SDR',
-        'MOEA/D': 'MOEA_D', 'MOEA/D-STM': 'MOEA_D_STM', 'MOEA/D-FRRMAB': 'MOEA_D_FRRMAB',
-        'MOEA/DD': 'MOEA_DD', 'C-TAEA': 'C_TAEA', 'K-RVEA': 'K_RVEA',
-        'DSAEA-PS': 'DSAEA_PS', 'MCEA-D': 'MCEA_D', 'CPS-MOEA': 'CPS_MOEA',
-        'MFEA-II': 'MFEA_II', 'G-MFEA': 'G_MFEA', 'MTEA-AD': 'MTEA_AD',
-        'MTEA-SaO': 'MTEA_SaO', 'LCB-EMT': 'LCB_EMT', 'EEI-BO+': 'EEI_BO_plus',
-        'MO-MFEA': 'MO_MFEA', 'MO-MFEA-II': 'MO_MFEA_II', 'MO-EMEA': 'MO_EMEA',
-        'EMT-ET': 'EMT_ET', 'EMT-PD': 'EMT_PD', 'MTDE-MKTA': 'MTDE_MKTA',
-        'MO-MTEA-SaO': 'MO_MTEA_SaO', 'ParEGO-KT': 'ParEGO_KT', 'MTEA-D-DN': 'MTEA_D_DN',
-    }
-    file_name = display_to_file.get(algo_name, algo_name)
-
-    ui_dir = Path(__file__).resolve().parent.parent
-    project_root = ui_dir.parent
-    return project_root / 'src' / 'ddmtolab' / 'Algorithms' / cat / f'{file_name}.py'
-
-
-def _open_algo_source(sender, app_data, user_data):
-    """Open algorithm source file in PyCharm or default editor."""
-    import subprocess
-    import sys
-    import shutil
-
-    algo_name = user_data
-    source_path = _get_algo_source_path(algo_name)
-
-    if not source_path.exists():
-        show_error_modal(f"Source file not found:\n{source_path}")
-        return
-
-    # Try PyCharm first
-    pycharm_paths = [
-        shutil.which('pycharm'),
-        shutil.which('pycharm64'),
-        r'C:\Program Files\JetBrains\PyCharm Community Edition 2024.1\bin\pycharm64.exe',
-        r'C:\Program Files\JetBrains\PyCharm 2024.1\bin\pycharm64.exe',
-        r'C:\Program Files\JetBrains\PyCharm Community Edition 2023.3\bin\pycharm64.exe',
-        r'C:\Program Files\JetBrains\PyCharm 2023.3\bin\pycharm64.exe',
-    ]
-
-    # Find PyCharm installation
-    pycharm_exe = None
-    for path in pycharm_paths:
-        if path and Path(path).exists():
-            pycharm_exe = path
-            break
-
-    # Also check common JetBrains toolbox location
-    if not pycharm_exe:
-        toolbox_base = Path.home() / 'AppData' / 'Local' / 'JetBrains' / 'Toolbox' / 'apps'
-        if toolbox_base.exists():
-            for pycharm_dir in toolbox_base.glob('PyCharm*/**/pycharm64.exe'):
-                pycharm_exe = str(pycharm_dir)
-                break
-
-    if pycharm_exe:
-        # Open in PyCharm
-        subprocess.Popen([pycharm_exe, str(source_path)],
-                         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0)
-    else:
-        # Fallback to default editor
-        if sys.platform == 'win32':
-            os.startfile(str(source_path))
-        elif sys.platform == 'darwin':
-            subprocess.run(['open', str(source_path)])
-        else:
-            subprocess.run(['xdg-open', str(source_path)])
-
-
 def _update_algo_params_display():
     """Update algorithm parameters display based on selection."""
     if not dpg.does_item_exist("test_algo_params_container"):
@@ -382,7 +274,7 @@ def _update_algo_params_display():
             with dpg.popup(header, mousebutton=dpg.mvMouseButton_Right,
                            min_size=(160, 0), max_size=(160, 50)):
                 dpg.add_menu_item(label="Open Source File",
-                                  callback=_open_algo_source, user_data=algo_name)
+                                  callback=_open_algo_source, user_data=(algo_name, cat))
 
             # Name parameter for renaming
             with dpg.group(horizontal=True):
@@ -469,35 +361,6 @@ def _cache_param_value_by_id(algo_id: int, param_name: str, value):
     if algo_id not in _state["algo_params_cache"]:
         _state["algo_params_cache"][algo_id] = {}
     _state["algo_params_cache"][algo_id][param_name] = value
-
-
-def _parse_param_value(value, param_type: str):
-    """Parse parameter value, supporting list input like [100, 200]."""
-    if isinstance(value, str):
-        value = value.strip()
-        # Check if it's a list format
-        if value.startswith('[') and value.endswith(']'):
-            try:
-                import ast
-                parsed = ast.literal_eval(value)
-                if isinstance(parsed, list):
-                    # Convert list elements to appropriate type
-                    if param_type == 'int':
-                        return [int(x) for x in parsed]
-                    elif param_type == 'float':
-                        return [float(x) for x in parsed]
-                    return parsed
-            except:
-                pass
-        # Single value - convert to appropriate type
-        try:
-            if param_type == 'int':
-                return int(value)
-            elif param_type == 'float':
-                return float(value)
-        except:
-            pass
-    return value
 
 
 def _get_algo_params_for_run(algo_id: int, algo_name: str) -> dict:
@@ -756,13 +619,13 @@ def _run_analysis():
         if not data_files:
             return None
 
-        settings = None
+        metric = dpg.get_value("test_metric_combo") if dpg.does_item_exist("test_metric_combo") else "IGD"
+        settings = {'metric': metric, 'n_ref': 10000}
         if is_multi_objective(prob_cat):
-            settings = get_problem_settings(prob_cat, suite)
-            if settings:
-                settings = settings.copy()
+            suite_settings = get_problem_settings(prob_cat, suite)
+            if suite_settings:
+                settings.update(suite_settings)
                 settings['problems'] = [method]
-                metric = dpg.get_value("test_metric_combo") if dpg.does_item_exist("test_metric_combo") else "IGD"
                 settings['metric'] = metric
 
         use_log = dpg.get_value("test_log_check") if dpg.does_item_exist("test_log_check") else False
@@ -788,55 +651,6 @@ def _run_analysis():
 
     except Exception:
         return None
-
-
-def _open_file_location(sender, app_data, user_data):
-    """Open the folder containing the file in Windows Explorer."""
-    import subprocess
-    file_path = user_data
-    folder_path = os.path.dirname(file_path)
-    if os.path.exists(folder_path):
-        subprocess.Popen(['explorer', '/select,', file_path.replace('/', '\\')])
-
-
-def _copy_image_to_clipboard(sender, app_data, user_data):
-    """Copy image to clipboard (Windows only)."""
-    import sys
-    file_path = user_data
-
-    if not os.path.exists(file_path):
-        return
-
-    try:
-        from PIL import Image
-        import io
-
-        if sys.platform == 'win32':
-            import win32clipboard
-
-            # Open image and convert to BMP format for clipboard
-            img = Image.open(file_path)
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
-
-            # Save to bytes as BMP
-            output = io.BytesIO()
-            img.save(output, format='BMP')
-            bmp_data = output.getvalue()[14:]  # Remove BMP header
-            output.close()
-
-            # Copy to clipboard
-            win32clipboard.OpenClipboard()
-            win32clipboard.EmptyClipboard()
-            win32clipboard.SetClipboardData(win32clipboard.CF_DIB, bmp_data)
-            win32clipboard.CloseClipboard()
-        else:
-            # For non-Windows, just show a message
-            show_info_modal("Copy to clipboard is only supported on Windows.")
-    except ImportError:
-        show_error_modal("Please install pywin32: pip install pywin32")
-    except Exception as e:
-        show_error_modal(f"Failed to copy image: {e}")
 
 
 def _load_and_display_image(image_path: str, parent, max_width: int = 600):
@@ -905,7 +719,7 @@ def _display_results():
             error_msg = f"[ERROR] {name}: {status.error}"
             with dpg.group(horizontal=True, parent="test_results_area"):
                 dpg.add_text(error_msg, color=(200, 60, 60), wrap=560)
-                dpg.add_button(label="\u2398", callback=_on_copy_error_click,
+                dpg.add_button(label="Copy", callback=_on_copy_error_click,
                                user_data=error_msg, width=24)
 
     if not results:
@@ -922,7 +736,7 @@ def _display_results():
 
     # Image layout: 3 images per row, uniform width
     viewport_w = dpg.get_viewport_width()
-    available_width = max(400, viewport_w - 250 - 280 - 50)
+    available_width = int(max(400, viewport_w - 250 - 280 - 50) * 0.9)
     IMG_WIDTH = (available_width - 40) // 3  # 3 images + spacing per row
     nd_per_row = 3
 
@@ -992,12 +806,7 @@ def _display_results():
                 dpg.bind_item_theme(tbl, table_theme)
 
                 for i, col in enumerate(cols):
-                    if i == 0:
-                        col_width = 150
-                    elif i == 1:
-                        col_width = 50
-                    else:
-                        col_width = 180
+                    col_width = 150 if i == 0 else 180
                     dpg.add_table_column(label=str(col), parent=tbl, width_fixed=True, init_width_or_weight=col_width)
 
                 for row_idx, row in df.iterrows():
@@ -1167,7 +976,7 @@ def _display_loaded_results(results_path: Path):
         return
 
     viewport_w = dpg.get_viewport_width()
-    available_width = max(400, viewport_w - 250 - 280 - 50)
+    available_width = int(max(400, viewport_w - 250 - 280 - 50) * 0.9)
     IMG_WIDTH = (available_width - 40) // 3
     per_row = 3
 
@@ -1292,6 +1101,18 @@ def _load_data_clicked(sender, app_data):
     show_nd = dpg.get_value("test_shownd_check") if dpg.does_item_exist("test_shownd_check") else True
     best_so_far = dpg.get_value("test_bestsofar_check") if dpg.does_item_exist("test_bestsofar_check") else True
 
+    # Build settings for metric calculation with reference data from all MO suites
+    metric = dpg.get_value("test_metric_combo") if dpg.does_item_exist("test_metric_combo") else "IGD"
+    settings = {'metric': metric, 'n_ref': 10000}
+    # Load Pareto front references from all MO problem suites so loaded data can use them
+    for mo_cat in ['STMO', 'MTMO']:
+        for suite in get_problem_suites(mo_cat):
+            suite_settings = get_problem_settings(mo_cat, suite)
+            if suite_settings:
+                for key, value in suite_settings.items():
+                    if key not in ('metric', 'n_ref') and key not in settings:
+                        settings[key] = value
+
     # Lock run button
     _state["running"] = True
     dpg.configure_item("test_run_btn", enabled=False)
@@ -1312,6 +1133,7 @@ def _load_data_clicked(sender, app_data):
             analyzer = TestDataAnalyzer(
                 data_path=folder_path,
                 save_path=save_path,
+                settings=settings,
                 figure_format=figure_format,
                 log_scale=use_log,
                 show_pf=show_pf,
@@ -1400,7 +1222,7 @@ def create(parent, base_path: str = "./tests"):
             dpg.add_separator()
 
             dpg.add_text("Category", color=COLOR_SUCCESS)
-            dpg.add_combo(CATEGORIES, default_value="STSO", tag="test_algo_cat_combo",
+            dpg.add_combo(ALGO_CATEGORIES, default_value="STSO", tag="test_algo_cat_combo",
                           callback=_on_algo_category_change, width=-1)
 
             dpg.add_spacer(height=5)
@@ -1419,32 +1241,54 @@ def create(parent, base_path: str = "./tests"):
         with dpg.child_window(tag="test_right_panel"):
             # Buttons row at the top
             with dpg.group(horizontal=True):
-                dpg.add_button(label="Load Data", callback=_load_data_clicked, width=90)
-                dpg.add_spacer(width=8)
-                dpg.add_button(label="Clean Data", callback=_clean_clicked, width=80)
-                dpg.add_spacer(width=8)
+                clean_btn = dpg.add_button(label="Clean Data", callback=_clean_clicked, width=95)
+                dpg.add_spacer(width=4)
+                load_btn = dpg.add_button(label="Load Data", callback=_load_data_clicked, width=90)
+                dpg.add_spacer(width=4)
                 run_btn = dpg.add_button(label="Run", tag="test_run_btn",
                                          callback=_run_clicked, width=100)
-                dpg.add_spacer(width=8)
+                dpg.add_spacer(width=4)
                 stop_btn = dpg.add_button(label="Stop", tag="test_stop_btn",
                                           callback=_stop_clicked, width=100)
-                dpg.add_spacer(width=8)
+                dpg.add_spacer(width=4)
                 anim_btn = dpg.add_button(label="Animation", callback=_animation_clicked, width=100)
 
-            # Apply colored themes to Run and Stop buttons
+            # Secondary buttons (Clean Data, Load Data)
+            with dpg.theme() as secondary_theme:
+                with dpg.theme_component(dpg.mvButton):
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, (55, 75, 100))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (70, 95, 125))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (85, 115, 150))
+                    dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 8, 6)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 4)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameBorderSize, 1)
+                    dpg.add_theme_color(dpg.mvThemeCol_Border, (90, 110, 140))
+            dpg.bind_item_theme(clean_btn, secondary_theme)
+            dpg.bind_item_theme(load_btn, secondary_theme)
+
+            # Primary button (Run)
             with dpg.theme() as run_theme:
                 with dpg.theme_component(dpg.mvButton):
-                    dpg.add_theme_color(dpg.mvThemeCol_Button, (60, 140, 60))
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (80, 160, 80))
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (100, 180, 100))
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, (40, 140, 70))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (55, 165, 90))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (70, 185, 110))
+                    dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 8, 6)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 4)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameBorderSize, 1)
+                    dpg.add_theme_color(dpg.mvThemeCol_Border, (60, 170, 90))
             dpg.bind_item_theme(run_btn, run_theme)
             _state["run_theme"] = run_theme
 
+            # Danger button (Stop)
             with dpg.theme() as stop_theme:
                 with dpg.theme_component(dpg.mvButton):
-                    dpg.add_theme_color(dpg.mvThemeCol_Button, (160, 60, 60))
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (180, 80, 80))
-                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (200, 100, 100))
+                    dpg.add_theme_color(dpg.mvThemeCol_Button, (170, 50, 50))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (195, 70, 70))
+                    dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (215, 95, 95))
+                    dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 8, 6)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 4)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameBorderSize, 1)
+                    dpg.add_theme_color(dpg.mvThemeCol_Border, (200, 70, 70))
             dpg.bind_item_theme(stop_btn, stop_theme)
 
             with dpg.theme() as delete_theme:
@@ -1454,11 +1298,16 @@ def create(parent, base_path: str = "./tests"):
                     dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (200, 90, 90))
             _state["delete_theme"] = delete_theme
 
+            # Animation button
             with dpg.theme() as anim_theme:
                 with dpg.theme_component(dpg.mvButton):
                     dpg.add_theme_color(dpg.mvThemeCol_Button, (180, 120, 40))
                     dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (200, 140, 60))
                     dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (220, 160, 80))
+                    dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 8, 6)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 4)
+                    dpg.add_theme_style(dpg.mvStyleVar_FrameBorderSize, 1)
+                    dpg.add_theme_color(dpg.mvThemeCol_Border, (210, 150, 60))
             dpg.bind_item_theme(anim_btn, anim_theme)
 
             # Apply bold font to Run and Stop buttons
@@ -1468,44 +1317,56 @@ def create(parent, base_path: str = "./tests"):
                 dpg.bind_item_font(run_btn, _bold)
                 dpg.bind_item_font(stop_btn, _bold)
 
-            dpg.add_spacer(height=5)
+            dpg.add_spacer(height=2)
             dpg.add_separator()
 
-            # Analysis Settings (same layout as Batch Experiment)
+            # Analysis Settings
             dpg.add_text("Analysis Settings", color=COLOR_TITLE)
             dpg.add_separator()
-
-            # Row 1: Pure checkboxes
-            with dpg.group(horizontal=True):
-                dpg.add_checkbox(label="Log Scale", tag="test_log_check",
-                                 default_value=True)
-                dpg.add_spacer(width=5)
-                dpg.add_checkbox(label="Best-So-Far", tag="test_bestsofar_check",
-                                 default_value=True)
-                dpg.add_spacer(width=5)
-                dpg.add_checkbox(label="Show ND", tag="test_shownd_check",
-                                 default_value=True)
-                dpg.add_spacer(width=5)
-                dpg.add_checkbox(label="Show PF", tag="test_showpf_check",
-                                 default_value=True)
-                dpg.add_spacer(width=15)
-                dpg.add_checkbox(label="Std Band", tag="test_stdband_check",
-                                 default_value=False)
-                dpg.add_spacer(width=5)
-                dpg.add_checkbox(label="Merge Plots", tag="test_merge_check",
-                                 default_value=False)
-
             dpg.add_spacer(height=3)
 
-            # Row 2: Combos and input parameters
-            with dpg.group(horizontal=True):
-                dpg.add_text("Metric")
-                dpg.add_combo(METRICS, default_value="IGD",
-                              tag="test_metric_combo", width=80)
-                dpg.add_spacer(width=5)
-                dpg.add_text("Figure")
-                dpg.add_combo(FIGURE_FORMATS, default_value="png",
-                              tag="test_fig_combo", width=70)
+            # Analysis settings table: 2 rows, 6 columns, vertically aligned
+            with dpg.theme() as _tbl_pad_theme:
+                with dpg.theme_component(dpg.mvTable):
+                    dpg.add_theme_style(dpg.mvStyleVar_CellPadding, 12, 4)
+            with dpg.table(header_row=False, borders_innerH=False, borders_outerH=False,
+                           borders_innerV=False, borders_outerV=False,
+                           policy=dpg.mvTable_SizingFixedFit, pad_outerX=False) as settings_tbl:
+                dpg.bind_item_theme(settings_tbl, _tbl_pad_theme)
+                for _ in range(6):
+                    dpg.add_table_column()
+
+                # Row 1: Checkboxes (label before checkbox)
+                with dpg.table_row():
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Log Scale")
+                        dpg.add_checkbox(tag="test_log_check", default_value=True)
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Best-So-Far")
+                        dpg.add_checkbox(tag="test_bestsofar_check", default_value=True)
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Show ND")
+                        dpg.add_checkbox(tag="test_shownd_check", default_value=True)
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Show PF")
+                        dpg.add_checkbox(tag="test_showpf_check", default_value=True)
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Std Band")
+                        dpg.add_checkbox(tag="test_stdband_check", default_value=False)
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Merge Plots")
+                        dpg.add_checkbox(tag="test_merge_check", default_value=False)
+
+                # Row 2: Combos and inputs
+                with dpg.table_row():
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Metric")
+                        dpg.add_combo(METRICS, default_value="IGD",
+                                      tag="test_metric_combo", width=80)
+                    with dpg.group(horizontal=True):
+                        dpg.add_text("Figure")
+                        dpg.add_combo(FIGURE_FORMATS, default_value="png",
+                                      tag="test_fig_combo", width=70)
 
             dpg.add_spacer(height=5)
             dpg.add_separator()
@@ -1564,7 +1425,7 @@ def update():
             error_msg = f"Analysis failed: {load_status.error}"
             with dpg.group(horizontal=True, parent="test_results_area"):
                 dpg.add_text(error_msg, color=(200, 60, 60), wrap=760)
-                dpg.add_button(label="\u2398", callback=_on_copy_error_click,
+                dpg.add_button(label="Copy", callback=_on_copy_error_click,
                                user_data=error_msg, width=24)
         else:
             dpg.add_text(f"Analysis completed in {format_time(elapsed)}",

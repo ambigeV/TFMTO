@@ -201,6 +201,15 @@ class NN_Training:
         Random seed for train/test split (default 42).
     """
 
+    problem_information = {
+        'n_cases': 6,
+        'n_tasks': '1',
+        'n_dims': '[101, 1867]',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'real_world',
+    }
+
     _WEIGHT_BOUND = 3.0
 
     def __init__(self, test_ratio=0.3, seed=42):

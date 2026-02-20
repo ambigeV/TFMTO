@@ -21,8 +21,6 @@ from scipy.interpolate import RBFInterpolator
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
 from ddmtolab.Methods.Algo_Methods.algo_utils import *
-from ddmtolab.Algorithms.STSO.DE import DE
-from ddmtolab.Methods.mtop import MTOP
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -38,7 +36,7 @@ class GL_SADE:
     """
 
     algorithm_information = {
-        'n_tasks': '1-K',
+        'n_tasks': '[1, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
@@ -187,7 +185,7 @@ class GL_SADE:
         # Use Gaussian RBF
         try:
             rbf_interpolator = RBFInterpolator(X, Y, kernel='gaussian', epsilon=1.0 / spread)
-        except:
+        except Exception:
             # Fallback
             rbf_interpolator = RBFInterpolator(X, Y, kernel='thin_plate_spline')
 
@@ -237,15 +235,9 @@ class GL_SADE:
         def acquisition_func(x):
             return rbf_model(x)
 
-        # Optimize acquisition function using DE
-        candidate = self._optimize_acquisition(
-            acquisition_func,
-            dim,
-            popsize=50,
-            max_gen=50,
-            mode='plain'
-        )
-
+        # Optimize acquisition using DE/best/1 with elite init from database
+        candidate = self._de_best1_search(acquisition_func, X, Y, dim,
+                                          popsize=50, max_gen=50)
         return candidate
 
     # Local search using GPR model with LCB-decay acquisition
@@ -267,39 +259,58 @@ class GL_SADE:
             mean, std = gpr_model(x)
             return mean - w * std
 
-        # Optimize acquisition function using DE (only 1 generation for prescreening)
-        candidate = self._optimize_acquisition(
-            acquisition_func,
-            dim,
-            popsize=50,
-            max_gen=1,
-            mode='lcb'
-        )
-
+        # Optimize using DE/best/1 with elite init (1 generation = prescreening)
+        candidate = self._de_best1_search(acquisition_func, X, Y, dim,
+                                          popsize=50, max_gen=1)
         return candidate
 
-    # Optimize acquisition function using DE
-    def _optimize_acquisition(self, acquisition_func, dim, popsize=50, max_gen=50, mode='plain'):
+    def _de_best1_search(self, acquisition_func, X_db, Y_db, dim,
+                         popsize=50, max_gen=50, F=0.5, CR=0.8):
+        """DE/best/1/bin with elite initialization and 1-to-1 comparison selection."""
+        N = len(X_db)
+        Y_flat = Y_db.flatten()
 
-        # Create surrogate problem wrapper
-        def surrogate_objective(x):
-            return acquisition_func(x)
+        # Elite initialization: top-popsize solutions from database
+        if N >= popsize:
+            idx = np.argsort(Y_flat)[:popsize]
+            pop = X_db[idx].copy()
+            pop_acq = acquisition_func(pop).flatten()
+        else:
+            extra = np.random.rand(popsize - N, dim)
+            pop = np.vstack([X_db.copy(), extra])
+            pop_acq = acquisition_func(pop).flatten()
 
-        surrogate_problem = MTOP()
-        surrogate_problem.add_task(objective_func=surrogate_objective, dim=dim)
+        for gen in range(max_gen):
+            # Find current best
+            best_idx = np.argmin(pop_acq)
+            x_best = pop[best_idx]
 
-        # Run DE to optimize acquisition function
-        max_nfes = popsize * max_gen
-        de = DE(surrogate_problem, n=popsize, max_nfes=max_nfes, disable_tqdm=True)
-        results = de.optimize()
+            offspring = np.empty_like(pop)
+            for j in range(popsize):
+                # Mutation: DE/best/1
+                candidates = [k for k in range(popsize) if k != j]
+                r1, r2 = np.random.choice(candidates, 2, replace=False)
+                mutant = x_best + F * (pop[r1] - pop[r2])
+                mutant = np.clip(mutant, 0.0, 1.0)
 
-        # Get best solution
-        best_solution = results.best_decs[0].reshape(1, -1)
+                # Binomial crossover
+                trial = pop[j].copy()
+                j_rand = np.random.randint(dim)
+                for d in range(dim):
+                    if np.random.rand() < CR or d == j_rand:
+                        trial[d] = mutant[d]
+                offspring[j] = trial
 
-        # Ensure solution is within [0, 1]
-        best_solution = np.clip(best_solution, 0.0, 1.0)
+            # 1-to-1 greedy comparison selection
+            offspring_acq = acquisition_func(offspring).flatten()
+            for j in range(popsize):
+                if offspring_acq[j] <= pop_acq[j]:
+                    pop[j] = offspring[j]
+                    pop_acq[j] = offspring_acq[j]
 
-        return best_solution
+        # Return best solution
+        best_idx = np.argmin(pop_acq)
+        return pop[best_idx:best_idx + 1].copy()
 
     # Ensure candidate is not too close to existing samples
     def _ensure_uniqueness(self, candidate, X, dim, epsilon=5e-3, max_trials=50):
@@ -309,7 +320,7 @@ class GL_SADE:
 
         while trial_count < max_trials:
             # Compute minimum distance to existing samples
-            dist = cdist(candidate, X, metric='euclidean')
+            dist = cdist(candidate, X, metric='chebyshev')
             min_dist = np.min(dist)
 
             if min_dist >= epsilon:

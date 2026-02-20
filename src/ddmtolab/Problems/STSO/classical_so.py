@@ -13,6 +13,15 @@ class CLASSICALSO:
     individual tasks in a multi-task setting.
     """
 
+    problem_information = {
+        'n_cases': 9,
+        'n_tasks': '1',
+        'n_dims': 'D',
+        'n_objs': '1',
+        'n_cons': '0',
+        'type': 'synthetic',
+    }
+
     def __init__(self):
         pass
 

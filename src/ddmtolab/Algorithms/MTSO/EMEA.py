@@ -30,12 +30,12 @@ class EMEA:
     """
 
     algorithm_information = {
-        'n_tasks': '2-K',
+        'n_tasks': '[2, K]',
         'dims': 'unequal',
         'objs': 'equal',
         'n_objs': '1',
         'cons': 'unequal',
-        'n_cons': '0-C',
+        'n_cons': '[0, C]',
         'expensive': 'False',
         'knowledge_transfer': 'True',
         'n': 'unequal',
