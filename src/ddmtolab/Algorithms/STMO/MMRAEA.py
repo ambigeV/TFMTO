@@ -8,9 +8,7 @@ optimization (CSO + GA) for balanced convergence and diversity.
 
 References
 ----------
-    [1] J. Shen, X. Wang, R. He, Y. Tian, W. Wang, P. Wang, and Z. Wen. Optimization of
-        high-dimensional expensive multi-objective problems using multi-mode radial basis functions.
-        Complex & Intelligent Systems, 2025, 11(2): 147.
+    [1] J. Shen, X. Wang, R. He, Y. Tian, W. Wang, P. Wang, and Z. Wen. Optimization of high-dimensional expensive multi-objective problems using multi-mode radial basis functions. Complex & Intelligent Systems, 2025, 11(2): 147.
 
 Notes
 -----

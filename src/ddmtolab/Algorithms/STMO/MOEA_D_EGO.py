@@ -7,9 +7,7 @@ Improvement (ETI) with Moment Matching Approximation, and K-means batch selectio
 
 References
 ----------
-    [1] Q. Zhang, W. Liu, E. Tsang, and B. Virginas. Expensive multiobjective optimization
-        by MOEA/D with Gaussian process model. IEEE Transactions on Evolutionary Computation,
-        2010, 14(3): 456-474.
+    [1] Q. Zhang, W. Liu, E. Tsang, and B. Virginas. Expensive multiobjective optimization by MOEA/D with Gaussian process model. IEEE Transactions on Evolutionary Computation, 2010, 14(3): 456-474.
 
 Notes
 -----

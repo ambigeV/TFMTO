@@ -8,9 +8,7 @@ selection and APD-based environmental selection.
 
 References
 ----------
-    [1] J. Shen, P. Wang, H. Dong, W. Wang, and J. Li. Surrogate-assisted evolutionary algorithm
-        with decomposition-based local learning for high-dimensional multi-objective optimization.
-        Expert Systems with Applications, 2024, 240: 122575.
+    [1] J. Shen, P. Wang, H. Dong, W. Wang, and J. Li. Surrogate-assisted evolutionary algorithm with decomposition-based local learning for high-dimensional multi-objective optimization. Expert Systems with Applications, 2024, 240: 122575.
 
 Notes
 -----

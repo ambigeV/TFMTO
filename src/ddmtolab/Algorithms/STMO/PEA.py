@@ -8,9 +8,7 @@ promising candidates for expensive re-evaluation using diversity-based strategie
 
 References
 ----------
-    [1] T. Sonoda and M. Nakata. Multiple Objective Optimization Based on Kriging
-        Surrogate Model with Constrained Probabilistic Pareto Dominance.
-        IEEE Congress on Evolutionary Computation (CEC), 2020.
+    [1] T. Sonoda and M. Nakata. Multiple Objective Optimization Based on Kriging Surrogate Model with Constrained Probabilistic Pareto Dominance. IEEE Congress on Evolutionary Computation (CEC), 2020.
 
 Notes
 -----

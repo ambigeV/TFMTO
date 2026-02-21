@@ -12,9 +12,7 @@ class CF:
 
     References
     ----------
-    Q. Zhang, A. Zhou, S. Zhao, P. N. Suganthan, W. Liu, and S. Tiwari.
-    "Multiobjective optimization test instances for the CEC 2009 special session and competition."
-    University of Essex, Colchester, UK, Tech. Rep. CES-487, 2009.
+    [1] Q. Zhang, A. Zhou, S. Zhao, P. N. Suganthan, W. Liu, and S. Tiwari. "Multiobjective optimization test instances for the CEC 2009 special session and competition." University of Essex, Colchester, UK, Tech. Rep. CES-487, 2009.
     """
 
     problem_information = {

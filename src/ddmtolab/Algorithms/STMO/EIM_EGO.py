@@ -12,9 +12,7 @@ Three EIM infill criteria are supported:
 
 References
 ----------
-    [1] D. Zhan, Y. Cheng, and J. Liu. Expected improvement matrix-based infill criteria for
-        expensive multiobjective optimization. IEEE Transactions on Evolutionary Computation,
-        2017, 21(6): 956-975.
+    [1] D. Zhan, Y. Cheng, and J. Liu. Expected improvement matrix-based infill criteria for expensive multiobjective optimization. IEEE Transactions on Evolutionary Computation, 2017, 21(6): 956-975.
 
 Notes
 -----

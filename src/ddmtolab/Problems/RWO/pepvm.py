@@ -18,14 +18,9 @@ class PEPVM:
 
     References
     ----------
-    [1] Li, S., Gu, Q., Gong, W., & Ning, B. (2020). An Enhanced Adaptive
-        Differential Evolution Algorithm for Parameter Extraction of Photovoltaic
-        Models. Energy Conversion and Management, 205, 112443.
-    [2] Li, Y., Gong, W., & Li, S. (2022). Multitasking Optimization via an
-        Adaptive Solver Multitasking Evolutionary Framework. Information Sciences.
-    [3] Li, Y., Gong, W., & Li, S. (2023). Evolutionary Competitive Multitasking
-        Optimization via Improved Adaptive Differential Evolution. Expert Systems
-        with Applications, 119550.
+    [1] Li, S., Gu, Q., Gong, W., & Ning, B. (2020). An Enhanced Adaptive Differential Evolution Algorithm for Parameter Extraction of Photovoltaic Models. Energy Conversion and Management, 205, 112443.
+    [2] Li, Y., Gong, W., & Li, S. (2022). Multitasking Optimization via an Adaptive Solver Multitasking Evolutionary Framework. Information Sciences.
+    [3] Li, Y., Gong, W., & Li, S. (2023). Evolutionary Competitive Multitasking Optimization via Improved Adaptive Differential Evolution. Expert Systems with Applications, 119550.
 
     Attributes
     ----------

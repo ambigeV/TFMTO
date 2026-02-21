@@ -10,9 +10,7 @@ constraint violation CV.
 
 References
 ----------
-    [1] Z. Song, H. Wang, and B. Xue. A Kriging-Assisted Two-Archive
-        Evolutionary Algorithm for Expensive Multi-Objective Optimization.
-        IEEE Transactions on Evolutionary Computation, 2024.
+    [1] Z. Song, H. Wang, and B. Xue. A Kriging-Assisted Two-Archive Evolutionary Algorithm for Expensive Multi-Objective Optimization. IEEE Transactions on Evolutionary Computation, 2024.
 
 Notes
 -----

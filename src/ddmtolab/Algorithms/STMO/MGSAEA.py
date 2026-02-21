@@ -12,10 +12,7 @@ indicating convergence of the unconstrained search.
 
 References
 ----------
-    [1] Y. Zhang, H. Jiang, Y. Tian, H. Ma, and X. Zhang. Multigranularity
-        surrogate modeling for evolutionary multiobjective optimization with
-        expensive constraints. IEEE Transactions on Neural Networks and Learning
-        Systems, 2024, 35(3): 2956-2968.
+    [1] Y. Zhang, H. Jiang, Y. Tian, H. Ma, and X. Zhang. Multigranularity surrogate modeling for evolutionary multiobjective optimization with expensive constraints. IEEE Transactions on Neural Networks and Learning Systems, 2024, 35(3): 2956-2968.
 
 Notes
 -----

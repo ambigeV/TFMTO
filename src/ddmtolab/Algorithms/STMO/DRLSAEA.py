@@ -7,9 +7,7 @@ constraint handling strategies for surrogate model management.
 
 References
 ----------
-    [1] S. Shao, Y. Tian, and Y. Zhang. Deep reinforcement learning assisted
-        surrogate model management for expensive constrained multi-objective
-        optimization. Swarm and Evolutionary Computation, 2025, 92: 101817.
+    [1] S. Shao, Y. Tian, and Y. Zhang. Deep reinforcement learning assisted surrogate model management for expensive constrained multi-objective optimization. Swarm and Evolutionary Computation, 2025, 92: 101817.
 
 Notes
 -----

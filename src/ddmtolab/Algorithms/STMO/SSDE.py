@@ -8,9 +8,7 @@ evaluated with the expensive objective function.
 
 References
 ----------
-    [1] A. F. R. Araujo, L. R. C. Farias, and A. R. C. Goncalves. Self-organizing
-        surrogate-assisted non-dominated sorting differential evolution. Swarm
-        and Evolutionary Computation, 2024, 91: 101703.
+    [1] A. F. R. Araujo, L. R. C. Farias, and A. R. C. Goncalves. Self-organizing surrogate-assisted non-dominated sorting differential evolution. Swarm and Evolutionary Computation, 2024, 91: 101703.
 
 Notes
 -----

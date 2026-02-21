@@ -13,9 +13,7 @@ class MW:
 
     References
     ----------
-    Z. Ma and Y. Wang. "Evolutionary constrained multiobjective optimization:
-    Test suite construction and performance comparisons."
-    IEEE Transactions on Evolutionary Computation, 2019, 23(6): 972-986.
+    [1] Z. Ma and Y. Wang. "Evolutionary constrained multiobjective optimization: Test suite construction and performance comparisons." IEEE Transactions on Evolutionary Computation, 2019, 23(6): 972-986.
     """
 
     problem_information = {

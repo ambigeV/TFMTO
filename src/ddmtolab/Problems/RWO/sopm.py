@@ -13,11 +13,8 @@ class SOPM:
 
     References
     ----------
-    [1] Y. Li, W. Gong, "Multiobjective Multitask Optimization with Multiple Knowledge
-        Types and Transfer Adaptation," IEEE Trans. Evol. Comput., 2024.
-    [2] A. Kumar et al., "A Benchmark-suite of Real-world Constrained Multi-objective
-        Optimization Problems and Some Baseline Results," Swarm and Evolutionary
-        Computation, vol. 67, 2021.
+    [1] Y. Li, W. Gong, "Multiobjective Multitask Optimization with Multiple Knowledge Types and Transfer Adaptation," IEEE Trans. Evol. Comput., 2024.
+    [2] A. Kumar et al., "A Benchmark-suite of Real-world Constrained Multi-objective Optimization Problems and Some Baseline Results," Swarm and Evolutionary Computation, vol. 67, 2021.
 
     Notes
     -----

@@ -16,10 +16,7 @@ class UF:
 
     References
     ----------
-    Q. Zhang, A. Zhou, S. Zhao, P. N. Suganthan, W. Liu, and S. Tiwari.
-    Multiobjective optimization test instances for the CEC 2009 special
-    session and competition. School of CS & EE, University of Essex, Working
-    Report CES-487, 2009.
+    [1] Q. Zhang, A. Zhou, S. Zhao, P. N. Suganthan, W. Liu, and S. Tiwari. "Multiobjective optimization test instances for the CEC 2009 special session and competition." School of CS & EE, University of Essex, Working Report CES-487, 2009.
 
     Notes
     -----

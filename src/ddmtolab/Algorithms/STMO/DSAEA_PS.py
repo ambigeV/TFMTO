@@ -8,9 +8,7 @@ NSGA-II/CSDR) to balance convergence and diversity.
 
 References
 ----------
-    [1] J. Shen, P. Wang, Y. Tian, and H. Dong. A dual surrogate assisted evolutionary algorithm
-        based on parallel search for expensive multi/many-objective optimization. Applied Soft
-        Computing, 2023, 148: 110879.
+    [1] J. Shen, P. Wang, Y. Tian, and H. Dong. A dual surrogate assisted evolutionary algorithm based on parallel search for expensive multi/many-objective optimization. Applied Soft Computing, 2023, 148: 110879.
 
 Notes
 -----

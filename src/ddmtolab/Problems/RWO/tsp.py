@@ -26,13 +26,9 @@ Problems are ordered from easy to hard (by number of cities):
 
 References
 ----------
-.. [1] Reinelt, G. (1991). "TSPLIB -- A Traveling Salesman Problem Library."
-       ORSA Journal on Computing, 3(4), 376-384.
-.. [2] Bean, J.C. (1994). "Genetic Algorithms and Random Keys for Sequencing
-       and Optimization." ORSA Journal on Computing, 6(2), 154-160.
-.. [3] Applegate, D.L., Bixby, R.E., Chvatal, V., and Cook, W.J. (2006).
-       "The Traveling Salesman Problem: A Computational Study." Princeton
-       University Press.
+    [1] Reinelt, G. (1991). "TSPLIB -- A Traveling Salesman Problem Library." ORSA Journal on Computing, 3(4), 376-384.
+    [2] Bean, J.C. (1994). "Genetic Algorithms and Random Keys for Sequencing and Optimization." ORSA Journal on Computing, 6(2), 154-160.
+    [3] Applegate, D.L., Bixby, R.E., Chvatal, V., and Cook, W.J. (2006). "The Traveling Salesman Problem: A Computational Study." Princeton University Press.
 """
 
 import numpy as np

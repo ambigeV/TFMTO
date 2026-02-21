@@ -7,9 +7,7 @@ Kriging models with adaptive sampling strategies.
 
 References
 ----------
-    [1] Z. Song, H. Wang, C. He, and Y. Jin. A Kriging-assisted two-archive
-        evolutionary algorithm for expensive many-objective optimization.
-        IEEE Transactions on Evolutionary Computation, 2021, 25(6): 1013-1027.
+    [1] Z. Song, H. Wang, C. He, and Y. Jin. A Kriging-assisted two-archive evolutionary algorithm for expensive many-objective optimization. IEEE Transactions on Evolutionary Computation, 2021, 25(6): 1013-1027.
 
 Notes
 -----

@@ -7,10 +7,7 @@ combined with an adaptive reference point based evolutionary algorithm (AR-MOEA)
 
 References
 ----------
-    [1] D. Guo, X. Wang, K. Gao, Y. Jin, J. Ding, and T. Chai. Evolutionary optimization of
-        high-dimensional multiobjective and many-objective expensive problems assisted by a dropout
-        neural network. IEEE Transactions on Systems, Man, and Cybernetics: Systems, 2022, 52(4):
-        2084-2097.
+    [1] D. Guo, X. Wang, K. Gao, Y. Jin, J. Ding, and T. Chai. Evolutionary optimization of high-dimensional multiobjective and many-objective expensive problems assisted by a dropout neural network. IEEE Transactions on Systems, Man, and Cybernetics: Systems, 2022, 52(4): 2084-2097.
 
 Notes
 -----

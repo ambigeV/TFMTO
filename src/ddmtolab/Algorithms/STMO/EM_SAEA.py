@@ -8,9 +8,7 @@ multi/many-objective optimization. It uses a two-stage approach:
 
 References
 ----------
-    [1] Y. Li, X. Feng, and H. Yu. Enhancing landscape approximation with
-        ensemble-based surrogate model for expensive constrained multiobjective
-        optimization. IEEE Transactions on Evolutionary Computation, 2025.
+    [1] Y. Li, X. Feng, and H. Yu. Enhancing landscape approximation with ensemble-based surrogate model for expensive constrained multiobjective optimization. IEEE Transactions on Evolutionary Computation, 2025.
 
 Notes
 -----

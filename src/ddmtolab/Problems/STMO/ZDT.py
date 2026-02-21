@@ -15,9 +15,7 @@ class ZDT:
 
     References
     ----------
-    E. Zitzler, K. Deb, and L. Thiele. Comparison of multiobjective
-    evolutionary algorithms: Empirical results. Evolutionary Computation,
-    2000, 8(2): 173-195.
+    [1] E. Zitzler, K. Deb, and L. Thiele. "Comparison of multiobjective evolutionary algorithms: Empirical results." Evolutionary Computation, 2000, 8(2): 173-195.
 
     Notes
     -----

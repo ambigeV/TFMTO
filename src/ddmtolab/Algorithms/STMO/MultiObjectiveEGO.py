@@ -8,9 +8,7 @@ maximizes Standard Expected Improvement to select new evaluation points.
 
 References
 ----------
-    [1] R. Hussein and K. Deb. A generative Kriging surrogate model for constrained and
-        unconstrained multi-objective optimization. Proceedings of the Genetic and Evolutionary
-        Computation Conference, 2016, 573-580.
+    [1] R. Hussein and K. Deb. A generative Kriging surrogate model for constrained and unconstrained multi-objective optimization. Proceedings of the Genetic and Evolutionary Computation Conference, 2016, 573-580.
 
 Notes
 -----

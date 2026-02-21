@@ -5,9 +5,7 @@ This module implements DDEA-MESS for expensive single-objective optimization pro
 
 References
 ----------
-    [1] Yu, F., Gong, W., & Zhen, H. (2022). A data-driven evolutionary algorithm with
-        multi-evolutionary sampling strategy for expensive optimization. Knowledge-Based
-        Systems, 242, 108436.
+    [1] Yu, F., Gong, W., & Zhen, H. (2022). A data-driven evolutionary algorithm with multi-evolutionary sampling strategy for expensive optimization. Knowledge-Based Systems, 242, 108436.
 
 Notes
 -----

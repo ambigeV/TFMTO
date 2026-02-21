@@ -26,12 +26,18 @@ All algorithms follow a consistent interface:
 Single-Task Single-Objective (STSO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. automodule:: ddmtolab.Algorithms.STSO.GA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.GA.GA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.DE
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.DE.DE
    :members: optimize
@@ -40,12 +46,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.PSO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.PSO.PSO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.CMA_ES
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.CMA_ES.CMA_ES
    :members: optimize
@@ -54,12 +66,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.IPOP_CMA_ES
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.IPOP_CMA_ES.IPOP_CMA_ES
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.sep_CMA_ES
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.sep_CMA_ES.sep_CMA_ES
    :members: optimize
@@ -68,12 +86,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.MA_ES
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.MA_ES.MA_ES
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.OpenAI_ES
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.OpenAI_ES.OpenAI_ES
    :members: optimize
@@ -82,12 +106,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.xNES
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.xNES.xNES
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.CSO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.CSO.CSO
    :members: optimize
@@ -96,12 +126,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.SL_PSO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.SL_PSO.SL_PSO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.KLPSO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.KLPSO.KLPSO
    :members: optimize
@@ -110,12 +146,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.SHPSO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.SHPSO.SHPSO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.GWO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.GWO.GWO
    :members: optimize
@@ -124,12 +166,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.AO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.AO.AO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.EO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.EO.EO
    :members: optimize
@@ -138,12 +186,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.GL_SADE
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.GL_SADE.GL_SADE
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.BO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.BO.BO
    :members: optimize
@@ -152,12 +206,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.EEI_BO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.EEI_BO.EEI_BO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.ESAO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.ESAO.ESAO
    :members: optimize
@@ -166,12 +226,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.SA_COSO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.SA_COSO.SA_COSO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.TLRBF
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.TLRBF.TLRBF
    :members: optimize
@@ -180,6 +246,9 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.AutoSAEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.AutoSAEA.AutoSAEA
    :members: optimize
    :undoc-members:
@@ -187,12 +256,18 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STSO.DDEA_MESS
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STSO.DDEA_MESS.DDEA_MESS
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STSO.LSADE
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STSO.LSADE.LSADE
    :members: optimize
@@ -204,12 +279,18 @@ Single-Task Single-Objective (STSO)
 Single-Task Multiobjective (STMO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. automodule:: ddmtolab.Algorithms.STMO.NSGA_II
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.NSGA_II.NSGA_II
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.NSGA_III
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.NSGA_III.NSGA_III
    :members: optimize
@@ -218,12 +299,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.NSGA_II_SDR
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.NSGA_II_SDR.NSGA_II_SDR
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.MOEA_D
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.MOEA_D.MOEA_D
    :members: optimize
@@ -232,12 +319,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.MOEA_DD
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.MOEA_DD.MOEA_DD
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.MOEA_D_STM
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.MOEA_D_STM.MOEA_D_STM
    :members: optimize
@@ -246,12 +339,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.MOEA_D_FRRMAB
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.MOEA_D_FRRMAB.MOEA_D_FRRMAB
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.MCEA_D
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.MCEA_D.MCEA_D
    :members: optimize
@@ -260,12 +359,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.RVEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.RVEA.RVEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.K_RVEA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.K_RVEA.K_RVEA
    :members: optimize
@@ -274,12 +379,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.IBEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.IBEA.IBEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.SPEA2
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.SPEA2.SPEA2
    :members: optimize
@@ -288,12 +399,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.TwoArch2
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.TwoArch2.TwoArch2
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.CCMO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.CCMO.CCMO
    :members: optimize
@@ -302,12 +419,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.C_TAEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.C_TAEA.C_TAEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.CPS_MOEA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.CPS_MOEA.CPS_MOEA
    :members: optimize
@@ -316,12 +439,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.ParEGO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.ParEGO.ParEGO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.MSEA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.MSEA.MSEA
    :members: optimize
@@ -330,12 +459,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.REMO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.REMO.REMO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.KTA2
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.KTA2.KTA2
    :members: optimize
@@ -344,12 +479,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.DSAEA_PS
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.DSAEA_PS.DSAEA_PS
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.ADSAPSO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.ADSAPSO.ADSAPSO
    :members: optimize
@@ -358,12 +499,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.CSEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.CSEA.CSEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.DISK
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.DISK.DISK
    :members: optimize
@@ -372,12 +519,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.DRLSAEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.DRLSAEA.DRLSAEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.DirHV_EI
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.DirHV_EI.DirHV_EI
    :members: optimize
@@ -386,12 +539,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.EDN_ARMOEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.EDN_ARMOEA.EDN_ARMOEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.EIM_EGO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.EIM_EGO.EIM_EGO
    :members: optimize
@@ -400,12 +559,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.EM_SAEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.EM_SAEA.EM_SAEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.KTS
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.KTS.KTS
    :members: optimize
@@ -414,12 +579,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.MGSAEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.MGSAEA.MGSAEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.MMRAEA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.MMRAEA.MMRAEA
    :members: optimize
@@ -428,12 +599,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.MOEA_D_EGO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.MOEA_D_EGO.MOEA_D_EGO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.MultiObjectiveEGO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.MultiObjectiveEGO.MultiObjectiveEGO
    :members: optimize
@@ -442,12 +619,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.PCSAEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.PCSAEA.PCSAEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.PEA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.PEA.PEA
    :members: optimize
@@ -456,12 +639,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.PIEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.PIEA.PIEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.SAEA_DBLL
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.SAEA_DBLL.SAEA_DBLL
    :members: optimize
@@ -470,12 +659,18 @@ Single-Task Multiobjective (STMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.STMO.SSDE
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.STMO.SSDE.SSDE
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.STMO.TEA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.STMO.TEA.TEA
    :members: optimize
@@ -487,12 +682,18 @@ Single-Task Multiobjective (STMO)
 Multitask Single-Objective (MTSO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. automodule:: ddmtolab.Algorithms.MTSO.MFEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.MFEA.MFEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MFEA_II
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.MFEA_II.MFEA_II
    :members: optimize
@@ -501,12 +702,18 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.G_MFEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.G_MFEA.G_MFEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MTEA_AD
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.MTEA_AD.MTEA_AD
    :members: optimize
@@ -515,12 +722,18 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.MTEA_SaO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.MTEA_SaO.MTEA_SaO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.EMEA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.EMEA.EMEA
    :members: optimize
@@ -529,12 +742,18 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.MKTDE
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.MKTDE.MKTDE
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.SREMTO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.SREMTO.SREMTO
    :members: optimize
@@ -543,12 +762,18 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.RAMTEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.RAMTEA.RAMTEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.SELF
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.SELF.SELF
    :members: optimize
@@ -557,12 +782,18 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.EBS
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.EBS.EBS
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MTBO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.MTBO.MTBO
    :members: optimize
@@ -571,12 +802,18 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.MUMBO
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.MUMBO.MUMBO
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.LCB_EMT
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.LCB_EMT.LCB_EMT
    :members: optimize
@@ -585,6 +822,9 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.BO_LCB_CKT
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.BO_LCB_CKT.BO_LCB_CKT
    :members: optimize
    :undoc-members:
@@ -592,12 +832,18 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.BO_LCB_BCKT
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTSO.BO_LCB_BCKT.BO_LCB_BCKT
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.EEI_BO_plus
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTSO.EEI_BO_plus.EEI_BO_plus
    :members: optimize
@@ -609,12 +855,18 @@ Multitask Single-Objective (MTSO)
 Multitask Multiobjective (MTMO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. automodule:: ddmtolab.Algorithms.MTMO.MO_MFEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTMO.MO_MFEA.MO_MFEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.MO_MFEA_II
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTMO.MO_MFEA_II.MO_MFEA_II
    :members: optimize
@@ -623,12 +875,18 @@ Multitask Multiobjective (MTMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTMO.MO_EMEA
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTMO.MO_EMEA.MO_EMEA
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.MO_MTEA_SaO
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTMO.MO_MTEA_SaO.MO_MTEA_SaO
    :members: optimize
@@ -637,12 +895,18 @@ Multitask Multiobjective (MTMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTMO.MTEA_D_DN
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTMO.MTEA_D_DN.MTEA_D_DN
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.MTDE_MKTA
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTMO.MTDE_MKTA.MTDE_MKTA
    :members: optimize
@@ -651,6 +915,9 @@ Multitask Multiobjective (MTMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTMO.EMT_ET
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTMO.EMT_ET.EMT_ET
    :members: optimize
    :undoc-members:
@@ -658,12 +925,18 @@ Multitask Multiobjective (MTMO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTMO.EMT_PD
+   :no-members:
+
 .. autoclass:: ddmtolab.Algorithms.MTMO.EMT_PD.EMT_PD
    :members: optimize
    :undoc-members:
    :show-inheritance:
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.ParEGO_KT
+   :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTMO.ParEGO_KT.ParEGO_KT
    :members: optimize
@@ -789,6 +1062,9 @@ Benchmark Problem Suites
 .. autoclass:: ddmtolab.Problems.RWO.nn_training.NN_Training
    :members:
    :undoc-members:
+
+.. automodule:: ddmtolab.Problems.RWO.tsp
+   :no-members:
 
 .. autoclass:: ddmtolab.Problems.RWO.tsp.TSP
    :members:

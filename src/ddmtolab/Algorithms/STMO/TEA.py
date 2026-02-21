@@ -8,10 +8,7 @@ Kriging surrogate models to guide the search.
 
 References
 ----------
-    [1] Z. Zhang, Y. Wang, J. Liu, G. Sun, and K. Tang. A two-phase Kriging-
-        assisted evolutionary algorithm for expensive constrained multiobjective
-        optimization problems. IEEE Transactions on Systems, Man, and Cybernetics:
-        Systems, 2024, 54(8): 4579-4591.
+    [1] Z. Zhang, Y. Wang, J. Liu, G. Sun, and K. Tang. A two-phase Kriging-assisted evolutionary algorithm for expensive constrained multiobjective optimization problems. IEEE Transactions on Systems, Man, and Cybernetics: Systems, 2024, 54(8): 4579-4591.
 
 Notes
 -----

@@ -7,9 +7,7 @@ in the reduced space, and applies PSO on surrogates to find promising solutions.
 
 References
 ----------
-    [1] J. Lin, C. He, and R. Cheng. Adaptive dropout for high-dimensional
-        expensive multiobjective optimization. Complex & Intelligent Systems,
-        2022, 8(1): 271-285.
+    [1] J. Lin, C. He, and R. Cheng. Adaptive dropout for high-dimensional expensive multiobjective optimization. Complex & Intelligent Systems, 2022, 8(1): 271-285.
 
 Notes
 -----

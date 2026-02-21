@@ -73,7 +73,25 @@
            <div itemprop="articleBody">
              
   <h1>Source code for ddmtolab.Algorithms.MTMO.ParEGO_KT</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ParEGO with Knowledge Transfer (ParEGO-KT)</span>
+
+<span class="sd">This module implements ParEGO-KT for expensive multitask multiobjective optimization.</span>
+<span class="sd">It extends ParEGO with cross-task knowledge transfer using Spearman rank correlation</span>
+<span class="sd">to identify and leverage beneficial task relationships.</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">    [1] J. Knowles. &quot;ParEGO: A hybrid algorithm with on-line landscape approximation for expensive multiobjective optimization problems.&quot; IEEE Transactions on Evolutionary Computation, 2006, 10(1): 50-66.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">Author: Jiangtao Shen</span>
+<span class="sd">Email: j.shen5@exeter.ac.uk</span>
+<span class="sd">Date: 2025.12.18</span>
+<span class="sd">Version: 1.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">spearmanr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>

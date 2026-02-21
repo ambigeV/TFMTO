@@ -19,10 +19,8 @@ class PKACP:
 
     References
     ----------
-    [1] Y. Jiang et al., "A Bi-Objective Knowledge Transfer Framework for
-        Evolutionary Many-Task Optimization," IEEE TEVC, 2022.
-    [2] H. Xu et al., "Evolutionary Multi-Task Optimization with Adaptive
-        Knowledge Transfer," IEEE TEVC, 2021.
+    [1] Y. Jiang et al., "A Bi-Objective Knowledge Transfer Framework for Evolutionary Many-Task Optimization," IEEE TEVC, 2022.
+    [2] H. Xu et al., "Evolutionary Multi-Task Optimization with Adaptive Knowledge Transfer," IEEE TEVC, 2021.
 
     Attributes
     ----------

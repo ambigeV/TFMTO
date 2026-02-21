@@ -1,3 +1,21 @@
+"""
+ParEGO with Knowledge Transfer (ParEGO-KT)
+
+This module implements ParEGO-KT for expensive multitask multiobjective optimization.
+It extends ParEGO with cross-task knowledge transfer using Spearman rank correlation
+to identify and leverage beneficial task relationships.
+
+References
+----------
+    [1] J. Knowles. "ParEGO: A hybrid algorithm with on-line landscape approximation for expensive multiobjective optimization problems." IEEE Transactions on Evolutionary Computation, 2006, 10(1): 50-66.
+
+Notes
+-----
+Author: Jiangtao Shen
+Email: j.shen5@exeter.ac.uk
+Date: 2025.12.18
+Version: 1.0
+"""
 import numpy as np
 from scipy.stats import spearmanr
 from tqdm import tqdm

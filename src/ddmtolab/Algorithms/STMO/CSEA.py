@@ -7,9 +7,7 @@ relative to reference solutions, with adaptive surrogate-assisted selection stra
 
 References
 ----------
-    [1] L. Pan, C. He, Y. Tian, H. Wang, X. Zhang, and Y. Jin. A classification based
-        surrogate-assisted evolutionary algorithm for expensive many-objective optimization.
-        IEEE Transactions on Evolutionary Computation, 2019, 23(1): 74-88.
+    [1] L. Pan, C. He, Y. Tian, H. Wang, X. Zhang, and Y. Jin. A classification based surrogate-assisted evolutionary algorithm for expensive many-objective optimization. IEEE Transactions on Evolutionary Computation, 2019, 23(1): 74-88.
 
 Notes
 -----

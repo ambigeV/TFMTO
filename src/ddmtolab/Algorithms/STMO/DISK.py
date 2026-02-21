@@ -9,9 +9,7 @@ to fill gaps in the Pareto front.
 
 References
 ----------
-    [1] Z. Song, H. Wang, and H. Xu. DISK: A Kriging-Assisted Multi-Objective
-        Optimization Algorithm with Distribution-Informed Probabilistic Dominance.
-        IEEE Transactions on Evolutionary Computation, 2024.
+    [1] Z. Song, H. Wang, and H. Xu. DISK: A Kriging-Assisted Multi-Objective Optimization Algorithm with Distribution-Informed Probabilistic Dominance. IEEE Transactions on Evolutionary Computation, 2024.
 
 Notes
 -----

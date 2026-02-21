@@ -12,11 +12,9 @@ class CEC10_CSO:
     This class provides constrained single-objective optimization benchmark functions
     configured as Multi-Task Optimization Problems (MTOPs) with only one task.
 
-    Reference:
+    References
     ----------
-    Mallipeddi, Rammohan and Suganthan, Ponnuthurai.
-    "Problem Definitions and Evaluation Criteria for the CEC 2010 Competition
-    on Constrained Real-parameter Optimization." (2010)
+    [1] Mallipeddi, Rammohan and Suganthan, Ponnuthurai. "Problem Definitions and Evaluation Criteria for the CEC 2010 Competition on Constrained Real-parameter Optimization." (2010)
 
     Attributes
     ----------

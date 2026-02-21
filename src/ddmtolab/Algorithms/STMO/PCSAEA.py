@@ -8,9 +8,7 @@ strategies based on surrogate reliability.
 
 References
 ----------
-    [1] H. Wang, Y. Jin, C. Sun, and J. Deng. A pairwise comparison based surrogate-
-        assisted evolutionary algorithm for expensive multi-objective optimization.
-        Swarm and Evolutionary Computation, 2023, 80: 101323.
+    [1] H. Wang, Y. Jin, C. Sun, and J. Deng. A pairwise comparison based surrogate-assisted evolutionary algorithm for expensive multi-objective optimization. Swarm and Evolutionary Computation, 2023, 80: 101323.
 
 Notes
 -----

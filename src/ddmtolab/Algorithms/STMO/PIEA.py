@@ -8,9 +8,7 @@ then uses DE-based model optimization and hierarchical evaluation to guide the s
 
 References
 ----------
-    [1] Y. Li, W. Li, S. Li, and Y. Zhao. A performance indicator-based
-        evolutionary algorithm for expensive high-dimensional multi-/many-
-        objective optimization. Information Sciences, 2024: 121045.
+    [1] Y. Li, W. Li, S. Li, and Y. Zhao. A performance indicator-based evolutionary algorithm for expensive high-dimensional multi-/many-objective optimization. Information Sciences, 2024: 121045.
 
 Notes
 -----

@@ -5,9 +5,7 @@ This module implements K-RVEA for computationally expensive multi/many-objective
 
 References
 ----------
-    [1] T. Chugh, Y. Jin, K. Miettinen, J. Hakanen, and K. Sindhya. A surrogate-assisted reference vector guided
-        evolutionary algorithm for computationally expensive many-objective optimization. IEEE Transactions on
-        Evolutionary Computation, 2018, 22(1): 129-142.
+    [1] T. Chugh, Y. Jin, K. Miettinen, J. Hakanen, and K. Sindhya. A surrogate-assisted reference vector guided evolutionary algorithm for computationally expensive many-objective optimization. IEEE Transactions on Evolutionary Computation, 2018, 22(1): 129-142.
 
 Notes
 -----

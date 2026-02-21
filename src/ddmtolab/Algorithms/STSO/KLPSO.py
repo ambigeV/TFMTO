@@ -8,9 +8,7 @@ standard PSO velocity update.
 
 References
 ----------
-    [1] Jiang, Yi, et al. "Knowledge Learning for Evolutionary Computation."
-        IEEE Transactions on Evolutionary Computation, 2023.
-        DOI: 10.1109/TEVC.2023.3278132
+    [1] Jiang, Yi, et al. "Knowledge Learning for Evolutionary Computation." IEEE Transactions on Evolutionary Computation, 2023. DOI: 10.1109/TEVC.2023.3278132
 
 Notes
 -----
