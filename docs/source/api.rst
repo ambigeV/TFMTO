@@ -103,7 +103,7 @@ Single-Task Single-Objective (STSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
-.. autoclass:: ddmtolab.Algorithms.STSO.KL_PSO.KL_PSO
+.. autoclass:: ddmtolab.Algorithms.STSO.KLPSO.KLPSO
    :members: optimize
    :undoc-members:
    :show-inheritance:
@@ -769,6 +769,10 @@ Benchmark Problem Suites
    :undoc-members:
 
 .. autoclass:: ddmtolab.Problems.MTMO.mtmo_dtlz.MTMO_DTLZ
+   :members:
+   :undoc-members:
+
+.. autoclass:: ddmtolab.Problems.MTMO.mtmo_instance.MTMOInstances
    :members:
    :undoc-members:
 

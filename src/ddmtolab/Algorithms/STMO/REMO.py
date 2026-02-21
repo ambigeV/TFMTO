@@ -27,7 +27,7 @@ import time
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
     get_algorithm_information, initialization, evaluation, evaluation_single,
-    init_history, append_history, build_save_results,
+    build_staircase_history, build_save_results,
     nd_sort, ga_generation
 )
 
@@ -135,7 +135,9 @@ class REMO:
             else:
                 normalized_cons.append(cons_list[t])
 
-        all_decs, all_objs, all_cons = init_history(decs_list, objs_list, normalized_cons)
+        db_decs = [d.copy() for d in decs_list]
+        db_objs = [o.copy() for o in objs_list]
+        db_cons = [c.copy() for c in normalized_cons]
 
         pop_decs_list = [decs.copy() for decs in decs_list]
         pop_objs_list = [objs.copy() for objs in objs_list]
@@ -198,6 +200,9 @@ class REMO:
                 if next_decs is not None and len(next_decs) > 0:
                     new_objs, new_cons = evaluation_single(problem, next_decs, t)
                     if new_cons is None: new_cons = np.zeros((len(new_objs), 1))
+                    db_decs[t] = np.vstack([db_decs[t], next_decs])
+                    db_objs[t] = np.vstack([db_objs[t], new_objs])
+                    db_cons[t] = np.vstack([db_cons[t], new_cons])
 
                     combined_decs = np.vstack((curr_pop_decs, next_decs))
                     combined_objs = np.vstack((curr_pop_objs, new_objs))
@@ -234,9 +239,8 @@ class REMO:
                     nfes_per_task[t] += n_new
                     pbar.update(n_new)
 
-                    append_history(all_decs[t], pop_decs_list[t], all_objs[t], pop_objs_list[t], all_cons[t], pop_cons_list[t])
-
         pbar.close()
+        all_decs, all_objs, all_cons = build_staircase_history(db_decs, db_objs, k=1, db_cons=db_cons)
         results = build_save_results(
             all_decs=all_decs, all_objs=all_objs, all_cons=all_cons,
             runtime=time.time() - start_time, max_nfes=nfes_per_task,

@@ -135,10 +135,6 @@ class PIEA:
         arc_decs = [d.copy() for d in decs]
         arc_objs = [o.copy() for o in objs]
 
-        # History tracking
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=1)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=1)
-
         # Initialize indicator history list for each task
         indicators_per_task = []
         for _ in range(nt):
@@ -242,8 +238,6 @@ class PIEA:
                 nfes_per_task[i] += new_dec.shape[0]
                 pbar.update(new_dec.shape[0])
 
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
                 # Hierarchical evaluation
                 score = _hierarchical_evaluate(arc_objs[i])
 
@@ -252,6 +246,11 @@ class PIEA:
 
         pbar.close()
         runtime = time.time() - start_time
+
+        # Convert database to staircase history structure for results
+        db_decs = [decs[i].copy() for i in range(nt)]
+        db_objs = [objs[i].copy() for i in range(nt)]
+        all_decs, all_objs = build_staircase_history(db_decs, db_objs, k=1)
 
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime,
                                      max_nfes=nfes_per_task, bounds=problem.bounds,

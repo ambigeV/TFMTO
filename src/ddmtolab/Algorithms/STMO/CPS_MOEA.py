@@ -40,7 +40,7 @@ class CPS_MOEA:
         'n_objs': '[2, 3]',
         'cons': 'unequal',
         'n_cons': '[0, C]',
-        'expensive': 'False',
+        'expensive': 'True',
         'knowledge_transfer': 'False',
         'n': 'unequal',
         'max_nfes': 'unequal'
@@ -121,7 +121,9 @@ class CPS_MOEA:
         decs = initialization(problem, n_per_task)
         objs, cons = evaluation(problem, decs)
         nfes_per_task = n_per_task.copy()
-        all_decs, all_objs, all_cons = init_history(decs, objs, cons)
+        db_decs = [d.copy() for d in decs]
+        db_objs = [o.copy() for o in objs]
+        db_cons = [c.copy() for c in cons]
 
         # Initialize Pgood and Pbad for each task
         Pgood_decs, Pgood_objs, Pgood_cons = [], [], []
@@ -158,6 +160,9 @@ class CPS_MOEA:
                 # Generate offsprings using DE and KNN-based classification
                 off_decs = self._generate_offspring(i, decs[i], n_per_task[i])
                 off_objs, off_cons = evaluation_single(problem, off_decs, i)
+                db_decs[i] = np.vstack([db_decs[i], off_decs])
+                db_objs[i] = np.vstack([db_objs[i], off_objs])
+                db_cons[i] = np.vstack([db_cons[i], off_cons])
 
                 # Merge current population and offspring
                 objs[i], decs[i], cons[i] = vstack_groups(
@@ -201,11 +206,10 @@ class CPS_MOEA:
                 nfes_per_task[i] += n_per_task[i]
                 pbar.update(n_per_task[i])
 
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i], all_cons[i], cons[i])
-
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs, all_cons = build_staircase_history(db_decs, db_objs, k=self.n, db_cons=db_cons)
         # Save results
         results = build_save_results(
             all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,

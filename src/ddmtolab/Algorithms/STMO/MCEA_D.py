@@ -128,7 +128,9 @@ class MCEA_D:
         decs_list = initialization(problem, n=n_per_task, method='lhs')
         objs_list, cons_list = evaluation(problem, decs_list)
 
-        all_decs, all_objs, all_cons = init_history(decs_list, objs_list, cons_list)
+        db_decs = [d.copy() for d in decs_list]
+        db_objs = [o.copy() for o in objs_list]
+        db_cons = [c.copy() for c in cons_list]
 
         archive_decs_list = []
         archive_objs_list = []
@@ -205,6 +207,9 @@ class MCEA_D:
 
                     nfes_per_task[t] += 1
                     pbar.update(1)
+                    db_decs[t] = np.vstack([db_decs[t], off_dec.reshape(1, -1)])
+                    db_objs[t] = np.vstack([db_objs[t], off_obj])
+                    db_cons[t] = np.vstack([db_cons[t], off_con])
 
                     # Update Archive (Task t)
                     archive_decs_list[t] = np.vstack((archive_decs_list[t], off_dec))
@@ -230,12 +235,10 @@ class MCEA_D:
                         if cons_list[t] is not None:
                             cons_list[t][replace_indices] = off_con
 
-                # Log historical data for the current task's generation
-                append_history(all_decs[t], decs_list[t], all_objs[t], objs_list[t], all_cons[t], cons_list[t])
-
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs, all_cons = build_staircase_history(db_decs, db_objs, k=1, db_cons=db_cons)
         # Save Results
         results = build_save_results(
             all_decs=all_decs,

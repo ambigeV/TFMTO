@@ -110,9 +110,6 @@ class RAMTEA:
         # Compute task similarity matrix based on objective correlations
         sim = sim_calculate(objs)
 
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
-
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task), desc=f"{self.name}",
                     disable=self.disable_tqdm)
 
@@ -153,11 +150,10 @@ class RAMTEA:
                 nfes_per_task[i] += n_candidates
                 pbar.update(n_candidates)
 
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs = build_staircase_history(decs, objs, k=1)
         # Save results
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,
                                      bounds=problem.bounds, save_path=self.save_path,

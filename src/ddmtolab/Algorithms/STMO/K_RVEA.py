@@ -141,10 +141,6 @@ class K_RVEA:
         arc_decs = [d.copy() for d in decs]
         arc_objs = [o.copy() for o in objs]
 
-        # History tracking for results
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
-
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task),
                     desc=f"{self.name}", disable=self.disable_tqdm)
 
@@ -218,11 +214,10 @@ class K_RVEA:
                     nfes_per_task[i] += new_decs.shape[0]
                     pbar.update(new_decs.shape[0])
 
-                    append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs = build_staircase_history(decs, objs, k=self.mu)
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime,
                                      max_nfes=nfes_per_task, bounds=problem.bounds,
                                      save_path=self.save_path, filename=self.name,

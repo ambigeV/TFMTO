@@ -587,14 +587,6 @@ class DRLSAEA:
 
         # History tracking
         has_cons = any(c.shape[1] > 0 for c in cons)
-        if has_cons:
-            all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
-            all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
-            all_cons = reorganize_initial_data(cons, nt, n_initial_per_task, interval=self.mu)
-        else:
-            all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
-            all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
-            all_cons = None
 
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task),
                     desc=f"{self.name}", disable=self.disable_tqdm)
@@ -815,42 +807,15 @@ class DRLSAEA:
                 if step % copy_weights_freq == 0:
                     ddqn.copy_weights_agent_to_target()
 
-                # Record history
-                if has_cons:
-                    all_decs, all_objs, all_cons = append_history(
-                        all_decs, [arc_decs if t == task_i else
-                                   (all_decs[t][-1] if len(all_decs[t]) > 0 else decs[t])
-                                   for t in range(nt)],
-                        all_objs, [arc_objs if t == task_i else
-                                   (all_objs[t][-1] if len(all_objs[t]) > 0 else objs[t])
-                                   for t in range(nt)],
-                        all_cons, [arc_cons if t == task_i else
-                                   (all_cons[t][-1] if len(all_cons[t]) > 0 else cons[t])
-                                   for t in range(nt)]
-                    )
-                else:
-                    all_decs, all_objs = append_history(
-                        all_decs, [arc_decs if t == task_i else
-                                   (all_decs[t][-1] if len(all_decs[t]) > 0 else decs[t])
-                                   for t in range(nt)],
-                        all_objs, [arc_objs if t == task_i else
-                                   (all_objs[t][-1] if len(all_objs[t]) > 0 else objs[t])
-                                   for t in range(nt)]
-                    )
 
         pbar.close()
-
-        # Trim excess evaluations
-        if has_cons:
-            all_decs, all_objs, nfes_per_task, all_cons = trim_excess_evaluations(
-                all_decs, all_objs, nt, max_nfes_per_task, nfes_per_task, all_cons
-            )
-        else:
-            all_decs, all_objs, nfes_per_task = trim_excess_evaluations(
-                all_decs, all_objs, nt, max_nfes_per_task, nfes_per_task
-            )
-
         runtime = time.time() - start_time
+
+        if has_cons:
+            all_decs, all_objs, all_cons = build_staircase_history(decs, objs, k=self.mu, db_cons=cons)
+        else:
+            all_decs, all_objs = build_staircase_history(decs, objs, k=self.mu)
+            all_cons = None
         results = build_save_results(
             all_decs, all_objs, runtime, max_nfes_per_task,
             all_cons=all_cons if has_cons else None,

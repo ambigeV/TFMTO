@@ -78,6 +78,8 @@ dmypy.json
 CLAUDE.md
 
 # Project specific
+matlab_resources/
+tests/
 Data/
 *.csv
 *.xlsx

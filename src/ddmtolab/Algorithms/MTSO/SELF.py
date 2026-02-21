@@ -127,9 +127,6 @@ class SELF:
         for i in range(nt):
             nfes_per_task[i] += self.np
 
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
-
         # Working population for evolutionary updates
         pop_decs = copy.deepcopy(decs)
         pop_objs = copy.deepcopy(objs)
@@ -170,8 +167,6 @@ class SELF:
                     nfes_per_task[i] += 1
                     pbar.update(1)
 
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
             # === Local Optimization Phase ===
             for i in range(nt):
                 # Select top nl individuals for local GP model
@@ -202,8 +197,6 @@ class SELF:
                 nfes += 1
                 nfes_per_task[i] += 1
                 pbar.update(1)
-
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
 
             # === Local Knowledge Transfer Phase ===
             for i in range(nt):
@@ -249,14 +242,10 @@ class SELF:
                     nfes_per_task[i] += len(transfer_samples)
                     pbar.update(len(transfer_samples))
 
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
         pbar.close()
         runtime = time.time() - start_time
 
-        all_decs, all_objs, nfes_per_task = trim_excess_evaluations(all_decs, all_objs, nt, [self.max_nfes] * nt,
-                                                                    nfes_per_task)
-
+        all_decs, all_objs = build_staircase_history(decs, objs, k=1)
         # Save results
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,
                                      bounds=problem.bounds, save_path=self.save_path,

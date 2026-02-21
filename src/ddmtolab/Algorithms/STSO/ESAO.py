@@ -109,10 +109,6 @@ class ESAO:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # Initialize history: reorganize initial data into task-specific lists
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
-
         # Current working dataset (accumulated samples)
         current_decs = [decs[i].copy() for i in range(nt)]
         current_objs = [objs[i].copy() for i in range(nt)]
@@ -158,10 +154,6 @@ class ESAO:
                 current_decs[i] = np.vstack([current_decs[i], candidate_np])
                 current_objs[i] = np.vstack([current_objs[i], obj])
 
-                # Append to history
-                all_decs[i].append(current_decs[i].copy())
-                all_objs[i].append(current_objs[i].copy())
-
                 nfes_per_task[i] += 1
                 pbar.update(1)
 
@@ -179,6 +171,11 @@ class ESAO:
 
         pbar.close()
         runtime = time.time() - start_time
+
+        # Convert database to staircase history structure for results
+        db_decs = [current_decs[i].copy() for i in range(nt)]
+        db_objs = [current_objs[i].copy() for i in range(nt)]
+        all_decs, all_objs = build_staircase_history(db_decs, db_objs, k=1)
 
         # Build and save results
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,

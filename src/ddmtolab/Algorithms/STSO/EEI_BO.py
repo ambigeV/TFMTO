@@ -124,10 +124,6 @@ class EEI_BO:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # Reorganize initial data into task-specific history lists
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
-
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task), desc=f"{self.name}",
                     disable=self.disable_tqdm)
 
@@ -168,11 +164,13 @@ class EEI_BO:
                 nfes_per_task[i] += 1
                 pbar.update(1)
 
-                # Store cumulative history
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
         pbar.close()
         runtime = time.time() - start_time
+
+        # Convert database to staircase history structure for results
+        db_decs = [decs[i].copy() for i in range(nt)]
+        db_objs = [objs[i].copy() for i in range(nt)]
+        all_decs, all_objs = build_staircase_history(db_decs, db_objs, k=1)
 
         # Build and save optimization results
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,

@@ -88,13 +88,9 @@ class BO_LCB_BCKT:
         # Transform to unified space
         decs_uni = space_transfer(problem, decs_real, type='uni', padding=self.padding)
 
-        # Reorganize into task-specific history
-        all_decs_uni = reorganize_initial_data(decs_uni, nt, [n_initial] * nt)
-        all_objs = reorganize_initial_data(objs_real, nt, [n_initial] * nt)
-
         # Current working data (unified space)
-        decs = [all_decs_uni[i][-1].copy() for i in range(nt)]
-        objs = [all_objs[i][-1].copy() for i in range(nt)]
+        decs = [decs_uni[i].copy() for i in range(nt)]
+        objs = [objs_real[i].copy() for i in range(nt)]
 
         # Evaluation counters
         nfes_per_task = [n_initial] * nt
@@ -211,10 +207,6 @@ class BO_LCB_BCKT:
                 decs[target_idx] = np.vstack([decs[target_idx], candidate_uni])
                 objs[target_idx] = np.vstack([objs[target_idx], obj])
 
-                # Store history
-                append_history(all_decs_uni[target_idx], decs[target_idx],
-                               all_objs[target_idx], objs[target_idx])
-
                 nfes_per_task[target_idx] += 1
                 total_nfes += 1
                 pbar.update(1)
@@ -223,6 +215,7 @@ class BO_LCB_BCKT:
         runtime = time.time() - start_time
 
         # ======================== Phase 3: Build Results (real space) ========================
+        all_decs_uni, all_objs = build_staircase_history(decs, objs, k=1)
         final_decs_real = []
         for i in range(nt):
             task_decs_real = []

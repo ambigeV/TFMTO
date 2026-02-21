@@ -37,14 +37,14 @@ Data-Driven Multitask Optimization Laboratory
 Overview
 --------
 
-**DDMTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **90+ algorithms**, **180+ benchmark problems**, and powerful tools for problem definition, algorithm development, and performance evaluation.
+**DDMTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **91+ algorithms**, **180+ benchmark problems**, and powerful tools for problem definition, algorithm development, and performance evaluation.
 
 Whether you're working on expensive black-box optimization, multiobjective optimization, or complex multitask scenarios, DDMTOLab provides a flexible and extensible framework to accelerate your **research** and support real-world **applications**.
 
 Features
 --------
 
-* **Comprehensive Algorithms** - 90+ algorithms for expensive/inexpensive, single/multitask, single/multiobjective optimization
+* **Comprehensive Algorithms** - 91+ algorithms for expensive/inexpensive, single/multitask, single/multiobjective optimization
 * **Rich Problem Suites** - 180+ benchmark problems and real-world applications
 * **Data-Driven Optimization** - Surrogate modelling (GP, BO) for expensive optimization
 * **Flexible Framework** - Simple API and intuitive workflow for rapid prototyping
@@ -133,7 +133,7 @@ Optimization Visualization
 Key Components
 --------------
 
-Algorithms (90+)
+Algorithms (91+)
 ^^^^^^^^^^^^^^^^
 
 .. list-table::
@@ -143,7 +143,7 @@ Algorithms (90+)
    * - Category
      - Algorithms
    * - **STSO**
-     - GA, DE, PSO, SL_PSO, KL_PSO, CSO, CMA_ES, IPOP_CMA_ES, sep_CMA_ES, MA_ES, xNES, OpenAI_ES, AO, GWO, EO, BO, EEI_BO, ESAO, SHPSO, SA_COSO, TLRBF, GL_SADE, AutoSAEA, DDEA_MESS, LSADE
+     - GA, DE, PSO, SL_PSO, KLPSO, CSO, CMA_ES, IPOP_CMA_ES, sep_CMA_ES, MA_ES, xNES, OpenAI_ES, AO, GWO, EO, BO, EEI_BO, ESAO, SHPSO, SA_COSO, TLRBF, GL_SADE, AutoSAEA, DDEA_MESS, LSADE
    * - **STMO**
      - NSGA_II, NSGA_III, NSGA_II_SDR, SPEA2, MOEA_D, MOEA_DD, MOEA_D_FRRMAB, MOEA_D_STM, RVEA, IBEA, TwoArch2, MSEA, C_TAEA, CCMO, MCEA_D, CPS_MOEA, ParEGO, K_RVEA, DSAEA_PS, KTA2, REMO, ADSAPSO, CSEA, DISK, DRLSAEA, DirHV_EI, EDN_ARMOEA, EIM_EGO, EM_SAEA, KTS, MGSAEA, MMRAEA, MOEA_D_EGO, MultiObjectiveEGO, PCSAEA, PEA, PIEA, SAEA_DBLL, SSDE, TEA
    * - **MTSO**
@@ -167,7 +167,7 @@ Problems (180+)
    * - **MTSO**
      - CEC17_MTSO (9), CEC17_MTSO_10D (9), CEC19_MaTSO, CMT (9), STOP (12)
    * - **MTMO**
-     - CEC17_MTMO (9), CEC19_MTMO (10), CEC19_MaTMO, CEC21_MTMO (10), MTMO_DTLZ
+     - CEC17_MTMO (9), CEC19_MTMO (10), CEC19_MaTMO, CEC21_MTMO (10), MTMO_DTLZ, MTMOInstances
    * - **RWO**
      - PEPVM, PINN_HPO (12), SOPM, SCP, MO_SCP, PKACP, NN_Training, TSP (6)
 

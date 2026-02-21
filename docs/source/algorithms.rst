@@ -471,7 +471,7 @@ Classical evolutionary algorithms and surrogate-assisted methods for single-obje
      - Competitive Swarm Optimizer
    * - ``SL_PSO``
      - Social Learning PSO
-   * - ``KL_PSO``
+   * - ``KLPSO``
      - Knowledge Learning PSO
    * - ``SHPSO``
      - Self-adaptive Hierarchical PSO

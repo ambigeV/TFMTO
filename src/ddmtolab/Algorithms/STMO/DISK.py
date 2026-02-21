@@ -124,10 +124,6 @@ class DISK:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # History tracking
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.alpha)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.alpha)
-
         # Initialize working populations
         pop_indices = []
         for i in range(nt):
@@ -233,11 +229,10 @@ class DISK:
                 idx = _env_selection_real(objs[i], N)
                 pop_indices[i] = np.where(idx)[0]
 
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs = build_staircase_history(decs, objs, k=self.alpha)
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime,
                                      max_nfes=nfes_per_task, bounds=problem.bounds,
                                      save_path=self.save_path, filename=self.name,

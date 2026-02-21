@@ -125,10 +125,6 @@ class SA_COSO:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # Initialize history
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
-
         # Initialize data structures for each task
         hx = [decs[i].copy() for i in range(nt)]
         hf = [objs[i].flatten().copy() for i in range(nt)]
@@ -272,12 +268,13 @@ class SA_COSO:
                             gbest_rbf[i] = pos.copy()
                             gbest_rbf_val[i] = obj
 
-                # Append to history for results
-                all_decs[i].append(hx[i].copy())
-                all_objs[i].append(hf[i].reshape(-1, 1).copy())
-
         pbar.close()
         runtime = time.time() - start_time
+
+        # Convert database to staircase history structure for results
+        db_decs = [hx[i].copy() for i in range(nt)]
+        db_objs = [hf[i].reshape(-1, 1).copy() for i in range(nt)]
+        all_decs, all_objs = build_staircase_history(db_decs, db_objs, k=self.mu)
 
         # Build and save results
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,

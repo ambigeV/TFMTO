@@ -122,12 +122,7 @@ class SSDE:
         nfes_per_task = n_per_task.copy()
 
         # History tracking
-        all_decs = reorganize_initial_data(decs, nt, n_per_task, interval=1)
-        all_objs = reorganize_initial_data(objs, nt, n_per_task, interval=1)
-        if any(nc > 0 for nc in n_cons):
-            all_cons = reorganize_initial_data(cons, nt, n_per_task, interval=1)
-        else:
-            all_cons = None
+        has_cons = any(nc > 0 for nc in n_cons)
 
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_per_task),
                     desc=f"{self.name}", disable=self.disable_tqdm)
@@ -284,9 +279,6 @@ class SSDE:
                     nfes_per_task[i] += in_count
                     pbar.update(in_count)
 
-                    append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-                    if all_cons is not None and n_cons[i] > 0:
-                        all_cons[i].append(cons[i].copy())
                 else:
                     # No offspring survived, use current population as samples
                     st['sample_decs'] = np.vstack([st['sample_decs'], pop_decs])
@@ -295,6 +287,11 @@ class SSDE:
         pbar.close()
         runtime = time.time() - start_time
 
+        if has_cons:
+            all_decs, all_objs, all_cons = build_staircase_history(decs, objs, k=1, db_cons=cons)
+        else:
+            all_decs, all_objs = build_staircase_history(decs, objs, k=1)
+            all_cons = None
         if all_cons is not None:
             results = build_save_results(
                 all_decs=all_decs, all_objs=all_objs, runtime=runtime,

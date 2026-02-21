@@ -148,10 +148,6 @@ class SAEA_DBLL:
         arc_decs = [d.copy() for d in decs]
         arc_objs = [o.copy() for o in objs]
 
-        # History tracking
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
-
         # Initialize adapted reference vectors and sub-vectors
         V_list = [v.copy() for v in V0_list]
         Ve_list = []
@@ -264,11 +260,10 @@ class SAEA_DBLL:
                     nfes_per_task[i] += PopNew.shape[0]
                     pbar.update(PopNew.shape[0])
 
-                    append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs = build_staircase_history(decs, objs, k=self.mu)
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime,
                                      max_nfes=nfes_per_task, bounds=problem.bounds,
                                      save_path=self.save_path, filename=self.name,

@@ -5,9 +5,7 @@ This module implements AutoSAEA for expensive single-objective optimization prob
 
 References
 ----------
-    [1] Xie, L., Li, G., Wang, Z., Cui, L., & Gong, M. (2023). Surrogate-assisted
-        evolutionary algorithm with model and infill criterion auto-configuration.
-        IEEE Transactions on Evolutionary Computation.
+    [1] Xie, L., Li, G., Wang, Z., Cui, L., & Gong, M. (2023). Surrogate-assisted evolutionary algorithm with model and infill criterion auto-configuration. IEEE Transactions on Evolutionary Computation.
 
 Notes
 -----
@@ -98,10 +96,6 @@ class AutoSAEA:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # Initialize history
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
-
         current_decs = [decs[i].copy() for i in range(nt)]
         current_objs = [objs[i].copy() for i in range(nt)]
 
@@ -183,14 +177,16 @@ class AutoSAEA:
                 # Update dataset
                 current_decs[i] = np.vstack([current_decs[i], candidate])
                 current_objs[i] = np.vstack([current_objs[i], obj])
-                all_decs[i].append(current_decs[i].copy())
-                all_objs[i].append(current_objs[i].copy())
-
                 nfes_per_task[i] += 1
                 pbar.update(1)
 
         pbar.close()
         runtime = time.time() - start_time
+
+        # Convert database to staircase history structure for results
+        db_decs = [current_decs[i].copy() for i in range(nt)]
+        db_objs = [current_objs[i].copy() for i in range(nt)]
+        all_decs, all_objs = build_staircase_history(db_decs, db_objs, k=1)
 
         results = build_save_results(
             all_decs=all_decs, all_objs=all_objs, runtime=runtime,

@@ -153,13 +153,7 @@ class EM_SAEA:
         nfes_per_task = n_initial_per_task.copy()
 
         # History
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.mu)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.mu)
         has_cons = any(c > 0 for c in n_cons)
-        if has_cons:
-            all_cons = reorganize_initial_data(cons, nt, n_initial_per_task, interval=self.mu)
-        else:
-            all_cons = None
 
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task),
                     desc=f"{self.name}", disable=self.disable_tqdm)
@@ -214,12 +208,6 @@ class EM_SAEA:
                     nfes_per_task[i] += new_decs.shape[0]
                     pbar.update(new_decs.shape[0])
 
-                    if has_cons:
-                        append_history(all_decs[i], decs[i], all_objs[i], objs[i],
-                                       all_cons[i], cons[i])
-                    else:
-                        append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
                 # Stage switch
                 threshold = int(np.ceil(NI + 0.5 * (max_nfes_per_task[i] - NI)))
                 stages[i] = 1 if nfes_per_task[i] < threshold else 2
@@ -227,6 +215,11 @@ class EM_SAEA:
         pbar.close()
         runtime = time.time() - start_time
 
+        if has_cons:
+            all_decs, all_objs, all_cons = build_staircase_history(decs, objs, k=self.mu, db_cons=cons)
+        else:
+            all_decs, all_objs = build_staircase_history(decs, objs, k=self.mu)
+            all_cons = None
         kwargs = {}
         if has_cons:
             kwargs['all_cons'] = all_cons

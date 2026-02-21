@@ -111,10 +111,6 @@ class MOEA_D_EGO:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # History tracking
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task, interval=self.batch_size)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task, interval=self.batch_size)
-
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task),
                     desc=f"{self.name}", disable=self.disable_tqdm)
 
@@ -139,7 +135,6 @@ class MOEA_D_EGO:
                     objs[i] = np.vstack([objs[i], new_obj])
                     nfes_per_task[i] += actual_batch
                     pbar.update(actual_batch)
-                    append_history(all_decs[i], decs[i], all_objs[i], objs[i])
                     continue
 
                 # Optimize ETI and select batch of candidate points
@@ -159,11 +154,10 @@ class MOEA_D_EGO:
                 nfes_per_task[i] += new_x.shape[0]
                 pbar.update(new_x.shape[0])
 
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs = build_staircase_history(decs, objs, k=self.batch_size)
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime,
                                      max_nfes=nfes_per_task, bounds=problem.bounds,
                                      save_path=self.save_path, filename=self.name,

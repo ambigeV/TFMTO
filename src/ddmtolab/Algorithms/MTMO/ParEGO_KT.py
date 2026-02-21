@@ -110,10 +110,6 @@ class ParEGO_KT:
         # Compute similarity matrix using Spearman's rank correlation
         similarity_matrix = self._compute_similarity_matrix(ranks, n_initial_per_task)
 
-        # Reorganize initial data into task-specific history lists
-        all_decs = reorganize_initial_data(decs, nt, n_initial_per_task)
-        all_objs = reorganize_initial_data(objs, nt, n_initial_per_task)
-
         pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task),
                     desc=f"{self.name}", disable=self.disable_tqdm)
 
@@ -139,9 +135,6 @@ class ParEGO_KT:
 
                 # Update dataset with new sample
                 decs[i], objs[i] = vstack_groups((decs[i], candidate_np), (objs[i], obj))
-
-                # Store cumulative history
-                append_history(all_decs[i], decs[i], all_objs[i], objs[i])
 
                 nfes_per_task[i] += 1
                 pbar.update(1)
@@ -175,15 +168,13 @@ class ParEGO_KT:
                     # Update dataset
                     decs[i], objs[i] = vstack_groups((decs[i], transferred_solution), (objs[i], obj_transfer))
 
-                    # Store cumulative history
-                    append_history(all_decs[i], decs[i], all_objs[i], objs[i])
-
                     nfes_per_task[i] += 1
                     pbar.update(1)
 
         pbar.close()
         runtime = time.time() - start_time
 
+        all_decs, all_objs = build_staircase_history(decs, objs, k=1)
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime,
                                      max_nfes=nfes_per_task, bounds=problem.bounds,
                                      save_path=self.save_path, filename=self.name,
