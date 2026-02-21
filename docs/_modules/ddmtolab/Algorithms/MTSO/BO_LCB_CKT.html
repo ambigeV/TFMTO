@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Algorithms.MTSO.BO_LCB_CKT &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Algorithms.MTSO.BO_LCB_CKT &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -126,7 +126,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">algorithm_information</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;n_tasks&#39;</span><span class="p">:</span> <span class="s1">&#39;2-K&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_tasks&#39;</span><span class="p">:</span> <span class="s1">&#39;[2, K]&#39;</span><span class="p">,</span>
         <span class="s1">&#39;dims&#39;</span><span class="p">:</span> <span class="s1">&#39;unequal&#39;</span><span class="p">,</span>
         <span class="s1">&#39;objs&#39;</span><span class="p">:</span> <span class="s1">&#39;equal&#39;</span><span class="p">,</span>
         <span class="s1">&#39;n_objs&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
@@ -222,10 +222,6 @@
         <span class="n">objs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">decs</span><span class="p">)</span>
         <span class="n">nfes_per_task</span> <span class="o">=</span> <span class="n">n_initial_per_task</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-        <span class="c1"># Reorganize initial data into task-specific history lists</span>
-        <span class="n">all_decs</span> <span class="o">=</span> <span class="n">reorganize_initial_data</span><span class="p">(</span><span class="n">decs</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">n_initial_per_task</span><span class="p">)</span>
-        <span class="n">all_objs</span> <span class="o">=</span> <span class="n">reorganize_initial_data</span><span class="p">(</span><span class="n">objs</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">n_initial_per_task</span><span class="p">)</span>
-
         <span class="c1"># Unified progress bar</span>
         <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">max_nfes_per_task</span><span class="p">),</span> <span class="n">initial</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">n_initial_per_task</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="n">disable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">disable_tqdm</span><span class="p">)</span>
@@ -248,9 +244,6 @@
 
                 <span class="c1"># Update dataset</span>
                 <span class="n">decs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">objs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vstack_groups</span><span class="p">((</span><span class="n">decs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">candidate</span><span class="p">),</span> <span class="p">(</span><span class="n">objs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">obj</span><span class="p">))</span>
-
-                <span class="c1"># Store cumulative history</span>
-                <span class="n">append_history</span><span class="p">(</span><span class="n">all_decs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">decs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">all_objs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">objs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
                 <span class="n">nfes_per_task</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -350,17 +343,13 @@
             <span class="p">)</span>
             <span class="n">decs_uni</span><span class="p">[</span><span class="n">target_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">decs_uni</span><span class="p">[</span><span class="n">target_idx</span><span class="p">],</span> <span class="n">solution_candidate_uni</span><span class="p">])</span>
 
-            <span class="c1"># Store cumulative history (real space)</span>
-            <span class="n">append_history</span><span class="p">(</span><span class="n">all_decs</span><span class="p">[</span><span class="n">target_idx</span><span class="p">],</span> <span class="n">decs</span><span class="p">[</span><span class="n">target_idx</span><span class="p">],</span>
-                           <span class="n">all_objs</span><span class="p">[</span><span class="n">target_idx</span><span class="p">],</span> <span class="n">objs</span><span class="p">[</span><span class="n">target_idx</span><span class="p">])</span>
-
             <span class="n">nfes_per_task</span><span class="p">[</span><span class="n">target_idx</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="n">runtime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
 
-
+        <span class="n">all_decs</span><span class="p">,</span> <span class="n">all_objs</span> <span class="o">=</span> <span class="n">build_staircase_history</span><span class="p">(</span><span class="n">decs</span><span class="p">,</span> <span class="n">objs</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">build_save_results</span><span class="p">(</span><span class="n">all_decs</span><span class="o">=</span><span class="n">all_decs</span><span class="p">,</span> <span class="n">all_objs</span><span class="o">=</span><span class="n">all_objs</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="n">runtime</span><span class="p">,</span> <span class="n">max_nfes</span><span class="o">=</span><span class="n">nfes_per_task</span><span class="p">,</span>
                                      <span class="n">bounds</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                      <span class="n">save_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_data</span><span class="p">)</span>
@@ -396,8 +385,8 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_sources</span><span class="p">):</span>
             <span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
                 <span class="c1"># Adapt target solutions in unified space</span>
+                <span class="c1"># No clipping: allow GP extrapolation (matching MATLAB obj_ada.m)</span>
                 <span class="n">X_adapted</span> <span class="o">=</span> <span class="n">solutions_target_uni</span> <span class="o">-</span> <span class="n">theta</span>
-                <span class="n">X_adapted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">X_adapted</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
                 <span class="k">try</span><span class="p">:</span>
                     <span class="c1"># Predict using source GP</span>
@@ -549,8 +538,8 @@
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_sources</span><span class="p">):</span>
             <span class="c1"># Adapt target solutions in unified space</span>
+            <span class="c1"># No clipping: allow GP extrapolation (matching MATLAB knowledge_competition.m)</span>
             <span class="n">X_adapted</span> <span class="o">=</span> <span class="n">decs_target_uni</span> <span class="o">-</span> <span class="n">ada_vectors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="n">X_adapted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">X_adapted</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">objs_val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">gp_predict</span><span class="p">(</span>
@@ -594,71 +583,86 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_improvement_external</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objs_source</span><span class="p">,</span> <span class="n">objs_val</span><span class="p">,</span> <span class="n">objs_target</span><span class="p">,</span> <span class="n">similarity</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Estimate external improvement (same as before).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">similarity</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">similarity</span><span class="p">)</span>
+<span class="sd">        Estimate external improvement using exponential decay model.</span>
 
-        <span class="k">if</span> <span class="n">similarity</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+<span class="sd">        Matches MATLAB improvement_external.m:</span>
+<span class="sd">        - Fits pure exponential y(t) = a * exp(-b*t) to sorted-descending convergence curves</span>
+<span class="sd">        - Estimates time savings from source knowledge transfer</span>
+<span class="sd">        - Computes analogized improvement on target curve</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        objs_source : ndarray</span>
+<span class="sd">            Source task true objectives (unsorted)</span>
+<span class="sd">        objs_val : ndarray</span>
+<span class="sd">            Source GP predictions on target data</span>
+<span class="sd">        objs_target : ndarray</span>
+<span class="sd">            Target task true objectives (unsorted)</span>
+<span class="sd">        similarity : float</span>
+<span class="sd">            Rank-based similarity between source and target</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        improvement : float</span>
+<span class="sd">            Estimated external improvement (non-negative)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">similarity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span>
 
+        <span class="c1"># Sort descending (matching MATLAB: sort(...,&#39;descend&#39;))</span>
         <span class="n">objs_source_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">objs_source</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">objs_target_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">objs_target</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="n">n_source</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">objs_source_sorted</span><span class="p">)</span>
         <span class="n">n_target</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">objs_target_sorted</span><span class="p">)</span>
 
-        <span class="c1"># Fit exponential decay for source</span>
-        <span class="n">gamma_o_source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">objs_source_sorted</span><span class="p">)</span>
+        <span class="c1"># Pure exponential model: y(t) = a * exp(-b*t)</span>
+        <span class="c1"># Fit: log(y) = log(a) - b*t  (requires y &gt; 0)</span>
+        <span class="c1"># MATLAB: coe = [ones(n,1), (1:n)&#39;] \ log(objs)</span>
+        <span class="c1">#         ps = [exp(coe(1)), -coe(2)]</span>
+
+        <span class="c1"># Source curve fit</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">objs_source_sorted</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
         <span class="n">t_source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_source</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">y_shifted_source</span> <span class="o">=</span> <span class="n">objs_source_sorted</span> <span class="o">-</span> <span class="n">gamma_o_source</span> <span class="o">+</span> <span class="mf">1e-10</span>
-
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">coeffs_source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">t_source</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">y_shifted_source</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">lambda_source</span> <span class="o">=</span> <span class="o">-</span><span class="n">coeffs_source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">gamma_i_source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">coeffs_source</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-            <span class="k">if</span> <span class="n">lambda_source</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mf">0.0</span>
+            <span class="c1"># polyfit: log(y) = coeffs[0]*t + coeffs[1]</span>
+            <span class="n">coeffs_source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">t_source</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">objs_source_sorted</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">a_source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">coeffs_source</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>   <span class="c1"># exp(intercept)</span>
+            <span class="n">b_source</span> <span class="o">=</span> <span class="o">-</span><span class="n">coeffs_source</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>           <span class="c1"># -slope</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span>
 
-        <span class="c1"># Fit exponential decay for target</span>
-        <span class="n">gamma_o_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">objs_target_sorted</span><span class="p">)</span>
+        <span class="c1"># Target curve fit</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">objs_target_sorted</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
         <span class="n">t_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_target</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">y_shifted_target</span> <span class="o">=</span> <span class="n">objs_target_sorted</span> <span class="o">-</span> <span class="n">gamma_o_target</span> <span class="o">+</span> <span class="mf">1e-10</span>
-
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">coeffs_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">t_target</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">y_shifted_target</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">lambda_target</span> <span class="o">=</span> <span class="o">-</span><span class="n">coeffs_target</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">gamma_i_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">coeffs_target</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-            <span class="k">if</span> <span class="n">lambda_target</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mf">0.0</span>
+            <span class="n">coeffs_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">t_target</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">objs_target_sorted</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">a_target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">coeffs_target</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">b_target</span> <span class="o">=</span> <span class="o">-</span><span class="n">coeffs_target</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span>
 
-        <span class="c1"># Calculate time interval</span>
+        <span class="c1"># Time position of min(objs_val) on source curve</span>
+        <span class="c1"># MATLAB: tv = max(0, -log(min(objs_val)/ps(1)) / ps(2))</span>
         <span class="n">min_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">objs_val</span><span class="p">)</span>
-
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">tau_v</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">lambda_source</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
-                <span class="n">gamma_i_source</span> <span class="o">/</span> <span class="p">(</span><span class="n">min_val</span> <span class="o">-</span> <span class="n">gamma_o_source</span> <span class="o">+</span> <span class="mf">1e-10</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">tau_v</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">min_val</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">a_source</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">b_source</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">tv</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tv</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">min_val</span> <span class="o">/</span> <span class="n">a_source</span><span class="p">)</span> <span class="o">/</span> <span class="n">b_source</span>
+                <span class="n">tv</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">tv</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="n">tau_v</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">tv</span> <span class="o">=</span> <span class="mf">0.0</span>
 
-        <span class="n">tau_max</span> <span class="o">=</span> <span class="n">n_source</span>
-        <span class="n">delta_tau</span> <span class="o">=</span> <span class="n">tau_max</span> <span class="o">-</span> <span class="n">tau_v</span>
-
-        <span class="c1"># Analogize to target</span>
-        <span class="n">tau_current</span> <span class="o">=</span> <span class="n">n_target</span>
-        <span class="n">tau_analogized</span> <span class="o">=</span> <span class="n">similarity</span> <span class="o">*</span> <span class="p">(</span><span class="n">tau_current</span> <span class="o">+</span> <span class="n">delta_tau</span><span class="p">)</span>
-
-        <span class="n">predicted_obj</span> <span class="o">=</span> <span class="n">gamma_o_target</span> <span class="o">+</span> <span class="n">gamma_i_target</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">lambda_target</span> <span class="o">*</span> <span class="n">tau_analogized</span><span class="p">)</span>
+        <span class="c1"># Analogized time and predicted improvement</span>
+        <span class="c1"># MATLAB: imp = sim*(min(objs_target) - decay_target(sim*(n_target+n_source-tv), pt))</span>
+        <span class="n">analogized_time</span> <span class="o">=</span> <span class="n">similarity</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_target</span> <span class="o">+</span> <span class="n">n_source</span> <span class="o">-</span> <span class="n">tv</span><span class="p">)</span>
+        <span class="n">predicted_obj</span> <span class="o">=</span> <span class="n">a_target</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">b_target</span> <span class="o">*</span> <span class="n">analogized_time</span><span class="p">)</span>
         <span class="n">improvement</span> <span class="o">=</span> <span class="n">similarity</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">objs_target</span><span class="p">)</span> <span class="o">-</span> <span class="n">predicted_obj</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">improvement</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">improvement</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_ranks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

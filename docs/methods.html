@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Methods &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>Methods &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -401,7 +401,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 </section>
 <section id="metric-configuration">
 <h3>Metric Configuration<a class="headerlink" href="#metric-configuration" title="Link to this heading"></a></h3>
-<p>For problems requiring complex metrics (e.g., multi-objective optimization), provide a <code class="docutils literal notranslate"><span class="pre">settings</span></code> configuration dictionary:</p>
+<p>For problems requiring complex metrics (e.g., multiobjective optimization), provide a <code class="docutils literal notranslate"><span class="pre">settings</span></code> configuration dictionary:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;metric&#39;</span><span class="p">:</span> <span class="s1">&#39;IGD&#39;</span><span class="p">,</span>                    <span class="c1"># Performance metric: &#39;IGD&#39; or &#39;HV&#39;</span>
     <span class="s1">&#39;ref_path&#39;</span><span class="p">:</span> <span class="s1">&#39;./MOReference&#39;</span><span class="p">,</span>        <span class="c1"># Reference file path</span>
@@ -673,7 +673,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 </div>
 </li>
 <li><p><strong>Set appropriate n_ref for metrics and visualization:</strong></p>
-<p>When calculating multi-objective metrics (e.g., IGD), it is recommended to set <code class="docutils literal notranslate"><span class="pre">n_ref</span></code> to 1000 (preferably not exceeding 2000). Using too many reference points can result in very large PDF files when visualizing Pareto fronts with the true PF overlay.</p>
+<p>When calculating multiobjective metrics (e.g., IGD), it is recommended to set <code class="docutils literal notranslate"><span class="pre">n_ref</span></code> to 1000 (preferably not exceeding 2000). Using too many reference points can result in very large PDF files when visualizing Pareto fronts with the true PF overlay.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;metric&#39;</span><span class="p">:</span> <span class="s1">&#39;IGD&#39;</span><span class="p">,</span>
     <span class="s1">&#39;n_ref&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>  <span class="c1"># Recommended: balance accuracy and file size</span>
@@ -815,7 +815,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">MTOP</span></code> (Multi-Task Optimization Problem) class provides a unified interface for defining single-task and multi-task optimization problems with support for objectives, constraints, and variable bounds.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MTOP</span></code> (Multitask Optimization Problem) class provides a unified interface for defining single-task and multitask optimization problems with support for objectives, constraints, and variable bounds.</p>
 <section id="id8">
 <h3>Module Features<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">MTOP</span></code> class offers:</p>
@@ -874,7 +874,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 <span class="n">idx</span> <span class="o">=</span> <span class="n">mtop</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">sphere</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">constraint_func</span><span class="o">=</span><span class="n">constraint</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Multi-Objective Task:</strong></p>
+<p><strong>Multiobjective Task:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">multi_obj</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -929,7 +929,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Methods.animation_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnimationGenerator</span><span class="p">,</span> <span class="n">create_optimization_animation</span>
 </pre></div>
 </div>
-<p>The animation generator module provides comprehensive visualization tools for optimization processes, supporting both single-objective and multi-objective optimization with multiple comparison modes.</p>
+<p>The animation generator module provides comprehensive visualization tools for optimization processes, supporting both single-objective and multiobjective optimization with multiple comparison modes.</p>
 <section id="id10">
 <h3>Module Features<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
 <p>The animation generator offers:</p>
@@ -950,7 +950,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 <li><p><strong>Decision Space (Left)</strong>: Parallel coordinate plot showing decision variable evolution</p></li>
 <li><p><strong>Convergence Curve (Right)</strong>: Best objective value vs. NFEs (Number of Function Evaluations)</p></li>
 </ul>
-<p><strong>For Multi-Objective Optimization:</strong></p>
+<p><strong>For Multiobjective Optimization:</strong></p>
 <ul class="simple">
 <li><p><strong>Decision Space (Left)</strong>: Parallel coordinate plot showing decision variable evolution</p></li>
 <li><p><strong>Objective Space (Right)</strong>: Pareto front evolution</p>
@@ -1089,7 +1089,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 <li><p><code class="docutils literal notranslate"><span class="pre">merge</span></code>: Comparison mode (0-3, default: 0)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">title</span></code>: Custom title for the animation (optional)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">algorithm_order</span></code>: List of algorithm names specifying display order (merge mode only)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_nfes</span></code>: Maximum NFEs, scalar or list for multi-task problems (default: 100)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_nfes</span></code>: Maximum NFEs, scalar or list for multitask problems (default: 100)</p></li>
 </ul>
 </section>
 <section id="nfes-configuration">
@@ -1104,7 +1104,7 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 </pre></div>
 </div>
 <p><strong>List NFEs (Different per Task):</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Multi-task problem with different NFEs per task</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Multitask problem with different NFEs per task</span>
 <span class="n">create_optimization_animation</span><span class="p">(</span>
     <span class="n">pkl_path</span><span class="o">=</span><span class="s1">&#39;multi_task_results.pkl&#39;</span><span class="p">,</span>
     <span class="n">max_nfes</span><span class="o">=</span><span class="p">[</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">15000</span><span class="p">]</span>  <span class="c1"># Task 1: 5000, Task 2: 10000, Task 3: 15000</span>
@@ -1112,11 +1112,11 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 </pre></div>
 </div>
 <p><strong>Automatic Compatibility:</strong></p>
-<p>The system automatically handles single-task and multi-task scenarios:</p>
+<p>The system automatically handles single-task and multitask scenarios:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Single-task optimization</span>
 <span class="n">create_optimization_animation</span><span class="p">(</span><span class="s1">&#39;single_task.pkl&#39;</span><span class="p">,</span> <span class="n">max_nfes</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 
-<span class="c1"># Multi-task optimization</span>
+<span class="c1"># Multitask optimization</span>
 <span class="n">create_optimization_animation</span><span class="p">(</span><span class="s1">&#39;multi_task.pkl&#39;</span><span class="p">,</span> <span class="n">max_nfes</span><span class="o">=</span><span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -1265,15 +1265,15 @@ Timing summary saved to: ./Data/time_summary_20251203_143022.csv
 <span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Multi-Objective Multi-Task Optimization:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Multi-task with different NFEs</span>
+<p><strong>Multiobjective Multitask Optimization:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Multitask with different NFEs</span>
 <span class="n">create_optimization_animation</span><span class="p">(</span>
     <span class="n">pkl_path</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;./Data/NSGAII/NSGAII_DTLZ_1.pkl&#39;</span><span class="p">,</span>
               <span class="s1">&#39;./Data/MOEAD/MOEAD_DTLZ_1.pkl&#39;</span><span class="p">,</span>
               <span class="s1">&#39;./Data/MyAlgo/MyAlgo_DTLZ_1.pkl&#39;</span><span class="p">],</span>
     <span class="n">output_path</span><span class="o">=</span><span class="s1">&#39;./Animations/MO_comparison.gif&#39;</span><span class="p">,</span>
     <span class="n">merge</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Multi-Objective Comparison&#39;</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Multiobjective Comparison&#39;</span><span class="p">,</span>
     <span class="n">algorithm_order</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;NSGA-II&#39;</span><span class="p">,</span> <span class="s1">&#39;MOEA/D&#39;</span><span class="p">,</span> <span class="s1">&#39;MyAlgo&#39;</span><span class="p">],</span>
     <span class="n">max_nfes</span><span class="o">=</span><span class="p">[</span><span class="mi">5000</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">],</span>  <span class="c1"># Different NFEs for 3 tasks</span>
     <span class="n">fps</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
@@ -1530,7 +1530,7 @@ Animations saved to: ./TestResults
 </section>
 <section id="usage-examples">
 <h3>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading"></a></h3>
-<p><strong>Multi-Objective Metrics (IGD, GD, HV, etc.):</strong></p>
+<p><strong>Multiobjective Metrics (IGD, GD, HV, etc.):</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Methods.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">IGD</span><span class="p">,</span> <span class="n">HV</span><span class="p">,</span> <span class="n">GD</span><span class="p">,</span> <span class="n">IGDp</span><span class="p">,</span> <span class="n">DeltaP</span><span class="p">,</span> <span class="n">Spacing</span><span class="p">,</span> <span class="n">Spread</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -1613,7 +1613,7 @@ Animations saved to: ./TestResults
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">initialization</span></code></p></td>
-<td><p>Initialize multi-task decision variable matrices with Random or LHS sampling</p></td>
+<td><p>Initialize multitask decision variable matrices with Random or LHS sampling</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation</span></code></p></td>
 <td><p>Batch evaluate multiple tasks with selective objective/constraint evaluation</p></td>
@@ -1673,7 +1673,7 @@ Animations saved to: ./TestResults
 <td><p>Synchronously select rows from multiple arrays by index</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">par_list</span></code></p></td>
-<td><p>Convert single parameter to multi-task parameter list</p></td>
+<td><p>Convert single parameter to multitask parameter list</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_algorithm_information</span></code></p></td>
 <td><p>Extract and print algorithm metadata</p></td>
@@ -1686,7 +1686,7 @@ Animations saved to: ./TestResults
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Methods.Algo_Methods.bo_utils</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
-<p>The BO utilities module provides core Bayesian optimization functionalities based on BoTorch and GPyTorch, including single-task and multi-task Gaussian process modeling.</p>
+<p>The BO utilities module provides core Bayesian optimization functionalities based on BoTorch and GPyTorch, including single-task and multitask Gaussian process modeling.</p>
 <table class="docutils align-default" id="id15">
 <caption><span class="caption-text">Key Functions in bo_utils</span><a class="headerlink" href="#id15" title="Link to this table"></a></caption>
 <colgroup>
@@ -1709,16 +1709,16 @@ Animations saved to: ./TestResults
 <td><p>Get next sampling point via single-task BO (LogEI acquisition)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mtgp_build</span></code></p></td>
-<td><p>Build multi-task Gaussian process model</p></td>
+<td><p>Build multitask Gaussian process model</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mtgp_predict</span></code></p></td>
-<td><p>Predict for specified task using multi-task GP</p></td>
+<td><p>Predict for specified task using multitask GP</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mtgp_task_corr</span></code></p></td>
-<td><p>Extract task correlation matrix from multi-task GP</p></td>
+<td><p>Extract task correlation matrix from multitask GP</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mtbo_next_point</span></code></p></td>
-<td><p>Get next sampling point via multi-task BO</p></td>
+<td><p>Get next sampling point via multitask BO</p></td>
 </tr>
 </tbody>
 </table>
@@ -1752,7 +1752,7 @@ Animations saved to: ./TestResults
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Methods.Algo_Methods.uniform_point</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
-<p>The uniform point generation module provides various methods for generating uniformly distributed points for multi-objective optimization and decision space sampling.</p>
+<p>The uniform point generation module provides various methods for generating uniformly distributed points for multiobjective optimization and decision space sampling.</p>
 <table class="docutils align-default" id="id17">
 <caption><span class="caption-text">Key Functions in uniform_point</span><a class="headerlink" href="#id17" title="Link to this table"></a></caption>
 <colgroup>

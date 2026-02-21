@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Methods.data_analysis &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Methods.data_analysis &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -118,33 +118,24 @@
 <span class="c1"># Enums and Constants</span>
 <span class="c1"># =============================================================================</span>
 
-<div class="viewcode-block" id="OptimizationDirection">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.OptimizationDirection">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizationDirection</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimization direction enumeration.&quot;&quot;&quot;</span>
     <span class="n">MINIMIZE</span> <span class="o">=</span> <span class="s2">&quot;minimize&quot;</span>
-    <span class="n">MAXIMIZE</span> <span class="o">=</span> <span class="s2">&quot;maximize&quot;</span></div>
+    <span class="n">MAXIMIZE</span> <span class="o">=</span> <span class="s2">&quot;maximize&quot;</span>
 
 
-
-<div class="viewcode-block" id="TableFormat">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.TableFormat">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TableFormat</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Output table format enumeration.&quot;&quot;&quot;</span>
     <span class="n">EXCEL</span> <span class="o">=</span> <span class="s2">&quot;excel&quot;</span>
-    <span class="n">LATEX</span> <span class="o">=</span> <span class="s2">&quot;latex&quot;</span></div>
+    <span class="n">LATEX</span> <span class="o">=</span> <span class="s2">&quot;latex&quot;</span>
 
 
-
-<div class="viewcode-block" id="StatisticType">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.StatisticType">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">StatisticType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Statistical measure type enumeration.&quot;&quot;&quot;</span>
     <span class="n">MEAN</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
     <span class="n">MEDIAN</span> <span class="o">=</span> <span class="s2">&quot;median&quot;</span>
     <span class="n">MAX</span> <span class="o">=</span> <span class="s2">&quot;max&quot;</span>
-    <span class="n">MIN</span> <span class="o">=</span> <span class="s2">&quot;min&quot;</span></div>
-
+    <span class="n">MIN</span> <span class="o">=</span> <span class="s2">&quot;min&quot;</span>
 
 
 <span class="c1"># Default color palette for plots</span>
@@ -162,8 +153,6 @@
 <span class="c1"># Data Classes</span>
 <span class="c1"># =============================================================================</span>
 
-<div class="viewcode-block" id="ScanResult">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.ScanResult">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ScanResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -185,12 +174,9 @@
     <span class="n">algorithms</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">problems</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">runs</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">data_path</span><span class="p">:</span> <span class="n">Path</span></div>
+    <span class="n">data_path</span><span class="p">:</span> <span class="n">Path</span>
 
 
-
-<div class="viewcode-block" id="MetricResults">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.MetricResults">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MetricResults</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -226,12 +212,9 @@
     <span class="n">objective_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]]</span>
     <span class="n">runtime</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span>
     <span class="n">max_nfes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span>
-    <span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+    <span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
 
-
-<div class="viewcode-block" id="TableConfig">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.TableConfig">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TableConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -258,12 +241,9 @@
     <span class="n">statistic_type</span><span class="p">:</span> <span class="n">StatisticType</span> <span class="o">=</span> <span class="n">StatisticType</span><span class="o">.</span><span class="n">MEAN</span>
     <span class="n">significance_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
     <span class="n">rank_sum_test</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./Results&#39;</span><span class="p">)</span></div>
+    <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./Results&#39;</span><span class="p">)</span>
 
 
-
-<div class="viewcode-block" id="PlotConfig">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.PlotConfig">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">PlotConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -293,6 +273,9 @@
 <span class="sd">    merge_columns : int</span>
 <span class="sd">        Number of columns in merged plot layout.</span>
 <span class="sd">        Default: 3</span>
+<span class="sd">    show_std_band : bool</span>
+<span class="sd">        Whether to show standard deviation band on convergence curves.</span>
+<span class="sd">        Default: False</span>
 <span class="sd">    save_path : Path</span>
 <span class="sd">        Directory path to save output figures.</span>
 <span class="sd">    colors : List[str]</span>
@@ -307,14 +290,12 @@
     <span class="n">show_nd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">merge_plots</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">merge_columns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">show_std_band</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./Results&#39;</span><span class="p">)</span>
     <span class="n">colors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">DEFAULT_COLORS</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
-    <span class="n">markers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">DEFAULT_MARKERS</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span></div>
+    <span class="n">markers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">DEFAULT_MARKERS</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
 
 
-
-<div class="viewcode-block" id="ComparisonResult">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.ComparisonResult">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ComparisonResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -330,12 +311,9 @@
 <span class="sd">        P-value from statistical test, or None if test not performed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">symbol</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">p_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">p_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-
-<div class="viewcode-block" id="ComparisonCounts">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.ComparisonCounts">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ComparisonCounts</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -354,23 +332,18 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">plus</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">minus</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">equal</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
-
+    <span class="n">equal</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
 
 <span class="c1"># =============================================================================</span>
 <span class="c1"># Utility Functions</span>
 <span class="c1"># =============================================================================</span>
 
-<div class="viewcode-block" id="DataUtils">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataUtils">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DataUtils</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility class for data loading and processing operations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="DataUtils.load_pickle">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataUtils.load_pickle">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_pickle</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -395,11 +368,8 @@
 <span class="sd">            If the file cannot be unpickled.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="DataUtils.load_reference">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataUtils.load_reference">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_reference</span><span class="p">(</span>
             <span class="n">settings</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
@@ -528,8 +498,7 @@
 
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Unknown reference definition type for </span><span class="si">{</span><span class="n">problem</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">ref_definition</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span></div>
-
+            <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_reference_from_file</span><span class="p">(</span>
@@ -595,8 +564,6 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading reference data from file &#39;</span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="DataUtils.get_metric_direction">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataUtils.get_metric_direction">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metric_direction</span><span class="p">(</span><span class="n">metric_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">OptimizationDirection</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -633,24 +600,18 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unsupported metric: </span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="n">sign</span> <span class="o">=</span> <span class="n">metric_signs</span><span class="p">[</span><span class="n">metric_name</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">OptimizationDirection</span><span class="o">.</span><span class="n">MAXIMIZE</span> <span class="k">if</span> <span class="n">sign</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">OptimizationDirection</span><span class="o">.</span><span class="n">MINIMIZE</span></div>
-</div>
-
+        <span class="k">return</span> <span class="n">OptimizationDirection</span><span class="o">.</span><span class="n">MAXIMIZE</span> <span class="k">if</span> <span class="n">sign</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">OptimizationDirection</span><span class="o">.</span><span class="n">MINIMIZE</span>
 
 
 <span class="c1"># =============================================================================</span>
 <span class="c1"># Statistics Module</span>
 <span class="c1"># =============================================================================</span>
 
-<div class="viewcode-block" id="StatisticsCalculator">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.StatisticsCalculator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">StatisticsCalculator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for statistical calculations and hypothesis testing.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="StatisticsCalculator.calculate_statistic">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.StatisticsCalculator.calculate_statistic">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">calculate_statistic</span><span class="p">(</span>
             <span class="n">data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
@@ -687,11 +648,8 @@
         <span class="k">elif</span> <span class="n">statistic_type</span> <span class="o">==</span> <span class="n">StatisticType</span><span class="o">.</span><span class="n">MIN</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span></div>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
-
-<div class="viewcode-block" id="StatisticsCalculator.perform_rank_sum_test">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.StatisticsCalculator.perform_rank_sum_test">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">perform_rank_sum_test</span><span class="p">(</span>
             <span class="n">algo_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
@@ -738,11 +696,8 @@
 
             <span class="k">return</span> <span class="n">ComparisonResult</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="n">symbol</span><span class="p">,</span> <span class="n">p_value</span><span class="o">=</span><span class="n">p_value</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">ComparisonResult</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">ComparisonResult</span><span class="p">(</span><span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="n">p_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="StatisticsCalculator.collect_task_data">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.StatisticsCalculator.collect_task_data">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">collect_task_data</span><span class="p">(</span>
             <span class="n">all_best_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]],</span>
@@ -774,11 +729,8 @@
             <span class="n">value</span> <span class="o">=</span> <span class="n">all_best_values</span><span class="p">[</span><span class="n">algo</span><span class="p">][</span><span class="n">prob</span><span class="p">][</span><span class="n">run</span><span class="p">][</span><span class="n">task_idx</span><span class="p">]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span></div>
+        <span class="k">return</span> <span class="n">data</span>
 
-
-<div class="viewcode-block" id="StatisticsCalculator.select_representative_run">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.StatisticsCalculator.select_representative_run">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">select_representative_run</span><span class="p">(</span>
             <span class="n">all_best_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]],</span>
@@ -837,17 +789,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">return</span> <span class="n">runs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
-</div>
-
+        <span class="k">return</span> <span class="n">runs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
 
 <span class="c1"># =============================================================================</span>
 <span class="c1"># Table Generator Module</span>
 <span class="c1"># =============================================================================</span>
 
-<div class="viewcode-block" id="TableGenerator">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.TableGenerator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TableGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for generating comparison tables in Excel and LaTeX formats.</span>
@@ -864,8 +812,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
 
-<div class="viewcode-block" id="TableGenerator.generate">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.TableGenerator.generate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">all_best_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]],</span>
@@ -906,8 +852,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">table_format</span> <span class="o">==</span> <span class="n">TableFormat</span><span class="o">.</span><span class="n">EXCEL</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_excel_table</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">algorithm_order</span><span class="p">,</span> <span class="n">comparison_counts</span><span class="p">,</span> <span class="n">algorithm_ranks</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_latex_table</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">algorithm_order</span><span class="p">,</span> <span class="n">comparison_counts</span><span class="p">,</span> <span class="n">algorithm_ranks</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span></div>
-
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_latex_table</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">algorithm_order</span><span class="p">,</span> <span class="n">comparison_counts</span><span class="p">,</span> <span class="n">algorithm_ranks</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_generate_data_rows</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -1382,16 +1327,13 @@
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">latex_str</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LaTeX table saved to: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">latex_str</span></div>
-
+        <span class="k">return</span> <span class="n">latex_str</span>
 
 
 <span class="c1"># =============================================================================</span>
 <span class="c1"># Plot Generator Module</span>
 <span class="c1"># =============================================================================</span>
 
-<div class="viewcode-block" id="PlotGenerator">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.PlotGenerator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PlotGenerator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for generating various visualization plots.</span>
@@ -1435,8 +1377,6 @@
             <span class="c1"># Linear interpolation: y = 14 - (14-6)/(15-2) * (x-2)</span>
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">14</span> <span class="o">-</span> <span class="p">(</span><span class="mi">8</span> <span class="o">/</span> <span class="mi">13</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_algorithms</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)))</span>
 
-<div class="viewcode-block" id="PlotGenerator.plot_convergence_curves">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.PlotGenerator.plot_convergence_curves">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_convergence_curves</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">metric_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span>
@@ -1498,8 +1438,7 @@
                     <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
                     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All convergence plots saved to: </span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All convergence plots saved to: </span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_convergence_figure</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -1563,11 +1502,16 @@
             <span class="n">markersize</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="mf">1.6</span>
 
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">algo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">algorithm_order</span><span class="p">):</span>
-            <span class="n">selected_run</span> <span class="o">=</span> <span class="n">StatisticsCalculator</span><span class="o">.</span><span class="n">select_representative_run</span><span class="p">(</span>
-                <span class="n">best_values</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">statistic_type</span>
-            <span class="p">)</span>
-
-            <span class="n">curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_convergence_curve</span><span class="p">(</span><span class="n">metric_values</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">selected_run</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">show_std_band</span><span class="p">:</span>
+                <span class="n">mean_curve</span><span class="p">,</span> <span class="n">std_curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_convergence_mean_std</span><span class="p">(</span>
+                    <span class="n">metric_values</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">task_idx</span>
+                <span class="p">)</span>
+                <span class="n">curve</span> <span class="o">=</span> <span class="n">mean_curve</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">selected_run</span> <span class="o">=</span> <span class="n">StatisticsCalculator</span><span class="o">.</span><span class="n">select_representative_run</span><span class="p">(</span>
+                    <span class="n">best_values</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">statistic_type</span>
+                <span class="p">)</span>
+                <span class="n">curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_convergence_curve</span><span class="p">(</span><span class="n">metric_values</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">selected_run</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -1579,13 +1523,21 @@
             <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nfes</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">))</span>
             <span class="n">marker_interval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
 
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">colors</span><span class="p">)]</span>
+
             <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
                 <span class="n">x</span><span class="p">,</span> <span class="n">curve</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">algo</span><span class="p">,</span>
-                <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">colors</span><span class="p">)],</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
                 <span class="n">marker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">markers</span><span class="p">[</span><span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">markers</span><span class="p">)],</span>
                 <span class="n">markevery</span><span class="o">=</span><span class="n">marker_interval</span><span class="p">,</span>
                 <span class="n">markersize</span><span class="o">=</span><span class="n">markersize</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span>
             <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">show_std_band</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">std_curve</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+                    <span class="n">x</span><span class="p">,</span> <span class="n">curve</span> <span class="o">-</span> <span class="n">std_curve</span><span class="p">,</span> <span class="n">curve</span> <span class="o">+</span> <span class="n">std_curve</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span>
+                <span class="p">)</span>
 
         <span class="c1"># Set axis labels</span>
         <span class="n">y_label</span> <span class="o">=</span> <span class="n">metric_name</span> <span class="k">if</span> <span class="n">metric_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;Objective Value&#39;</span>
@@ -1788,6 +1740,45 @@
             <span class="n">truncated_curves</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">[:</span><span class="n">min_len</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_curves</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">truncated_curves</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_convergence_mean_std</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">metric_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+            <span class="n">algo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">prob</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">task_idx</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute mean and standard deviation of convergence curves across all runs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        metric_values : Dict</span>
+<span class="sd">            Metric values dictionary.</span>
+<span class="sd">        algo : str</span>
+<span class="sd">            Algorithm name.</span>
+<span class="sd">        prob : str</span>
+<span class="sd">            Problem name.</span>
+<span class="sd">        task_idx : int</span>
+<span class="sd">            Task index.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[np.ndarray, np.ndarray]</span>
+<span class="sd">            (mean_curve, std_curve). Both empty arrays if no data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_curves</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">metric_values</span><span class="p">[</span><span class="n">algo</span><span class="p">][</span><span class="n">prob</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">curve</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">metric_values</span><span class="p">[</span><span class="n">algo</span><span class="p">][</span><span class="n">prob</span><span class="p">][</span><span class="n">r</span><span class="p">][</span><span class="n">task_idx</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">all_curves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_curves</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+        <span class="n">min_len</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_curves</span><span class="p">)</span>
+        <span class="n">truncated_curves</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">c</span><span class="p">[:</span><span class="n">min_len</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_curves</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">truncated_curves</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">truncated_curves</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_scientific_notation</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span>
@@ -1832,8 +1823,6 @@
             <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">major</span><span class="o">.</span><span class="n">formatter</span><span class="o">.</span><span class="n">_useMathText</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="PlotGenerator.plot_runtime">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.PlotGenerator.plot_runtime">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_runtime</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">runtime</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]],</span>
@@ -1904,11 +1893,8 @@
         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Runtime plot saved to: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Runtime plot saved to: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="PlotGenerator.plot_nd_solutions">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.PlotGenerator.plot_nd_solutions">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_nd_solutions</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">best_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]],</span>
@@ -1997,8 +1983,7 @@
                         <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">nd_folder</span> <span class="o">/</span> <span class="n">filename</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
                         <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All non-dominated solutions plots saved to: </span><span class="si">{</span><span class="n">nd_folder</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All non-dominated solutions plots saved to: </span><span class="si">{</span><span class="n">nd_folder</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_plot_merged_nd_solutions</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -2257,8 +2242,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">fig</span></div>
-
+        <span class="k">return</span> <span class="n">fig</span>
 
 
 <span class="c1"># =============================================================================</span>
@@ -2310,6 +2294,7 @@
             <span class="n">show_nd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">merge_plots</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
             <span class="n">merge_columns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="n">show_std_band</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
             <span class="n">best_so_far</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">clear_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">convergence_k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2370,6 +2355,9 @@
 <span class="sd">        merge_columns : int, optional</span>
 <span class="sd">            Number of columns in merged plot layout.</span>
 <span class="sd">            Default: 3</span>
+<span class="sd">        show_std_band : bool, optional</span>
+<span class="sd">            Whether to show standard deviation band on convergence curves.</span>
+<span class="sd">            Default: False</span>
 <span class="sd">        best_so_far : bool, optional</span>
 <span class="sd">            Whether to use best-so-far metric values.</span>
 <span class="sd">            Default: True</span>
@@ -2408,6 +2396,7 @@
             <span class="n">show_nd</span><span class="o">=</span><span class="n">show_nd</span><span class="p">,</span>
             <span class="n">merge_plots</span><span class="o">=</span><span class="n">merge_plots</span><span class="p">,</span>
             <span class="n">merge_columns</span><span class="o">=</span><span class="n">merge_columns</span><span class="p">,</span>
+            <span class="n">show_std_band</span><span class="o">=</span><span class="n">show_std_band</span><span class="p">,</span>
             <span class="n">save_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
         <span class="p">)</span>
 
@@ -2417,8 +2406,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_scan_result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ScanResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricResults</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="DataAnalyzer.scan_data">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.scan_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">scan_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScanResult</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Scan the data directory to detect algorithms, problems, run counts.</span>
@@ -2481,11 +2468,8 @@
             <span class="n">data_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_path</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_result</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_result</span>
 
-
-<div class="viewcode-block" id="DataAnalyzer.calculate_metrics">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.calculate_metrics">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">calculate_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricResults</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate metric values for all algorithms, problems, and runs.</span>
@@ -2566,8 +2550,7 @@
             <span class="n">metric_name</span><span class="o">=</span><span class="n">metric_name</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span></div>
-
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_run_metric_value</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -2696,8 +2679,6 @@
 
         <span class="k">return</span> <span class="n">metric_values</span><span class="p">,</span> <span class="n">metric_values_best_so_far</span>
 
-<div class="viewcode-block" id="DataAnalyzer.generate_tables">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.generate_tables">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate comparison tables with statistical analysis.</span>
@@ -2722,11 +2703,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">best_values</span><span class="p">,</span>
             <span class="n">algo_order</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">metric_name</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-
-<div class="viewcode-block" id="DataAnalyzer.generate_convergence_plots">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.generate_convergence_plots">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_convergence_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate and save convergence curve plots.</span>
@@ -2753,11 +2731,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">max_nfes</span><span class="p">,</span>
             <span class="n">algo_order</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">metric_name</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-
-<div class="viewcode-block" id="DataAnalyzer.generate_runtime_plots">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.generate_runtime_plots">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_runtime_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate and save runtime comparison bar plots.</span>
@@ -2778,11 +2753,8 @@
         <span class="n">algo_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm_order</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm_order</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_result</span><span class="o">.</span><span class="n">algorithms</span>
 
         <span class="n">plot_gen</span> <span class="o">=</span> <span class="n">PlotGenerator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_config</span><span class="p">)</span>
-        <span class="n">plot_gen</span><span class="o">.</span><span class="n">plot_runtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">runtime</span><span class="p">,</span> <span class="n">algo_order</span><span class="p">)</span></div>
+        <span class="n">plot_gen</span><span class="o">.</span><span class="n">plot_runtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">runtime</span><span class="p">,</span> <span class="n">algo_order</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="DataAnalyzer.generate_nd_solution_plots">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.generate_nd_solution_plots">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_nd_solution_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate and save non-dominated solution visualization plots.</span>
@@ -2808,11 +2780,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_metric_results</span><span class="o">.</span><span class="n">objective_values</span><span class="p">,</span>
             <span class="n">algo_order</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-
-<div class="viewcode-block" id="DataAnalyzer.export_convergence_data">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.export_convergence_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">export_convergence_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Export convergence curve data to text files.</span>
@@ -2876,8 +2845,7 @@
                             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span><span class="si">:</span><span class="s1">.6g</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">yi</span><span class="p">)</span><span class="si">:</span><span class="s1">.6g</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence data exported to: </span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
-
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence data exported to: </span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DataAnalyzer.run">
 <a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.data_analysis.DataAnalyzer.run">[docs]</a>

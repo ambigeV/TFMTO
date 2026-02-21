@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Problems.STMO.ZDT &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Problems.STMO.ZDT &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -99,12 +99,21 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    All ZDT problems have exactly M=2 objectives. The decision space dimension</span>
-<span class="sd">    can be adjusted via the `dim` parameter.</span>
+<span class="sd">    can be adjusted via the `D` parameter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">problem_information</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;n_cases&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s1">&#39;n_tasks&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_dims&#39;</span><span class="p">:</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_objs&#39;</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_cons&#39;</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;synthetic&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
 
 <div class="viewcode-block" id="ZDT.ZDT1">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT.ZDT1">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **ZDT1** problem.</span>
 
@@ -113,7 +122,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -136,16 +145,16 @@
             <span class="n">obj</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span>
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="ZDT.ZDT2">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT.ZDT2">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **ZDT2** problem.</span>
 
@@ -154,7 +163,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -177,16 +186,16 @@
             <span class="n">obj</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span>
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="ZDT.ZDT3">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT.ZDT3">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **ZDT3** problem.</span>
 
@@ -195,7 +204,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -218,16 +227,16 @@
             <span class="n">obj</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span>
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="ZDT.ZDT4">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT.ZDT4">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **ZDT4** problem.</span>
 
@@ -236,7 +245,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 10).</span>
 
 <span class="sd">        Returns</span>
@@ -261,16 +270,16 @@
             <span class="n">obj</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span>
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="ZDT.ZDT5">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT.ZDT5">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **ZDT5** problem.</span>
 
@@ -279,7 +288,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 80). The actual dimension</span>
 <span class="sd">            will be adjusted to 30 + 5k format.</span>
 
@@ -294,7 +303,7 @@
 <span class="sd">        to binary by thresholding at 0.5: x &gt; 0.5 → 1, x ≤ 0.5 → 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Adjust dimension to 30 + 5k format</span>
-        <span class="n">dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">5</span><span class="p">))</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">30</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">5</span><span class="p">))</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">30</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">T1</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -303,7 +312,7 @@
             <span class="n">x_binary</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
             <span class="n">n_samples</span> <span class="o">=</span> <span class="n">x_binary</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="c1"># Number of groups: 1 group of 30 + (dim - 30) / 5 groups of 5</span>
+            <span class="c1"># Number of groups: 1 group of 30 + (D - 30) / 5 groups of 5</span>
             <span class="n">n_groups</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">x_binary</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">30</span><span class="p">)</span> <span class="o">//</span> <span class="mi">5</span>
             <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_groups</span><span class="p">))</span>
 
@@ -336,16 +345,16 @@
             <span class="k">return</span> <span class="n">obj</span>
 
         <span class="c1"># Binary variables: lower bound 0, upper bound 1</span>
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="ZDT.ZDT6">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT.ZDT6">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT6</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ZDT6</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **ZDT6** problem.</span>
 
@@ -354,7 +363,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 10).</span>
 
 <span class="sd">        Returns</span>
@@ -377,10 +386,10 @@
             <span class="n">obj</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span>
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 </div>
 
@@ -388,8 +397,6 @@
 
 <span class="c1"># --- Pareto Front (PF) Functions ---</span>
 
-<div class="viewcode-block" id="ZDT1_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT1_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ZDT1_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front (PF) for ZDT1.</span>
@@ -411,12 +418,9 @@
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;ZDT1 only supports M=2 objectives&quot;</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="ZDT2_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT2_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ZDT2_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front (PF) for ZDT2.</span>
@@ -438,12 +442,9 @@
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;ZDT2 only supports M=2 objectives&quot;</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="ZDT3_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT3_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ZDT3_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front (PF) for ZDT3.</span>
@@ -493,12 +494,9 @@
             <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span> <span class="o">-</span> <span class="n">f1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">f1</span><span class="p">)</span>
             <span class="n">pf_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">]))</span>
 
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">pf_segments</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">pf_segments</span><span class="p">)</span>
 
 
-
-<div class="viewcode-block" id="ZDT4_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT4_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ZDT4_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front (PF) for ZDT4.</span>
@@ -518,12 +516,9 @@
 <span class="sd">        Array of shape (N, 2) representing the PF points.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;ZDT4 only supports M=2 objectives&quot;</span>
-    <span class="k">return</span> <span class="n">ZDT1_PF</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">ZDT1_PF</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
 
 
-
-<div class="viewcode-block" id="ZDT5_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT5_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ZDT5_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front (PF) for ZDT5.</span>
@@ -558,12 +553,9 @@
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="c1"># f2 = (dim - 30) / 5 / f1</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="p">((</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">30</span><span class="p">)</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span> <span class="o">/</span> <span class="n">f1</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="ZDT6_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.ZDT.ZDT6_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">ZDT6_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front (PF) for ZDT6.</span>
@@ -586,8 +578,7 @@
     <span class="n">minf1</span> <span class="o">=</span> <span class="mf">0.280775</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">minf1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
-
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
 <span class="n">SETTINGS</span> <span class="o">=</span> <span class="p">{</span>

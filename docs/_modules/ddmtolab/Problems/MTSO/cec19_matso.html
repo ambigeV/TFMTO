@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Problems.MTSO.cec19_matso &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Problems.MTSO.cec19_matso &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -100,13 +100,22 @@
 <span class="sd">        The directory path for problem data files.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">problem_information</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;n_cases&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s1">&#39;n_tasks&#39;</span><span class="p">:</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_dims&#39;</span><span class="p">:</span> <span class="s1">&#39;50&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_objs&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_cons&#39;</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;synthetic&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="mi">50</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="s1">&#39;data_cec19matso&#39;</span>
 
 <div class="viewcode-block" id="CEC19MaTSO.P1">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.MTSO.cec19_matso.CEC19MaTSO.P1">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">P1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates Problem 1 (MaTSO): **Rosenbrock** tasks.</span>
 
@@ -114,8 +123,12 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        task_num : int, optional</span>
+<span class="sd">        K : int, optional</span>
 <span class="sd">            Number of tasks to create (default: 10).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Fixed parameters by benchmark definition: D=50</span>
 
 <span class="sd">        - Function: Rosenbrock</span>
 <span class="sd">        - Dimensions: 50D</span>
@@ -137,7 +150,7 @@
 
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">task_num</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
             <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">rotation_task1</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
             <span class="n">go_vector</span> <span class="o">=</span> <span class="n">go_task1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
@@ -153,7 +166,7 @@
 
 <div class="viewcode-block" id="CEC19MaTSO.P2">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.MTSO.cec19_matso.CEC19MaTSO.P2">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">P2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates Problem 2 (MaTSO): **Ackley** tasks.</span>
 
@@ -161,8 +174,12 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        task_num : int, optional</span>
+<span class="sd">        K : int, optional</span>
 <span class="sd">            Number of tasks to create (default: 10).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Fixed parameters by benchmark definition: D=50</span>
 
 <span class="sd">        - Function: Ackley</span>
 <span class="sd">        - Dimensions: 50D</span>
@@ -184,7 +201,7 @@
 
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">task_num</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
             <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">rotation_task2</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
             <span class="n">go_vector</span> <span class="o">=</span> <span class="n">go_task2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
@@ -200,7 +217,7 @@
 
 <div class="viewcode-block" id="CEC19MaTSO.P3">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.MTSO.cec19_matso.CEC19MaTSO.P3">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">P3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates Problem 3 (MaTSO): **Rastrigin** tasks.</span>
 
@@ -208,8 +225,12 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        task_num : int, optional</span>
+<span class="sd">        K : int, optional</span>
 <span class="sd">            Number of tasks to create (default: 10).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Fixed parameters by benchmark definition: D=50</span>
 
 <span class="sd">        - Function: Rastrigin</span>
 <span class="sd">        - Dimensions: 50D</span>
@@ -231,7 +252,7 @@
 
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">task_num</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
             <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">rotation_task3</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
             <span class="n">go_vector</span> <span class="o">=</span> <span class="n">go_task3</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
@@ -247,7 +268,7 @@
 
 <div class="viewcode-block" id="CEC19MaTSO.P4">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.MTSO.cec19_matso.CEC19MaTSO.P4">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">P4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates Problem 4 (MaTSO): **Griewank** tasks.</span>
 
@@ -255,8 +276,12 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        task_num : int, optional</span>
+<span class="sd">        K : int, optional</span>
 <span class="sd">            Number of tasks to create (default: 10).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Fixed parameters by benchmark definition: D=50</span>
 
 <span class="sd">        - Function: Griewank</span>
 <span class="sd">        - Dimensions: 50D</span>
@@ -278,7 +303,7 @@
 
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">task_num</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
             <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">rotation_task4</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
             <span class="n">go_vector</span> <span class="o">=</span> <span class="n">go_task4</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
@@ -294,7 +319,7 @@
 
 <div class="viewcode-block" id="CEC19MaTSO.P5">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.MTSO.cec19_matso.CEC19MaTSO.P5">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">P5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates Problem 5 (MaTSO): **Weierstrass** tasks.</span>
 
@@ -302,8 +327,12 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        task_num : int, optional</span>
+<span class="sd">        K : int, optional</span>
 <span class="sd">            Number of tasks to create (default: 10).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Fixed parameters by benchmark definition: D=50</span>
 
 <span class="sd">        - Function: Weierstrass</span>
 <span class="sd">        - Dimensions: 50D</span>
@@ -325,7 +354,7 @@
 
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">task_num</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
             <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">rotation_task5</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
             <span class="n">go_vector</span> <span class="o">=</span> <span class="n">go_task5</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
@@ -341,7 +370,7 @@
 
 <div class="viewcode-block" id="CEC19MaTSO.P6">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.MTSO.cec19_matso.CEC19MaTSO.P6">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">P6</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_num</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">P6</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates Problem 6 (MaTSO): **Schwefel** tasks.</span>
 
@@ -349,8 +378,12 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        task_num : int, optional</span>
+<span class="sd">        K : int, optional</span>
 <span class="sd">            Number of tasks to create (default: 10).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Fixed parameters by benchmark definition: D=50</span>
 
 <span class="sd">        - Function: Schwefel</span>
 <span class="sd">        - Dimensions: 50D</span>
@@ -372,7 +405,7 @@
 
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">task_num</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
             <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">rotation_task6</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
             <span class="n">go_vector</span> <span class="o">=</span> <span class="n">go_task6</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 

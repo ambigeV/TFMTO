@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Algorithms.STSO.TLRBF &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Algorithms.STSO.TLRBF &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -114,7 +114,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">algorithm_information</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;n_tasks&#39;</span><span class="p">:</span> <span class="s1">&#39;1-K&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_tasks&#39;</span><span class="p">:</span> <span class="s1">&#39;[1, K]&#39;</span><span class="p">,</span>
         <span class="s1">&#39;dims&#39;</span><span class="p">:</span> <span class="s1">&#39;unequal&#39;</span><span class="p">,</span>
         <span class="s1">&#39;objs&#39;</span><span class="p">:</span> <span class="s1">&#39;equal&#39;</span><span class="p">,</span>
         <span class="s1">&#39;n_objs&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
@@ -186,10 +186,6 @@
         <span class="n">objs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">decs</span><span class="p">)</span>
         <span class="n">nfes_per_task</span> <span class="o">=</span> <span class="n">n_initial_per_task</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-        <span class="c1"># Initialize history: reorganize initial data into task-specific lists</span>
-        <span class="n">all_decs</span> <span class="o">=</span> <span class="n">reorganize_initial_data</span><span class="p">(</span><span class="n">decs</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">n_initial_per_task</span><span class="p">)</span>
-        <span class="n">all_objs</span> <span class="o">=</span> <span class="n">reorganize_initial_data</span><span class="p">(</span><span class="n">objs</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">n_initial_per_task</span><span class="p">)</span>
-
         <span class="c1"># Current working dataset (accumulated samples)</span>
         <span class="n">current_decs</span> <span class="o">=</span> <span class="p">[</span><span class="n">decs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">)]</span>
         <span class="n">current_objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">objs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">)]</span>
@@ -221,6 +217,9 @@
                     <span class="c1"># ===== Local Search =====</span>
                     <span class="n">candidate_np</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_search</span><span class="p">(</span><span class="n">current_decs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">current_objs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dim</span><span class="p">)</span>
 
+                <span class="c1"># Ensure uniqueness before evaluation</span>
+                <span class="n">candidate_np</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_uniqueness</span><span class="p">(</span><span class="n">candidate_np</span><span class="p">,</span> <span class="n">current_decs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dim</span><span class="p">)</span>
+
                 <span class="c1"># Evaluate the candidate solution</span>
                 <span class="n">obj</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">evaluation_single</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">candidate_np</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
 
@@ -228,15 +227,16 @@
                 <span class="n">current_decs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">current_decs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">candidate_np</span><span class="p">])</span>
                 <span class="n">current_objs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">current_objs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">obj</span><span class="p">])</span>
 
-                <span class="c1"># Append to history (store the entire current dataset as a snapshot)</span>
-                <span class="n">all_decs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_decs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
-                <span class="n">all_objs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_objs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
-
                 <span class="n">nfes_per_task</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="n">runtime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+        <span class="c1"># Convert database to staircase history structure for results</span>
+        <span class="n">db_decs</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_decs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">)]</span>
+        <span class="n">db_objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_objs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nt</span><span class="p">)]</span>
+        <span class="n">all_decs</span><span class="p">,</span> <span class="n">all_objs</span> <span class="o">=</span> <span class="n">build_staircase_history</span><span class="p">(</span><span class="n">db_decs</span><span class="p">,</span> <span class="n">db_objs</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Build and save results</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">build_save_results</span><span class="p">(</span><span class="n">all_decs</span><span class="o">=</span><span class="n">all_decs</span><span class="p">,</span> <span class="n">all_objs</span><span class="o">=</span><span class="n">all_objs</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="n">runtime</span><span class="p">,</span> <span class="n">max_nfes</span><span class="o">=</span><span class="n">nfes_per_task</span><span class="p">,</span>
@@ -265,7 +265,7 @@
         <span class="c1"># Use Gaussian RBF</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">rbf_model</span> <span class="o">=</span> <span class="n">RBFInterpolator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">spread</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="c1"># Fallback to thin_plate_spline if gaussian fails</span>
             <span class="n">rbf_model</span> <span class="o">=</span> <span class="n">RBFInterpolator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;thin_plate_spline&#39;</span><span class="p">)</span>
 
@@ -352,19 +352,18 @@
                 <span class="n">Y_clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">objs_i</span><span class="p">[</span><span class="n">idx_sorted</span><span class="p">])</span>
                 <span class="n">mean_objs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">objs_i</span><span class="p">[</span><span class="n">idx_sorted</span><span class="p">]))</span>
 
-            <span class="c1"># Probabilistic cluster selection (prefer clusters with lower mean objective)</span>
+            <span class="c1"># Probabilistic cluster selection (MATLAB: [~,idx]=sort(mper,&#39;descend&#39;); pro=idx/K)</span>
             <span class="n">mean_objs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mean_objs</span><span class="p">)</span>
-            <span class="c1"># Rank clusters by mean objective (1 = best)</span>
-            <span class="n">ranks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">mean_objs</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
-            <span class="c1"># Probability proportional to rank (higher rank = worse cluster = lower prob)</span>
-            <span class="n">probs</span> <span class="o">=</span> <span class="n">ranks</span> <span class="o">/</span> <span class="n">no_clusters</span>
-            <span class="n">probs</span> <span class="o">=</span> <span class="n">probs</span> <span class="o">/</span> <span class="n">probs</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">idx_desc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">mean_objs</span><span class="p">)</span>  <span class="c1"># descending sort indices</span>
+            <span class="n">pro</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">no_clusters</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">no_clusters</span><span class="p">):</span>
+                <span class="n">pro</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx_desc</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">no_clusters</span>  <span class="c1"># MATLAB 1-indexed</span>
 
-            <span class="c1"># Select cluster using rejection sampling</span>
+            <span class="c1"># Rejection sampling (MATLAB: while rand &gt; pro(sid))</span>
             <span class="n">selected_cluster</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">while</span> <span class="n">selected_cluster</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">no_clusters</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">probs</span><span class="p">[</span><span class="n">sid</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">pro</span><span class="p">[</span><span class="n">sid</span><span class="p">]:</span>
                     <span class="n">selected_cluster</span> <span class="o">=</span> <span class="n">sid</span>
 
             <span class="n">X_subregion</span> <span class="o">=</span> <span class="n">X_clusters</span><span class="p">[</span><span class="n">selected_cluster</span><span class="p">]</span>
@@ -391,7 +390,7 @@
         <span class="c1"># Find k nearest neighbors to the best point</span>
         <span class="n">idx_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">objs_i</span><span class="p">)</span>
         <span class="n">dist</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">(</span><span class="n">decs_i</span><span class="p">,</span> <span class="n">decs_i</span><span class="p">[</span><span class="n">idx_min</span><span class="p">:</span><span class="n">idx_min</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-        <span class="n">idx_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">dist</span><span class="p">)[:</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># +1 to include the best point itself</span>
+        <span class="n">idx_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">dist</span><span class="p">)[:</span><span class="n">k</span><span class="p">]</span>  <span class="c1"># k points total including best (matches MATLAB)</span>
 
         <span class="n">X_local</span> <span class="o">=</span> <span class="n">decs_i</span><span class="p">[</span><span class="n">idx_sorted</span><span class="p">]</span>
         <span class="n">Y_local</span> <span class="o">=</span> <span class="n">objs_i</span><span class="p">[</span><span class="n">idx_sorted</span><span class="p">]</span>
@@ -403,8 +402,8 @@
         <span class="n">lb_local</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">X_local</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">ub_local</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">X_local</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="c1"># Optimize using GA on surrogate (10 generations for local search)</span>
-        <span class="n">candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_surrogate</span><span class="p">(</span><span class="n">rbf_model</span><span class="p">,</span> <span class="n">lb_local</span><span class="p">,</span> <span class="n">ub_local</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="c1"># Optimize using GA on surrogate (50 generations, matching MATLAB)</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_surrogate</span><span class="p">(</span><span class="n">rbf_model</span><span class="p">,</span> <span class="n">lb_local</span><span class="p">,</span> <span class="n">ub_local</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">max_gen</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">candidate</span>
 
@@ -442,7 +441,18 @@
         <span class="c1"># Ensure solution is within [0, 1] (original problem bounds)</span>
         <span class="n">best_solution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">best_solution</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">best_solution</span></div>
+        <span class="k">return</span> <span class="n">best_solution</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_uniqueness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidate</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">5e-3</span><span class="p">,</span> <span class="n">max_trials</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure candidate is not too close to existing samples (Chebyshev distance).&quot;&quot;&quot;</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">max_trials</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_trials</span><span class="p">):</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;chebyshev&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;=</span> <span class="n">epsilon</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">perturbation</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">candidate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">candidate</span> <span class="o">+</span> <span class="n">perturbation</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">candidate</span></div>
 
 </pre></div>
 

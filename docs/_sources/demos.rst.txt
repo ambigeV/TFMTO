@@ -21,21 +21,21 @@ DDMTOLab supports four categories of optimization problems:
      - Single-Task Single-Objective
      - Traditional optimization with one task and one objective
    * - **STMO**
-     - Single-Task Multi-Objective
+     - Single-Task Multiobjective
      - Pareto optimization with multiple conflicting objectives
    * - **MTSO**
-     - Multi-Task Single-Objective
+     - Multitask Single-Objective
      - Multiple related tasks sharing knowledge
    * - **MTMO**
-     - Multi-Task Multi-Objective
+     - Multitask Multiobjective
      - Multiple tasks with multiple objectives each
 
 **Demo Structure:**
 
-- **Demo 1-3**: Multi-Task Single-Objective (MTSO) - from custom problems to batch experiments
+- **Demo 1-3**: Multitask Single-Objective (MTSO) - from custom problems to batch experiments
 - **Demo 4-5**: Expensive MTSO - surrogate-assisted optimization with limited budgets
-- **Demo 6-7**: Multi-Task Multi-Objective (MTMO) - with IGD metric calculation
-- **Demo 8-9**: Expensive Single-Task Multi-Objective (STMO) - surrogate-assisted MOEAs
+- **Demo 6-7**: Multitask Multiobjective (MTMO) - with IGD metric calculation
+- **Demo 8-9**: Expensive Single-Task Multiobjective (STMO) - surrogate-assisted MOEAs
 - **Demo 10**: Using alternative metrics (Hypervolume)
 
 **Output Directories:**
@@ -45,16 +45,16 @@ DDMTOLab supports four categories of optimization problems:
 
 ----
 
-Demo 1: Custom Multi-Task Problem
+Demo 1: Custom Multitask Problem
 ---------------------------------
 
-This demo shows how to define custom objective functions and build a multi-task optimization problem from scratch.
+This demo shows how to define custom objective functions and build a multitask optimization problem from scratch.
 
 **Key Concepts:**
 
 - Defining objective functions with normalized input [0,1]
 - Building MTOP with tasks of different dimensions
-- Comparing single-task GA vs multi-task MFEA
+- Comparing single-task GA vs multitask MFEA
 
 **Objective Functions:**
 
@@ -96,7 +96,7 @@ This demo shows how to define custom objective functions and build a multi-task 
 
 .. code-block:: python
 
-   # Build multi-task problem with 3 tasks of different dimensions
+   # Build multitask problem with 3 tasks of different dimensions
    problem = MTOP()
    problem.add_task(sphere, dim=10)      # Task 1: 10D Sphere
    problem.add_task(rastrigin, dim=20)   # Task 2: 20D Rastrigin
@@ -164,7 +164,7 @@ This demo compares algorithms on the CEC17-MTSO benchmark suite, demonstrating t
 
    # Run algorithms with same budget
    GA(problem, n=100, max_nfes=10000).optimize()     # Single-task baseline
-   MFEA(problem, n=100, max_nfes=10000).optimize()   # Multi-task algorithm
+   MFEA(problem, n=100, max_nfes=10000).optimize()   # Multitask algorithm
 
    # Analyze results
    analyzer = TestDataAnalyzer(
@@ -229,7 +229,7 @@ This demo runs batch experiments with statistical analysis, generating publicati
        # Add algorithms to compare
        # GA: single-task baseline
        # MFEA: multi-factorial EA
-       # MTEA-AD: multi-task EA with adaptive distribution
+       # MTEA-AD: multitask EA with adaptive distribution
        batch_exp.add_algorithm(GA, 'GA', n=100, max_nfes=10000)
        batch_exp.add_algorithm(MFEA, 'MFEA', n=100, max_nfes=10000)
        batch_exp.add_algorithm(MTEA_AD, 'MTEA-AD', n=100, max_nfes=10000)
@@ -270,7 +270,7 @@ This demo focuses on expensive optimization where function evaluations are costl
 **Key Concepts:**
 
 - Expensive optimization with limited budget (50 evaluations)
-- Bayesian Optimization (BO) and multi-task extensions
+- Bayesian Optimization (BO) and multitask extensions
 - Knowledge transfer for sample efficiency
 
 .. code-block:: python
@@ -288,7 +288,7 @@ This demo focuses on expensive optimization where function evaluations are costl
    # Compare with limited budget (50 evaluations)
    # GA: baseline
    # BO: single-task Bayesian optimization
-   # BO-LCB-BCKT: multi-task BO with knowledge transfer
+   # BO-LCB-BCKT: multitask BO with knowledge transfer
    GA(problem, n=10, max_nfes=50).optimize()
    BO(problem, n_initial=10, max_nfes=50).optimize()
    BO_LCB_BCKT(problem, n_initial=10, max_nfes=50).optimize()
@@ -355,8 +355,8 @@ This demo runs batch experiments comparing surrogate-assisted algorithms on expe
        # Add algorithms with limited budget
        # GA: baseline (small population)
        # BO: single-task Bayesian optimization
-       # MTBO: multi-task Bayesian optimization
-       # RAMTEA: ranking-based adaptive multi-task EA
+       # MTBO: multitask Bayesian optimization
+       # RAMTEA: ranking-based adaptive multitask EA
        batch_exp.add_algorithm(GA, 'GA', n=10, max_nfes=100)
        batch_exp.add_algorithm(BO, 'BO', n_initial=20, max_nfes=100, disable_tqdm=False)
        batch_exp.add_algorithm(MTBO, 'MTBO', n_initial=20, max_nfes=100, disable_tqdm=False)
@@ -390,11 +390,11 @@ This demo runs batch experiments comparing surrogate-assisted algorithms on expe
 Demo 6: MTMO Single-Run Test
 ----------------------------
 
-This demo demonstrates multi-task multi-objective optimization with IGD metric calculation using reference Pareto fronts.
+This demo demonstrates multitask multiobjective optimization with IGD metric calculation using reference Pareto fronts.
 
 **Key Concepts:**
 
-- Multi-task multi-objective optimization
+- Multitask multiobjective optimization
 - Setting up ``SETTINGS`` for IGD calculation
 - Reference Pareto front configuration per task
 
@@ -410,7 +410,7 @@ This demo demonstrates multi-task multi-objective optimization with IGD metric c
    problem = CEC17MTMO().P1()
 
    # NSGA-II: single-task MOEA (solves each task independently)
-   # MO-MFEA: multi-task MOEA with implicit knowledge transfer
+   # MO-MFEA: multitask MOEA with implicit knowledge transfer
    NSGA_II(problem, n=100, max_nfes=10000).optimize()
    MO_MFEA(problem, n=100, max_nfes=10000).optimize()
 
@@ -436,7 +436,7 @@ This demo demonstrates multi-task multi-objective optimization with IGD metric c
    results = analyzer.run()
 
    # Generate animation
-   # merge=3: objective space separated for multi-objective
+   # merge=3: objective space separated for multiobjective
    generator = AnimationGenerator(
        data_path='./Data',
        save_path='./Results',
@@ -454,7 +454,7 @@ This demo demonstrates multi-task multi-objective optimization with IGD metric c
 Demo 7: MTMO Batch Experiment
 -----------------------------
 
-This demo runs batch experiments for multi-task multi-objective optimization with statistical analysis.
+This demo runs batch experiments for multitask multiobjective optimization with statistical analysis.
 
 **Key Concepts:**
 
@@ -483,7 +483,7 @@ This demo runs batch experiments for multi-task multi-objective optimization wit
        # Add algorithms
        # NSGA-II: classic Pareto-based MOEA
        # RVEA: reference vector guided EA
-       # MTEA-D-DN: multi-task MOEA with decomposition
+       # MTEA-D-DN: multitask MOEA with decomposition
        batch_exp.add_algorithm(NSGA_II, 'NSGA-II', n=100, max_nfes=10000)
        batch_exp.add_algorithm(RVEA, 'RVEA', n=100, max_nfes=10000)
        batch_exp.add_algorithm(MTEA_D_DN, 'MTEA-D-DN', n=100, max_nfes=10000)
@@ -516,11 +516,11 @@ This demo runs batch experiments for multi-task multi-objective optimization wit
 Demo 8: Expensive STMO Single-Run
 ---------------------------------
 
-This demo compares surrogate-assisted MOEAs on expensive multi-objective problems using DTLZ benchmark.
+This demo compares surrogate-assisted MOEAs on expensive multiobjective problems using DTLZ benchmark.
 
 **Key Concepts:**
 
-- Expensive multi-objective optimization
+- Expensive multiobjective optimization
 - Surrogate-assisted algorithms: ParEGO, K-RVEA
 - DTLZ benchmark with configurable objectives
 
@@ -533,7 +533,7 @@ This demo compares surrogate-assisted MOEAs on expensive multi-objective problem
    from ddmtolab.Algorithms.STMO.ParEGO import ParEGO
    from ddmtolab.Algorithms.STMO.K_RVEA import K_RVEA
 
-   # DTLZ2: scalable multi-objective benchmark
+   # DTLZ2: scalable multiobjective benchmark
    # M=4: 4 objectives, dim=10: 10 decision variables
    problem = DTLZ().DTLZ2(M=4, dim=10)
 
@@ -760,11 +760,11 @@ Summary
      - GA, BO, MTBO, RAMTEA
    * - 6
      - MTMO
-     - Multi-objective single run
+     - Multiobjective single run
      - NSGA-II, MO-MFEA
    * - 7
      - MTMO
-     - Multi-objective batch
+     - Multiobjective batch
      - NSGA-II, RVEA, MTEA-D-DN
    * - 8
      - Expensive STMO

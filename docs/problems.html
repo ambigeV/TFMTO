@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Problems &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>Problems &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -59,8 +59,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#task-evaluation">Task Evaluation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#single-task-evaluation">Single Task Evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#selective-evaluation">Selective Evaluation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#multi-task-evaluation">Multi-Task Evaluation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#multi-task-selective-evaluation">Multi-Task Selective Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multitask-evaluation">Multitask Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multitask-selective-evaluation">Multitask Selective Evaluation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#unified-evaluation-mode">Unified Evaluation Mode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#automatic-vectorization">Automatic Vectorization</a></li>
 </ul>
@@ -81,9 +81,9 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#benchmark-problems">Benchmark Problems</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#single-task-single-objective-stso">Single-Task Single-Objective (STSO)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#single-task-multi-objective-stmo">Single-Task Multi-Objective (STMO)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#multi-task-single-objective-mtso">Multi-Task Single-Objective (MTSO)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#multi-task-multi-objective-mtmo">Multi-Task Multi-Objective (MTMO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#single-task-multiobjective-stmo">Single-Task Multiobjective (STMO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multitask-single-objective-mtso">Multitask Single-Objective (MTSO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multitask-multiobjective-mtmo">Multitask Multiobjective (MTMO)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#real-world-optimization-rwo">Real-World Optimization (RWO)</a></li>
 </ul>
 </li>
@@ -119,12 +119,12 @@
              
   <section id="problems">
 <span id="id1"></span><h1>Problems<a class="headerlink" href="#problems" title="Link to this heading"></a></h1>
-<p>This chapter introduces the <strong>MTOP (Multi-Task Optimization Problem)</strong> class, the core component of DDMTOLab for defining and managing multi-task optimization problems.</p>
+<p>This chapter introduces the <strong>MTOP (Multitask Optimization Problem)</strong> class, the core component of DDMTOLab for defining and managing multitask optimization problems.</p>
 <section id="mtop-class-overview">
 <h2>MTOP Class Overview<a class="headerlink" href="#mtop-class-overview" title="Link to this heading"></a></h2>
 <p>The MTOP class provides the following key features:</p>
 <ol class="arabic simple">
-<li><p><strong>Flexible Task Definition</strong>: Supports single/multi-objective, constrained/unconstrained tasks with varying dimensions</p></li>
+<li><p><strong>Flexible Task Definition</strong>: Supports single/multiobjective, constrained/unconstrained tasks with varying dimensions</p></li>
 <li><p><strong>Automatic Vectorization</strong>: Wraps non-vectorized functions for batch evaluation</p></li>
 <li><p><strong>Unified Evaluation Mode</strong>: Pads evaluation results to uniform dimensions for algorithm processing</p></li>
 <li><p><strong>Selective Evaluation</strong>: Evaluates only specified objectives or constraints for complex scenarios</p></li>
@@ -280,8 +280,8 @@
 </pre></div>
 </div>
 </section>
-<section id="multi-task-evaluation">
-<h3>Multi-Task Evaluation<a class="headerlink" href="#multi-task-evaluation" title="Link to this heading"></a></h3>
+<section id="multitask-evaluation">
+<h3>Multitask Evaluation<a class="headerlink" href="#multitask-evaluation" title="Link to this heading"></a></h3>
 <p>Evaluate multiple tasks simultaneously with <code class="docutils literal notranslate"><span class="pre">evaluate_tasks</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Prepare input data for each task</span>
 <span class="n">X0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>   <span class="c1"># Task 0: 4 solutions</span>
@@ -299,8 +299,8 @@
 </pre></div>
 </div>
 </section>
-<section id="multi-task-selective-evaluation">
-<h3>Multi-Task Selective Evaluation<a class="headerlink" href="#multi-task-selective-evaluation" title="Link to this heading"></a></h3>
+<section id="multitask-selective-evaluation">
+<h3>Multitask Selective Evaluation<a class="headerlink" href="#multitask-selective-evaluation" title="Link to this heading"></a></h3>
 <p>Apply different evaluation settings to each task:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Unified mode: same settings for all tasks</span>
 <span class="n">objs_list</span><span class="p">,</span> <span class="n">cons_list</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">evaluate_tasks</span><span class="p">(</span>
@@ -518,7 +518,7 @@
 </ul>
 </li>
 <li><p><strong>Boundary Settings</strong>: If <code class="docutils literal notranslate"><span class="pre">lower_bound</span></code> or <code class="docutils literal notranslate"><span class="pre">upper_bound</span></code> are not specified, default values of 0 and 1 are used. Explicitly specify search boundaries based on your problem.</p></li>
-<li><p><strong>Unified Evaluation Mode</strong>: Enabling this mode pads all task results to the same dimensions, useful for multi-task algorithms but increases memory overhead.</p></li>
+<li><p><strong>Unified Evaluation Mode</strong>: Enabling this mode pads all task results to the same dimensions, useful for multitask algorithms but increases memory overhead.</p></li>
 <li><p><strong>Selective Evaluation</strong>: In complex data-driven optimization scenarios where evaluation costs vary across tasks/objectives/constraints, use selective evaluation based on actual data availability.</p></li>
 </ol>
 </section>
@@ -527,10 +527,10 @@
 <p>For maintainability and platform compatibility, optimization problems should be encapsulated as Python classes. Problem files should be stored in <code class="docutils literal notranslate"><span class="pre">./Problems/</span></code> subdirectories by type:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">STSO</span></code>: Single-task single-objective</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">STMO</span></code>: Single-task multi-objective</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MTSO</span></code>: Multi-task single-objective</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">MTMO</span></code>: Multi-task multi-objective</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">WRP</span></code>: Real-world problems</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">STMO</span></code>: Single-task multiobjective</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTSO</span></code>: Multitask single-objective</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MTMO</span></code>: Multitask multiobjective</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RWO</span></code>: Real-world optimization problems</p></li>
 </ul>
 <section id="problem-class-definition">
 <h3>Problem Class Definition<a class="headerlink" href="#problem-class-definition" title="Link to this heading"></a></h3>
@@ -539,7 +539,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ddmtolab.Methods.mtop</span><span class="w"> </span><span class="kn">import</span> <span class="n">MTOP</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">CEC17MTMO</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;CEC2017 Multi-Task Multi-Objective Test Suite&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CEC2017 Multitask Multiobjective Test Suite&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mat_dir</span><span class="o">=</span><span class="s1">&#39;../Problems/MTMO/data_cec17mtmo&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize problem class with data file path&quot;&quot;&quot;</span>
@@ -571,7 +571,7 @@
         <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="mf">100.0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
         <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">100.0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
 
-        <span class="c1"># Create and configure multi-task optimization problem</span>
+        <span class="c1"># Create and configure multitask optimization problem</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
         <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">T2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
@@ -581,7 +581,7 @@
 </section>
 <section id="metric-configuration">
 <h3>Metric Configuration<a class="headerlink" href="#metric-configuration" title="Link to this heading"></a></h3>
-<p>For problems requiring complex metrics (e.g., multi-objective optimization), provide configuration for metric calculation:</p>
+<p>For problems requiring complex metrics (e.g., multiobjective optimization), provide configuration for metric calculation:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">P1_T1_PF</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate true Pareto front for Task 1&quot;&quot;&quot;</span>
     <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
@@ -673,8 +673,8 @@
 </pre></div>
 </div>
 </section>
-<section id="single-task-multi-objective-stmo">
-<h3>Single-Task Multi-Objective (STMO)<a class="headerlink" href="#single-task-multi-objective-stmo" title="Link to this heading"></a></h3>
+<section id="single-task-multiobjective-stmo">
+<h3>Single-Task Multiobjective (STMO)<a class="headerlink" href="#single-task-multiobjective-stmo" title="Link to this heading"></a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 15.0%" />
@@ -744,8 +744,8 @@
 </pre></div>
 </div>
 </section>
-<section id="multi-task-single-objective-mtso">
-<h3>Multi-Task Single-Objective (MTSO)<a class="headerlink" href="#multi-task-single-objective-mtso" title="Link to this heading"></a></h3>
+<section id="multitask-single-objective-mtso">
+<h3>Multitask Single-Objective (MTSO)<a class="headerlink" href="#multitask-single-objective-mtso" title="Link to this heading"></a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 18.0%" />
@@ -779,13 +779,13 @@
 <td><p>10-50</p></td>
 <td><p>50</p></td>
 <td><p>1 / 0</p></td>
-<td><p>CEC 2019 Many-Task Optimization: Large-scale multi-task scenarios</p></td>
+<td><p>CEC 2019 Many-Task Optimization: Large-scale multitask scenarios</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CMT</span></code></p></td>
 <td><p>2</p></td>
 <td><p>50 (configurable)</p></td>
 <td><p>1 / 0</p></td>
-<td><p>Combinatorial Multi-Task benchmark: Varying task correlations</p></td>
+<td><p>Combinatorial Multitask benchmark: Varying task correlations</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STOP</span></code></p></td>
 <td><p>2</p></td>
@@ -804,8 +804,8 @@
 </pre></div>
 </div>
 </section>
-<section id="multi-task-multi-objective-mtmo">
-<h3>Multi-Task Multi-Objective (MTMO)<a class="headerlink" href="#multi-task-multi-objective-mtmo" title="Link to this heading"></a></h3>
+<section id="multitask-multiobjective-mtmo">
+<h3>Multitask Multiobjective (MTMO)<a class="headerlink" href="#multitask-multiobjective-mtmo" title="Link to this heading"></a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 18.0%" />
@@ -833,13 +833,13 @@
 <td><p>2</p></td>
 <td><p>25-50</p></td>
 <td><p>2-3 / 0</p></td>
-<td><p>CEC 2019 MTMO benchmark: Extended multi-objective scenarios</p></td>
+<td><p>CEC 2019 MTMO benchmark: Extended multiobjective scenarios</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CEC19MaTMO</span></code></p></td>
 <td><p>10-50</p></td>
 <td><p>25-50</p></td>
 <td><p>2-3 / 0</p></td>
-<td><p>CEC 2019 Many-Task Multi-Objective: Large-scale MO multi-task</p></td>
+<td><p>CEC 2019 Many-Task Multiobjective: Large-scale MO multitask</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CEC21MTMO</span></code></p></td>
 <td><p>2</p></td>
@@ -851,7 +851,7 @@
 <td><p>2-10</p></td>
 <td><p>M+k-1</p></td>
 <td><p>M / 0</p></td>
-<td><p>Multi-task DTLZ variants: Configurable task relationships</p></td>
+<td><p>Multitask DTLZ variants: Configurable task relationships</p></td>
 </tr>
 </tbody>
 </table>
@@ -895,7 +895,7 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MO_SCP</span></code></p></td>
 <td><p>STMO</p></td>
-<td><p>Multi-Objective Ship Course Planning</p></td>
+<td><p>Multiobjective Ship Course Planning</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SCP</span></code></p></td>
 <td><p>STSO</p></td>
@@ -904,6 +904,14 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PKACP</span></code></p></td>
 <td><p>STMO</p></td>
 <td><p>Power Keeping &amp; Anti-Collision Path Planning</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NN_Training</span></code></p></td>
+<td><p>STSO</p></td>
+<td><p>Neural Network Weight Training via Neuroevolution</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TSP</span></code></p></td>
+<td><p>STSO</p></td>
+<td><p>Traveling Salesman Problem</p></td>
 </tr>
 </tbody>
 </table>

@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Problems.STMO.UF &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Problems.STMO.UF &mdash; DDMTOLab 1.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -101,12 +101,21 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    UF1-UF7 have M=2 objectives, UF8-UF10 have M=3 objectives.</span>
-<span class="sd">    The decision space dimension can be adjusted via the `dim` parameter.</span>
+<span class="sd">    The decision space dimension can be adjusted via the `D` parameter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">problem_information</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;n_cases&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s1">&#39;n_tasks&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_dims&#39;</span><span class="p">:</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_objs&#39;</span><span class="p">:</span> <span class="s1">&#39;[2, 3]&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;n_cons&#39;</span><span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;synthetic&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
 
 <div class="viewcode-block" id="UF.UF1">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF1">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF1** problem.</span>
 
@@ -114,7 +123,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -146,16 +155,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF2">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF2">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF2** problem.</span>
 
@@ -163,7 +172,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -203,16 +212,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF3">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF3">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF3** problem.</span>
 
@@ -220,7 +229,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -259,16 +268,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF4">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF4">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF4** problem.</span>
 
@@ -276,7 +285,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -309,16 +318,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF5">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF5">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF5** problem.</span>
 
@@ -326,7 +335,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -364,16 +373,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF6">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF6">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF6</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF6</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF6** problem.</span>
 
@@ -381,7 +390,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -431,16 +440,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF7">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF7">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF7</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF7</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF7** problem.</span>
 
@@ -448,7 +457,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -478,16 +487,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF8">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF8">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF8</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF8</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF8** problem.</span>
 
@@ -495,7 +504,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -532,16 +541,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF9">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF9">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF9</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF9</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF9** problem.</span>
 
@@ -549,7 +558,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -587,16 +596,16 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 
 
 <div class="viewcode-block" id="UF.UF10">
 <a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF.UF10">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">UF10</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">UF10</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MTOP</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the **UF10** problem.</span>
 
@@ -605,7 +614,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : int, optional</span>
+<span class="sd">        D : int, optional</span>
 <span class="sd">            Number of decision variables (default is 30).</span>
 
 <span class="sd">        Returns</span>
@@ -642,10 +651,10 @@
 
             <span class="k">return</span> <span class="n">obj</span>
 
-        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
-        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="n">MTOP</span><span class="p">()</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">objective_func</span><span class="o">=</span><span class="n">T1</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">D</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="n">lb</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="n">ub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">problem</span></div>
 </div>
 
@@ -653,8 +662,6 @@
 
 <span class="c1"># --- Pareto Front (PF) Functions ---</span>
 
-<div class="viewcode-block" id="UF1_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF1_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF1_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front (PF) for UF1.</span>
@@ -676,45 +683,33 @@
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;UF1 only supports M=2 objectives&quot;</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span> <span class="o">**</span> <span class="mf">0.5</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="UF2_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF2_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF2_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Pareto Front for UF2.&quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;UF2 only supports M=2 objectives&quot;</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span> <span class="o">**</span> <span class="mf">0.5</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="UF3_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF3_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF3_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Pareto Front for UF3.&quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;UF3 only supports M=2 objectives&quot;</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span> <span class="o">**</span> <span class="mf">0.5</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="UF4_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF4_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF4_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Pareto Front for UF4.&quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;UF4 only supports M=2 objectives&quot;</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="UF5_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF5_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF5_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front for UF5 (discrete with 21 points).</span>
@@ -735,12 +730,9 @@
     <span class="c1"># UF5 has discrete PF with specific points</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">21</span><span class="p">)</span> <span class="o">/</span> <span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="UF6_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF6_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF6_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front for UF6 (disconnected).</span>
@@ -764,23 +756,17 @@
     <span class="c1"># Remove disconnected regions: (0, 1/4) and (1/2, 3/4)</span>
     <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="p">((</span><span class="n">f1</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">f1</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">f1</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">f1</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="o">/</span> <span class="mi">4</span><span class="p">))</span>
     <span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">pf</span><span class="p">[</span><span class="n">mask</span><span class="o">.</span><span class="n">flatten</span><span class="p">()]</span></div>
+    <span class="k">return</span> <span class="n">pf</span><span class="p">[</span><span class="n">mask</span><span class="o">.</span><span class="n">flatten</span><span class="p">()]</span>
 
 
-
-<div class="viewcode-block" id="UF7_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF7_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF7_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the Pareto Front for UF7.&quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">M</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;UF7 only supports M=2 objectives&quot;</span>
     <span class="n">f1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">f1</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">])</span>
 
 
-
-<div class="viewcode-block" id="UF8_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF8_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF8_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front for UF8 (unit sphere).</span>
@@ -801,12 +787,9 @@
     <span class="n">R</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">uniform_point</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
     <span class="c1"># Normalize to unit sphere</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">R</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">R</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">R</span></div>
+    <span class="k">return</span> <span class="n">R</span>
 
 
-
-<div class="viewcode-block" id="UF9_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF9_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF9_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front for UF9.</span>
@@ -835,12 +818,9 @@
     <span class="c1"># Filter out points in the disconnected region</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">R</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
 
-    <span class="k">return</span> <span class="n">R</span></div>
+    <span class="k">return</span> <span class="n">R</span>
 
 
-
-<div class="viewcode-block" id="UF10_PF">
-<a class="viewcode-back" href="../../../../api.html#ddmtolab.Problems.STMO.UF.UF10_PF">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">UF10_PF</span><span class="p">(</span><span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">M</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the Pareto Front for UF10 (unit sphere).</span>
@@ -861,8 +841,7 @@
     <span class="n">R</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">uniform_point</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
     <span class="c1"># Normalize to unit sphere</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">R</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">R</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">R</span></div>
-
+    <span class="k">return</span> <span class="n">R</span>
 
 
 <span class="n">SETTINGS</span> <span class="o">=</span> <span class="p">{</span>

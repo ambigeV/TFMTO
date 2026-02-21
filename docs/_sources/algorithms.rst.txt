@@ -12,7 +12,7 @@ Considering the complexity and diversity of data-driven multitask optimization, 
 
 1. **Enhanced Platform Compatibility**: Traditional gradient-based methods, evolutionary algorithms, advanced data-driven multitask optimization algorithms, and hybrid innovative architectures can all be seamlessly integrated into the platform.
 
-2. **Improved Development Convenience**: Users can quickly implement algorithms across the full spectrum—from inexpensive single-task single-objective unconstrained optimization to expensive multi-task multi-objective constrained optimization—without understanding complex class inheritance hierarchies.
+2. **Improved Development Convenience**: Users can quickly implement algorithms across the full spectrum—from inexpensive single-task single-objective unconstrained optimization to expensive multitask multiobjective constrained optimization—without understanding complex class inheritance hierarchies.
 
 3. **Guaranteed Algorithm Freedom**: Users are free to design data structures, optimization workflows, and knowledge transfer strategies according to specific problem characteristics and algorithm mechanisms, without framework constraints.
 
@@ -112,7 +112,7 @@ Algorithms must return a result object conforming to the ``Results`` dataclass s
      - Description
    * - ``best_decs``
      - ``List[np.ndarray]``
-     - **Best decision variables**. List length is the number of tasks K. ``best_decs[i]`` is the best decision variable for task i. Shape is :math:`(n, D^i)`, where n is the number of optimal solutions (n=1 for single-objective; n≥2 for multi-objective)
+     - **Best decision variables**. List length is the number of tasks K. ``best_decs[i]`` is the best decision variable for task i. Shape is :math:`(n, D^i)`, where n is the number of optimal solutions (n=1 for single-objective; n≥2 for multiobjective)
    * - ``best_objs``
      - ``List[np.ndarray]``
      - **Best objective values**. List length is K. ``best_objs[i]`` is the best objective value for task i. Shape is :math:`(n, M^i)`
@@ -151,13 +151,13 @@ Algorithms must declare their basic characteristics through the ``algorithm_info
    * - Field
      - Description
    * - ``n_tasks``
-     - Supported task numbers. ``1`` means single-task only, ``K`` means multi-task only (K≥2), ``1-K`` means both single and multi-task supported
+     - Supported task numbers. ``1`` means single-task only, ``K`` means multitask only (K≥2), ``1-K`` means both single and multitask supported
    * - ``dims``
      - Decision variable dimension constraint. ``equal`` requires same dimensions across tasks, ``unequal`` supports unequal-dimension tasks
    * - ``objs``
      - Objective number constraint. ``equal`` requires same number of objectives across tasks, ``unequal`` supports unequal objective numbers
    * - ``n_objs``
-     - Objective quantity type. ``1`` means single-objective only, ``M`` means multi-objective only (M≥2), ``1-M`` means both supported
+     - Objective quantity type. ``1`` means single-objective only, ``M`` means multiobjective only (M≥2), ``1-M`` means both supported
    * - ``cons``
      - Constraint number constraint. ``equal`` requires same number of constraints across tasks, ``unequal`` supports unequal constraint numbers
    * - ``n_cons``
@@ -175,7 +175,7 @@ Algorithms must declare their basic characteristics through the ``algorithm_info
 
     class GA:
         algorithm_information = {
-            'n_tasks': '1-K',           # Supports single and multi-task
+            'n_tasks': '1-K',           # Supports single and multitask
             'dims': 'unequal',          # Supports unequal dimensions
             'objs': 'unequal',          # Supports unequal objectives
             'n_objs': '1',              # Single-objective only
@@ -276,7 +276,7 @@ Basic Usage
     print(f"Best objective: {results.best_objs[0]}")
     print(f"Runtime: {results.runtime:.2f}s")
 
-**Example: Multi-Task Optimization**:
+**Example: Multitask Optimization**:
 
 .. code-block:: python
 
@@ -294,7 +294,7 @@ Basic Usage
     def rastrigin(x):
         return 10*x.shape[1] + np.sum(x**2 - 10*np.cos(2*np.pi*x), axis=1)
 
-    # Create multi-task problem using MTOP
+    # Create multitask problem using MTOP
     problem = MTOP()
     problem.add_task(sphere, dim=30)
     problem.add_task(rosenbrock, dim=30)
@@ -436,7 +436,7 @@ You can easily implement custom algorithms by following the three construction r
 Available Algorithms
 --------------------
 
-DDMTOLab provides 60+ optimization algorithms organized into four categories:
+DDMTOLab provides 90+ optimization algorithms organized into four categories:
 
 STSO (Single-Task Single-Objective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -471,7 +471,7 @@ Classical evolutionary algorithms and surrogate-assisted methods for single-obje
      - Competitive Swarm Optimizer
    * - ``SL_PSO``
      - Social Learning PSO
-   * - ``KL_PSO``
+   * - ``KLPSO``
      - Knowledge Learning PSO
    * - ``SHPSO``
      - Self-adaptive Hierarchical PSO
@@ -493,11 +493,17 @@ Classical evolutionary algorithms and surrogate-assisted methods for single-obje
      - Efficient Surrogate-Assisted Optimization
    * - ``TLRBF``
      - Two-Layer RBF Surrogate-Assisted Optimization
+   * - ``AutoSAEA``
+     - Surrogate-Assisted EA with Auto-Configuration
+   * - ``DDEA_MESS``
+     - Data-Driven EA with Multi-Evolutionary Sampling Strategy
+   * - ``LSADE``
+     - Lipschitz Surrogate-Assisted Differential Evolution
 
-STMO (Single-Task Multi-Objective)
+STMO (Single-Task Multiobjective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Multi-objective evolutionary algorithms and surrogate-assisted methods.
+Multiobjective evolutionary algorithms and surrogate-assisted methods.
 
 .. list-table::
    :header-rows: 1
@@ -512,7 +518,7 @@ Multi-objective evolutionary algorithms and surrogate-assisted methods.
    * - ``NSGA_II_SDR``
      - NSGA-II with Stochastic Dominance Ranking
    * - ``MOEA_D``
-     - Multi-Objective Evolutionary Algorithm based on Decomposition
+     - Multiobjective Evolutionary Algorithm based on Decomposition
    * - ``MOEA_DD``
      - MOEA/D with Diversity Enhancement
    * - ``MOEA_D_STM``
@@ -532,7 +538,7 @@ Multi-objective evolutionary algorithms and surrogate-assisted methods.
    * - ``TwoArch2``
      - Two-Archive Algorithm 2
    * - ``CCMO``
-     - Coevolutionary Constrained Multi-Objective Optimization
+     - Coevolutionary Constrained Multiobjective Optimization
    * - ``C_TAEA``
      - Constrained Two-Archive Evolutionary Algorithm
    * - ``CPS_MOEA``
@@ -544,14 +550,52 @@ Multi-objective evolutionary algorithms and surrogate-assisted methods.
    * - ``MSEA``
      - Multi-Surrogate Evolutionary Algorithm
    * - ``REMO``
-     - Reference-based Multi-Objective Optimization
+     - Reference-based Multiobjective Optimization
    * - ``DSAEA_PS``
      - Data-driven Surrogate-Assisted EA with Pareto Selection
+   * - ``ADSAPSO``
+     - Adaptive Dropout Surrogate-Assisted PSO
+   * - ``CSEA``
+     - Classification-based Surrogate-assisted EA
+   * - ``DISK``
+     - Distribution-Informed Surrogate-assisted Kriging
+   * - ``DRLSAEA``
+     - Deep Reinforcement Learning Surrogate-Assisted EA
+   * - ``DirHV_EI``
+     - Direction-based Hypervolume Expected Improvement
+   * - ``EDN_ARMOEA``
+     - Efficient Dropout Neural Network based AR-MOEA
+   * - ``EIM_EGO``
+     - Expected Improvement Matrix based EGO
+   * - ``EM_SAEA``
+     - Ensemble Model Surrogate-Assisted EA
+   * - ``KTS``
+     - Kriging-Assisted Two-Archive Search
+   * - ``MGSAEA``
+     - Multigranularity Surrogate-Assisted EA
+   * - ``MMRAEA``
+     - Multi-Model Ranking Aggregation EA
+   * - ``MOEA_D_EGO``
+     - MOEA/D with Efficient Global Optimization
+   * - ``MultiObjectiveEGO``
+     - Multiobjective Efficient Global Optimization
+   * - ``PCSAEA``
+     - Pairwise Comparison Surrogate-Assisted EA
+   * - ``PEA``
+     - Pareto-based Efficient Algorithm
+   * - ``PIEA``
+     - Performance Indicator-based EA
+   * - ``SAEA_DBLL``
+     - Surrogate-Assisted EA with Direction-Based Local Learning
+   * - ``SSDE``
+     - Self-Organizing Surrogate-Assisted Non-Dominated Sorting DE
+   * - ``TEA``
+     - Two-phase EA with Probabilistic Dominance
 
-MTSO (Multi-Task Single-Objective)
+MTSO (Multitask Single-Objective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Multi-task evolutionary algorithms with knowledge transfer for single-objective optimization.
+Multitask evolutionary algorithms with knowledge transfer for single-objective optimization.
 
 .. list-table::
    :header-rows: 1
@@ -566,38 +610,38 @@ Multi-task evolutionary algorithms with knowledge transfer for single-objective 
    * - ``G_MFEA``
      - Generalized MFEA
    * - ``MTEA_AD``
-     - Multi-Task Evolutionary Algorithm with Adaptive Distribution
+     - Multitask Evolutionary Algorithm with Adaptive Distribution
    * - ``MTEA_SaO``
-     - Multi-Task EA with Surrogate-assisted Optimization
+     - Multitask EA with Surrogate-assisted Optimization
    * - ``EMEA``
-     - Evolutionary Multi-Task Evolutionary Algorithm
+     - Evolutionary Multitask Evolutionary Algorithm
    * - ``MKTDE``
      - Multi-Knowledge Transfer Differential Evolution
    * - ``SREMTO``
-     - Self-Regulated Evolutionary Multi-Task Optimization
+     - Self-Regulated Evolutionary Multitask Optimization
    * - ``RAMTEA``
-     - Resource Allocation Multi-Task Evolutionary Algorithm
+     - Resource Allocation Multitask Evolutionary Algorithm
    * - ``SELF``
      - Self-adaptive Evolutionary Learning Framework
    * - ``EBS``
      - Evolution by Similarity
    * - ``MTBO``
-     - Multi-Task Bayesian Optimization
+     - Multitask Bayesian Optimization
    * - ``MUMBO``
-     - Multi-Task Multi-Objective Bayesian Optimization
+     - Multitask Multiobjective Bayesian Optimization
    * - ``LCB_EMT``
-     - Lower Confidence Bound Evolutionary Multi-Tasking
+     - Lower Confidence Bound Evolutionary Multitasking
    * - ``BO_LCB_CKT``
      - BO with LCB and Curriculum Knowledge Transfer
    * - ``BO_LCB_BCKT``
      - BO with LCB and Bidirectional Curriculum Knowledge Transfer
    * - ``EEI_BO_plus``
-     - Enhanced EEI-BO for Multi-Task Optimization
+     - Enhanced EEI-BO for Multitask Optimization
 
-MTMO (Multi-Task Multi-Objective)
+MTMO (Multitask Multiobjective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Multi-task multi-objective evolutionary algorithms with knowledge transfer.
+Multitask multiobjective evolutionary algorithms with knowledge transfer.
 
 .. list-table::
    :header-rows: 1
@@ -606,21 +650,21 @@ Multi-task multi-objective evolutionary algorithms with knowledge transfer.
    * - Algorithm
      - Description
    * - ``MO_MFEA``
-     - Multi-Objective Multi-Factorial Evolutionary Algorithm
+     - Multiobjective Multi-Factorial Evolutionary Algorithm
    * - ``MO_MFEA_II``
-     - Multi-Objective MFEA II
+     - Multiobjective MFEA II
    * - ``MO_EMEA``
-     - Multi-Objective Evolutionary Multi-Task EA
+     - Multiobjective Evolutionary Multitask EA
    * - ``MO_MTEA_SaO``
-     - Multi-Objective MTEA with Surrogate-assisted Optimization
+     - Multiobjective MTEA with Surrogate-assisted Optimization
    * - ``MTEA_D_DN``
-     - Multi-Task EA/D with Dynamic Neighborhood
+     - Multitask EA/D with Dynamic Neighborhood
    * - ``MTDE_MKTA``
-     - Multi-Task DE with Multi-Knowledge Transfer Adaptation
+     - Multitask DE with Multi-Knowledge Transfer Adaptation
    * - ``EMT_ET``
-     - Evolutionary Multi-Tasking with Explicit Transfer
+     - Evolutionary Multitasking with Explicit Transfer
    * - ``EMT_PD``
-     - Evolutionary Multi-Tasking with Probabilistic Distribution
+     - Evolutionary Multitasking with Probabilistic Distribution
    * - ``ParEGO_KT``
      - ParEGO with Knowledge Transfer
 

@@ -3,14 +3,14 @@
 Problems
 ========
 
-This chapter introduces the **MTOP (Multi-Task Optimization Problem)** class, the core component of DDMTOLab for defining and managing multi-task optimization problems.
+This chapter introduces the **MTOP (Multitask Optimization Problem)** class, the core component of DDMTOLab for defining and managing multitask optimization problems.
 
 MTOP Class Overview
 -------------------
 
 The MTOP class provides the following key features:
 
-1. **Flexible Task Definition**: Supports single/multi-objective, constrained/unconstrained tasks with varying dimensions
+1. **Flexible Task Definition**: Supports single/multiobjective, constrained/unconstrained tasks with varying dimensions
 2. **Automatic Vectorization**: Wraps non-vectorized functions for batch evaluation
 3. **Unified Evaluation Mode**: Pads evaluation results to uniform dimensions for algorithm processing
 4. **Selective Evaluation**: Evaluates only specified objectives or constraints for complex scenarios
@@ -182,7 +182,7 @@ Evaluate only specific objectives or constraints. The ``eval_objectives`` and ``
     objs, cons = problem.evaluate_task(0, X, eval_objectives=False,
                                       eval_constraints=0)
 
-Multi-Task Evaluation
+Multitask Evaluation
 ~~~~~~~~~~~~~~~~~~~~~
 
 Evaluate multiple tasks simultaneously with ``evaluate_tasks``:
@@ -203,7 +203,7 @@ Evaluate multiple tasks simultaneously with ``evaluate_tasks``:
     for i, (objs, cons) in enumerate(zip(objs_list, cons_list)):
         print(f"Task {i}: objs shape={objs.shape}, cons shape={cons.shape}")
 
-Multi-Task Selective Evaluation
+Multitask Selective Evaluation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Apply different evaluation settings to each task:
@@ -419,7 +419,7 @@ When using the MTOP class, note the following:
 
 2. **Boundary Settings**: If ``lower_bound`` or ``upper_bound`` are not specified, default values of 0 and 1 are used. Explicitly specify search boundaries based on your problem.
 
-3. **Unified Evaluation Mode**: Enabling this mode pads all task results to the same dimensions, useful for multi-task algorithms but increases memory overhead.
+3. **Unified Evaluation Mode**: Enabling this mode pads all task results to the same dimensions, useful for multitask algorithms but increases memory overhead.
 
 4. **Selective Evaluation**: In complex data-driven optimization scenarios where evaluation costs vary across tasks/objectives/constraints, use selective evaluation based on actual data availability.
 
@@ -429,10 +429,10 @@ Complete Problem Definition Example
 For maintainability and platform compatibility, optimization problems should be encapsulated as Python classes. Problem files should be stored in ``./Problems/`` subdirectories by type:
 
 - ``STSO``: Single-task single-objective
-- ``STMO``: Single-task multi-objective
-- ``MTSO``: Multi-task single-objective
-- ``MTMO``: Multi-task multi-objective
-- ``WRP``: Real-world problems
+- ``STMO``: Single-task multiobjective
+- ``MTSO``: Multitask single-objective
+- ``MTMO``: Multitask multiobjective
+- ``RWO``: Real-world optimization problems
 
 Problem Class Definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -445,7 +445,7 @@ Example: CEC17MTMO Problem 1:
     from ddmtolab.Methods.mtop import MTOP
 
     class CEC17MTMO:
-        """CEC2017 Multi-Task Multi-Objective Test Suite"""
+        """CEC2017 Multitask Multiobjective Test Suite"""
 
         def __init__(self, mat_dir='../Problems/MTMO/data_cec17mtmo'):
             """Initialize problem class with data file path"""
@@ -477,7 +477,7 @@ Example: CEC17MTMO Problem 1:
             lb = np.array([0.0] + [-100.0] * (dim - 1))
             ub = np.array([1.0] + [100.0] * (dim - 1))
 
-            # Create and configure multi-task optimization problem
+            # Create and configure multitask optimization problem
             problem = MTOP()
             problem.add_task(T1, dim=dim, lower_bound=lb, upper_bound=ub)
             problem.add_task(T2, dim=dim, lower_bound=lb, upper_bound=ub)
@@ -486,7 +486,7 @@ Example: CEC17MTMO Problem 1:
 Metric Configuration
 ~~~~~~~~~~~~~~~~~~~~
 
-For problems requiring complex metrics (e.g., multi-objective optimization), provide configuration for metric calculation:
+For problems requiring complex metrics (e.g., multiobjective optimization), provide configuration for metric calculation:
 
 .. code-block:: python
 
@@ -571,7 +571,7 @@ Single-Task Single-Objective (STSO)
    problem_suite = CLASSICALSO(dim=30)
    problem = problem_suite.P1()  # Ackley function
 
-Single-Task Multi-Objective (STMO)
+Single-Task Multiobjective (STMO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
@@ -629,7 +629,7 @@ Single-Task Multi-Objective (STMO)
    dtlz = DTLZ()
    problem = dtlz.DTLZ2(M=5)
 
-Multi-Task Single-Objective (MTSO)
+Multitask Single-Objective (MTSO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
@@ -655,12 +655,12 @@ Multi-Task Single-Objective (MTSO)
      - 10-50
      - 50
      - 1 / 0
-     - CEC 2019 Many-Task Optimization: Large-scale multi-task scenarios
+     - CEC 2019 Many-Task Optimization: Large-scale multitask scenarios
    * - ``CMT``
      - 2
      - 50 (configurable)
      - 1 / 0
-     - Combinatorial Multi-Task benchmark: Varying task correlations
+     - Combinatorial Multitask benchmark: Varying task correlations
    * - ``STOP``
      - 2
      - 50
@@ -677,7 +677,7 @@ Multi-Task Single-Objective (MTSO)
    problem = problem_suite.P1()  # CI-HS: Complete Intersection - High Similarity
    print(f"Tasks: {problem.n_tasks}, Dims: {problem.dims}")
 
-Multi-Task Multi-Objective (MTMO)
+Multitask Multiobjective (MTMO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
@@ -698,12 +698,12 @@ Multi-Task Multi-Objective (MTMO)
      - 2
      - 25-50
      - 2-3 / 0
-     - CEC 2019 MTMO benchmark: Extended multi-objective scenarios
+     - CEC 2019 MTMO benchmark: Extended multiobjective scenarios
    * - ``CEC19MaTMO``
      - 10-50
      - 25-50
      - 2-3 / 0
-     - CEC 2019 Many-Task Multi-Objective: Large-scale MO multi-task
+     - CEC 2019 Many-Task Multiobjective: Large-scale MO multitask
    * - ``CEC21MTMO``
      - 2
      - 25-50
@@ -713,7 +713,7 @@ Multi-Task Multi-Objective (MTMO)
      - 2-10
      - M+k-1
      - M / 0
-     - Multi-task DTLZ variants: Configurable task relationships
+     - Multitask DTLZ variants: Configurable task relationships
 
 **Usage Example:**
 
@@ -749,13 +749,19 @@ DDMTOLab includes real-world optimization problems in the ``Problems/RWO/`` dire
      - Physics-Informed Neural Network Hyperparameter Optimization
    * - ``MO_SCP``
      - STMO
-     - Multi-Objective Ship Course Planning
+     - Multiobjective Ship Course Planning
    * - ``SCP``
      - STSO
      - Ship Course Planning
    * - ``PKACP``
      - STMO
      - Power Keeping & Anti-Collision Path Planning
+   * - ``NN_Training``
+     - STSO
+     - Neural Network Weight Training via Neuroevolution
+   * - ``TSP``
+     - STSO
+     - Traveling Salesman Problem
 
 See Also
 --------
