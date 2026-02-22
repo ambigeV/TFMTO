@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Methods.mtop &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Methods.mtop &mdash; DDMTOLab 1.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/documentation_options.js?v=aec50437"></script>
       <script src="../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -77,8 +77,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span>
 
 
-<div class="viewcode-block" id="ObjectiveFunctionWrapper">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.mtop.ObjectiveFunctionWrapper">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ObjectiveFunctionWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Pickle-compatible objective function wrapper for cross-platform parallel execution.</span>
@@ -175,12 +173,9 @@
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Objective returned 2D array with incompatible number of rows.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Objective returned array with ndim &gt; 2, unsupported.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
 
-
-<div class="viewcode-block" id="ConstraintFunctionWrapper">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.mtop.ConstraintFunctionWrapper">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConstraintFunctionWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Pickle-compatible constraint function wrapper for cross-platform parallel execution.</span>
@@ -276,8 +271,7 @@
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Constraint returned 2D with incompatible rows.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Constraint returned ndim &gt; 2, unsupported.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span></div>
-
+        <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="MTOP">
@@ -1200,8 +1194,6 @@
     <span class="c1"># -------------------------</span>
     <span class="c1"># Query / info</span>
     <span class="c1"># -------------------------</span>
-<div class="viewcode-block" id="MTOP.get_n_objectives">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.mtop.MTOP.get_n_objectives">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_n_objectives</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of objectives for a specific task.</span>
@@ -1223,11 +1215,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;task_idx out of range&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task_idx</span><span class="p">][</span><span class="s1">&#39;n_objectives&#39;</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task_idx</span><span class="p">][</span><span class="s1">&#39;n_objectives&#39;</span><span class="p">]</span>
 
-
-<div class="viewcode-block" id="MTOP.get_all_n_objectives">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.mtop.MTOP.get_all_n_objectives">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_all_n_objectives</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of objectives for all tasks.</span>
@@ -1237,11 +1226,8 @@
 <span class="sd">        List[int]</span>
 <span class="sd">            List of number of objectives for each task.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_n_objectives</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span><span class="p">)]</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_n_objectives</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span><span class="p">)]</span>
 
-
-<div class="viewcode-block" id="MTOP.get_n_constraints">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.mtop.MTOP.get_n_constraints">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_n_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of constraints for a specific task.</span>
@@ -1263,11 +1249,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">task_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;task_idx out of range&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task_idx</span><span class="p">][</span><span class="s1">&#39;n_constraints&#39;</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="n">task_idx</span><span class="p">][</span><span class="s1">&#39;n_constraints&#39;</span><span class="p">]</span>
 
-
-<div class="viewcode-block" id="MTOP.get_all_n_constraints">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.mtop.MTOP.get_all_n_constraints">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_all_n_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of constraints for all tasks.</span>
@@ -1277,8 +1260,7 @@
 <span class="sd">        List[int]</span>
 <span class="sd">            List of number of constraints for each task.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_n_constraints</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span><span class="p">)]</span></div>
-
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_n_constraints</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="MTOP.get_task_info">
 <a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.mtop.MTOP.get_task_info">[docs]</a>

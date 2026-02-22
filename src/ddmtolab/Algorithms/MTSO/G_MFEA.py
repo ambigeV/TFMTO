@@ -240,7 +240,7 @@ class G_MFEA:
                 # Sort by CV then objective
                 task_objs = pop_objs[task_indices].flatten()
                 task_cvs = pop_cvs[task_indices].flatten()
-                pop_rank_per_task[t] = np.lexsort((task_objs, task_cvs))
+                pop_rank_per_task[t] = constrained_sort(task_objs, task_cvs)
 
             # Update alpha and mean vectors at specified intervals
             if gen >= self.phi * max_gen and gen % max(1, round(self.theta * max_gen)) == 0:
@@ -425,7 +425,7 @@ class G_MFEA:
             task_sfs = all_sfs[task_indices]
 
             # Sort by CV first, then objective
-            sort_indices = np.lexsort((task_objs.flatten(), task_cvs.flatten()))
+            sort_indices = constrained_sort(task_objs, task_cvs)
             top_n = sort_indices[:n]
 
             selected_decs.append(task_decs[top_n])

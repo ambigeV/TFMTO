@@ -852,6 +852,146 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
+.. automodule:: ddmtolab.Algorithms.MTSO.BLKT_DE
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.BLKT_DE.BLKT_DE
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.DTSKT
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.DTSKT.DTSKT
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.EMTO_AI
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.EMTO_AI.EMTO_AI
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MFEA_AKT
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MFEA_AKT.MFEA_AKT
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MFEA_DGD
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MFEA_DGD.MFEA_DGD
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MFEA_SSG
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MFEA_SSG.MFEA_SSG
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MFEA_VC
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MFEA_VC.MFEA_VC
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MTDE_ADKT
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MTDE_ADKT.MTDE_ADKT
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MTEA_HKTS
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MTEA_HKTS.MTEA_HKTS
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MTEA_PAE
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MTEA_PAE.MTEA_PAE
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.MTES_KG
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.MTES_KG.MTES_KG
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.SaEF_AKT
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.SaEF_AKT.SaEF_AKT
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.SSLT_DE
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.SSLT_DE.SSLT_DE
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTSO.TNG_SNES
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTSO.TNG_SNES.TNG_SNES
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
 Multitask Multiobjective (MTMO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -939,6 +1079,56 @@ Multitask Multiobjective (MTMO)
    :no-members:
 
 .. autoclass:: ddmtolab.Algorithms.MTMO.ParEGO_KT.ParEGO_KT
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.EMT_GS
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTMO.EMT_GS.EMT_GS
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.MO_MTEA_PAE
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTMO.MO_MTEA_PAE.MO_MTEA_PAE
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.MO_SBO
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTMO.MO_SBO.MO_SBO
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.MTEA_D_TSD
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTMO.MTEA_D_TSD.MTEA_D_TSD
+   :members: optimize
+   :undoc-members:
+   :show-inheritance:
+   :special-members: __init__
+   :exclude-members: algorithm_information, get_algorithm_information
+
+.. automodule:: ddmtolab.Algorithms.MTMO.MTEA_DCK
+   :no-members:
+
+.. autoclass:: ddmtolab.Algorithms.MTMO.MTEA_DCK.MTEA_DCK
    :members: optimize
    :undoc-members:
    :show-inheritance:

@@ -2190,3 +2190,244 @@ def spea2_truncation_fast(pop_obj, N):
         deleted[remaining[worst]] = True
 
     return np.where(~deleted)[0]
+
+
+# =============================================================================
+# Dimension Alignment
+# =============================================================================
+
+def align_dimensions(dec, target_dim, fill='random'):
+    """
+    Align decision variable dimensions to target dimension.
+
+    Supports both 1D vectors and 2D arrays. If the input has fewer dimensions
+    than the target, padding is added. If it has more, it is truncated.
+
+    Parameters
+    ----------
+    dec : np.ndarray
+        Decision variable(s), shape (dim,) for 1D or (n, dim) for 2D
+    target_dim : int
+        Target dimension
+    fill : str, optional
+        Padding strategy: 'random' for U[0,1] values, 'zero' for zeros (default: 'random')
+
+    Returns
+    -------
+    aligned_dec : np.ndarray
+        Aligned decision variable(s), shape (target_dim,) or (n, target_dim)
+    """
+    if dec.ndim == 1:
+        current_dim = len(dec)
+        if current_dim == target_dim:
+            return dec.copy()
+        elif current_dim < target_dim:
+            if fill == 'random':
+                padding = np.random.rand(target_dim - current_dim)
+            else:
+                padding = np.zeros(target_dim - current_dim)
+            return np.concatenate([dec, padding])
+        else:
+            return dec[:target_dim].copy()
+    else:
+        n, current_dim = dec.shape
+        if current_dim == target_dim:
+            return dec.copy()
+        elif current_dim < target_dim:
+            if fill == 'random':
+                padding = np.random.rand(n, target_dim - current_dim)
+            else:
+                padding = np.zeros((n, target_dim - current_dim))
+            return np.hstack([dec, padding])
+        else:
+            return dec[:, :target_dim].copy()
+
+
+# =============================================================================
+# Constrained Sort
+# =============================================================================
+
+def constrained_sort(objs, cvs):
+    """
+    Sort indices by constraint violation first, then by objective value (ascending).
+
+    Parameters
+    ----------
+    objs : np.ndarray
+        Objective values, shape (n,) or (n, 1)
+    cvs : np.ndarray
+        Constraint violation values (total CV per individual), shape (n,) or (n, 1)
+
+    Returns
+    -------
+    sorted_indices : np.ndarray
+        Indices that would sort the population by (cvs, objs) ascending, shape (n,)
+    """
+    return np.lexsort((np.asarray(objs).flatten(), np.asarray(cvs).flatten()))
+
+
+# =============================================================================
+# CMA-ES Utilities
+# =============================================================================
+
+def cmaes_init_params(dim, lam=None, sigma0=0.3):
+    """
+    Initialize CMA-ES parameters for a given dimension.
+
+    Parameters
+    ----------
+    dim : int
+        Problem dimension
+    lam : int, optional
+        Population size (lambda). If None, uses ``4 + floor(3 * log(dim))``.
+    sigma0 : float, optional
+        Initial step size (default: 0.3)
+
+    Returns
+    -------
+    params : dict
+        CMA-ES state dictionary containing:
+
+        - **Strategy parameters**: dim, lam, mu, weights, mueff
+        - **Control parameters**: cs, damps, cc, c1, cmu, chiN
+        - **State variables**: m_dec, ps, pc, B, D, C, invsqrtC, sigma, eigenFE
+    """
+    if lam is None:
+        lam = int(4 + 3 * np.log(dim))
+    mu = lam // 2
+
+    weights = np.log(mu + 0.5) - np.log(np.arange(1, mu + 1))
+    weights = weights / np.sum(weights)
+    mueff = 1.0 / np.sum(weights ** 2)
+
+    cs = (mueff + 2) / (dim + mueff + 5)
+    damps = 1 + cs + 2 * max(np.sqrt((mueff - 1) / (dim + 1)) - 1, 0)
+    cc = (4 + mueff / dim) / (4 + dim + 2 * mueff / dim)
+    c1 = 2 / ((dim + 1.3) ** 2 + mueff)
+    cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2) ** 2 + 2 * mueff / 2))
+    chiN = np.sqrt(dim) * (1 - 1 / (4 * dim) + 1 / (21 * dim ** 2))
+
+    return {
+        'dim': dim, 'lam': lam, 'mu': mu, 'weights': weights, 'mueff': mueff,
+        'cs': cs, 'damps': damps, 'cc': cc, 'c1': c1, 'cmu': cmu, 'chiN': chiN,
+        'm_dec': np.random.rand(dim),
+        'ps': np.zeros(dim), 'pc': np.zeros(dim),
+        'B': np.eye(dim), 'D': np.ones(dim),
+        'C': np.eye(dim), 'invsqrtC': np.eye(dim),
+        'sigma': sigma0, 'eigenFE': 0
+    }
+
+
+def cmaes_sample(m_dec, sigma, B, D, lam, clip=True):
+    """
+    Generate offspring using CMA-ES sampling.
+
+    Samples from ``N(m_dec, sigma^2 * C)`` where ``C = B * diag(D^2) * B^T``.
+
+    Parameters
+    ----------
+    m_dec : np.ndarray
+        Mean decision vector, shape (d,)
+    sigma : float
+        Step size (global scaling factor)
+    B : np.ndarray
+        Eigenvector matrix from covariance decomposition, shape (d, d)
+    D : np.ndarray
+        Square root of eigenvalues (standard deviations), shape (d,)
+    lam : int
+        Number of offspring to generate
+    clip : bool, optional
+        If True, clip offspring to [0, 1] (default: True)
+
+    Returns
+    -------
+    offdecs : np.ndarray
+        Offspring decision variables, shape (lam, d)
+    """
+    d = len(m_dec)
+    z = np.random.randn(lam, d)
+    offdecs = m_dec + sigma * ((z * D) @ B.T)
+    if clip:
+        offdecs = np.clip(offdecs, 0, 1)
+    return offdecs
+
+
+def cmaes_update(params, sorted_decs, nfes):
+    """
+    Update CMA-ES parameters given fitness-sorted offspring.
+
+    Updates mean, evolution paths, covariance matrix, step size, and
+    performs eigendecomposition when needed. Modifies params dict in-place.
+
+    Parameters
+    ----------
+    params : dict
+        CMA-ES parameter dictionary from :func:`cmaes_init_params`
+    sorted_decs : np.ndarray
+        Offspring sorted by fitness (best first), shape (>=mu, dim)
+    nfes : int
+        Current number of function evaluations (for eigendecomposition timing)
+
+    Returns
+    -------
+    restarted : bool
+        True if eigendecomposition failed and covariance was reset to identity
+    """
+    p = params
+
+    # Update mean
+    old_dec = p['m_dec'].copy()
+    p['m_dec'] = p['weights'] @ sorted_decs[:p['mu']]
+
+    # Update evolution paths
+    diff = (p['m_dec'] - old_dec) / p['sigma']
+    p['ps'] = (1 - p['cs']) * p['ps'] + \
+              np.sqrt(p['cs'] * (2 - p['cs']) * p['mueff']) * (p['invsqrtC'] @ diff)
+
+    ps_norm = np.linalg.norm(p['ps'])
+    factor = 1 - (1 - p['cs']) ** (2 * nfes / p['lam'])
+    if factor > 0:
+        hsig = float(ps_norm / np.sqrt(factor) / p['chiN'] < 1.4 + 2 / (p['dim'] + 1))
+    else:
+        hsig = 1.0
+
+    p['pc'] = (1 - p['cc']) * p['pc'] + \
+              hsig * np.sqrt(p['cc'] * (2 - p['cc']) * p['mueff']) * diff
+
+    # Update covariance matrix
+    artmp = (sorted_decs[:p['mu']] - old_dec) / p['sigma']
+    delta = (1 - hsig) * p['cc'] * (2 - p['cc'])
+    p['C'] = (1 - p['c1'] - p['cmu']) * p['C'] + \
+             p['c1'] * (np.outer(p['pc'], p['pc']) + delta * p['C']) + \
+             p['cmu'] * (artmp.T @ np.diag(p['weights']) @ artmp)
+
+    # Update step size
+    p['sigma'] *= np.exp(p['cs'] / p['damps'] * (ps_norm / p['chiN'] - 1))
+
+    # Eigendecomposition (periodic)
+    restarted = False
+    if nfes - p['eigenFE'] > p['lam'] / (p['c1'] + p['cmu']) / p['dim'] / 10:
+        p['eigenFE'] = nfes
+
+        if not np.all(np.isfinite(p['C'])):
+            restarted = True
+        else:
+            p['C'] = np.triu(p['C']) + np.triu(p['C'], 1).T
+            try:
+                eigvals, eigvecs = np.linalg.eigh(p['C'])
+                if np.min(eigvals) <= 0:
+                    restarted = True
+                else:
+                    p['B'] = eigvecs
+                    p['D'] = np.sqrt(eigvals)
+            except np.linalg.LinAlgError:
+                restarted = True
+
+        if restarted:
+            p['B'] = np.eye(p['dim'])
+            p['D'] = np.ones(p['dim'])
+            p['C'] = np.eye(p['dim'])
+
+        p['invsqrtC'] = p['B'] @ np.diag(1.0 / p['D']) @ p['B'].T
+
+    return restarted

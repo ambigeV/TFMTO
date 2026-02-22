@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Methods.Algo_Methods.algo_utils &mdash; DDMTOLab 1.0.7 documentation</title>
+  <title>ddmtolab.Methods.Algo_Methods.algo_utils &mdash; DDMTOLab 1.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
+      <script src="../../../../_static/documentation_options.js?v=aec50437"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -2322,6 +2322,247 @@
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">deleted</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Dimension Alignment</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">align_dimensions</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">target_dim</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Align decision variable dimensions to target dimension.</span>
+
+<span class="sd">    Supports both 1D vectors and 2D arrays. If the input has fewer dimensions</span>
+<span class="sd">    than the target, padding is added. If it has more, it is truncated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dec : np.ndarray</span>
+<span class="sd">        Decision variable(s), shape (dim,) for 1D or (n, dim) for 2D</span>
+<span class="sd">    target_dim : int</span>
+<span class="sd">        Target dimension</span>
+<span class="sd">    fill : str, optional</span>
+<span class="sd">        Padding strategy: &#39;random&#39; for U[0,1] values, &#39;zero&#39; for zeros (default: &#39;random&#39;)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    aligned_dec : np.ndarray</span>
+<span class="sd">        Aligned decision variable(s), shape (target_dim,) or (n, target_dim)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dec</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">current_dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_dim</span> <span class="o">==</span> <span class="n">target_dim</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dec</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">current_dim</span> <span class="o">&lt;</span> <span class="n">target_dim</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fill</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
+                <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">target_dim</span> <span class="o">-</span> <span class="n">current_dim</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">target_dim</span> <span class="o">-</span> <span class="n">current_dim</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">dec</span><span class="p">,</span> <span class="n">padding</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dec</span><span class="p">[:</span><span class="n">target_dim</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">current_dim</span> <span class="o">=</span> <span class="n">dec</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">current_dim</span> <span class="o">==</span> <span class="n">target_dim</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dec</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">current_dim</span> <span class="o">&lt;</span> <span class="n">target_dim</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fill</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
+                <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">target_dim</span> <span class="o">-</span> <span class="n">current_dim</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">target_dim</span> <span class="o">-</span> <span class="n">current_dim</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">dec</span><span class="p">,</span> <span class="n">padding</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dec</span><span class="p">[:,</span> <span class="p">:</span><span class="n">target_dim</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Constrained Sort</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">constrained_sort</span><span class="p">(</span><span class="n">objs</span><span class="p">,</span> <span class="n">cvs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sort indices by constraint violation first, then by objective value (ascending).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    objs : np.ndarray</span>
+<span class="sd">        Objective values, shape (n,) or (n, 1)</span>
+<span class="sd">    cvs : np.ndarray</span>
+<span class="sd">        Constraint violation values (total CV per individual), shape (n,) or (n, 1)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sorted_indices : np.ndarray</span>
+<span class="sd">        Indices that would sort the population by (cvs, objs) ascending, shape (n,)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">objs</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cvs</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># CMA-ES Utilities</span>
+<span class="c1"># =============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cmaes_init_params</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigma0</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize CMA-ES parameters for a given dimension.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dim : int</span>
+<span class="sd">        Problem dimension</span>
+<span class="sd">    lam : int, optional</span>
+<span class="sd">        Population size (lambda). If None, uses ``4 + floor(3 * log(dim))``.</span>
+<span class="sd">    sigma0 : float, optional</span>
+<span class="sd">        Initial step size (default: 0.3)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    params : dict</span>
+<span class="sd">        CMA-ES state dictionary containing:</span>
+
+<span class="sd">        - **Strategy parameters**: dim, lam, mu, weights, mueff</span>
+<span class="sd">        - **Control parameters**: cs, damps, cc, c1, cmu, chiN</span>
+<span class="sd">        - **State variables**: m_dec, ps, pc, B, D, C, invsqrtC, sigma, eigenFE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">lam</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">lam</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">mueff</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">cs</span> <span class="o">=</span> <span class="p">(</span><span class="n">mueff</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">dim</span> <span class="o">+</span> <span class="n">mueff</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">damps</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">cs</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">mueff</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">dim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">cc</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="n">mueff</span> <span class="o">/</span> <span class="n">dim</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="n">dim</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mueff</span> <span class="o">/</span> <span class="n">dim</span><span class="p">)</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">((</span><span class="n">dim</span> <span class="o">+</span> <span class="mf">1.3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">mueff</span><span class="p">)</span>
+    <span class="n">cmu</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">c1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">mueff</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">mueff</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">dim</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mueff</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">chiN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">dim</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">21</span> <span class="o">*</span> <span class="n">dim</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;dim&#39;</span><span class="p">:</span> <span class="n">dim</span><span class="p">,</span> <span class="s1">&#39;lam&#39;</span><span class="p">:</span> <span class="n">lam</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">:</span> <span class="n">mu</span><span class="p">,</span> <span class="s1">&#39;weights&#39;</span><span class="p">:</span> <span class="n">weights</span><span class="p">,</span> <span class="s1">&#39;mueff&#39;</span><span class="p">:</span> <span class="n">mueff</span><span class="p">,</span>
+        <span class="s1">&#39;cs&#39;</span><span class="p">:</span> <span class="n">cs</span><span class="p">,</span> <span class="s1">&#39;damps&#39;</span><span class="p">:</span> <span class="n">damps</span><span class="p">,</span> <span class="s1">&#39;cc&#39;</span><span class="p">:</span> <span class="n">cc</span><span class="p">,</span> <span class="s1">&#39;c1&#39;</span><span class="p">:</span> <span class="n">c1</span><span class="p">,</span> <span class="s1">&#39;cmu&#39;</span><span class="p">:</span> <span class="n">cmu</span><span class="p">,</span> <span class="s1">&#39;chiN&#39;</span><span class="p">:</span> <span class="n">chiN</span><span class="p">,</span>
+        <span class="s1">&#39;m_dec&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span>
+        <span class="s1">&#39;ps&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span> <span class="s1">&#39;pc&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span>
+        <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span>
+        <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span> <span class="s1">&#39;invsqrtC&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span>
+        <span class="s1">&#39;sigma&#39;</span><span class="p">:</span> <span class="n">sigma0</span><span class="p">,</span> <span class="s1">&#39;eigenFE&#39;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cmaes_sample</span><span class="p">(</span><span class="n">m_dec</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate offspring using CMA-ES sampling.</span>
+
+<span class="sd">    Samples from ``N(m_dec, sigma^2 * C)`` where ``C = B * diag(D^2) * B^T``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    m_dec : np.ndarray</span>
+<span class="sd">        Mean decision vector, shape (d,)</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        Step size (global scaling factor)</span>
+<span class="sd">    B : np.ndarray</span>
+<span class="sd">        Eigenvector matrix from covariance decomposition, shape (d, d)</span>
+<span class="sd">    D : np.ndarray</span>
+<span class="sd">        Square root of eigenvalues (standard deviations), shape (d,)</span>
+<span class="sd">    lam : int</span>
+<span class="sd">        Number of offspring to generate</span>
+<span class="sd">    clip : bool, optional</span>
+<span class="sd">        If True, clip offspring to [0, 1] (default: True)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    offdecs : np.ndarray</span>
+<span class="sd">        Offspring decision variables, shape (lam, d)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">m_dec</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+    <span class="n">offdecs</span> <span class="o">=</span> <span class="n">m_dec</span> <span class="o">+</span> <span class="n">sigma</span> <span class="o">*</span> <span class="p">((</span><span class="n">z</span> <span class="o">*</span> <span class="n">D</span><span class="p">)</span> <span class="o">@</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">clip</span><span class="p">:</span>
+        <span class="n">offdecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">offdecs</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">offdecs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cmaes_update</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">sorted_decs</span><span class="p">,</span> <span class="n">nfes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Update CMA-ES parameters given fitness-sorted offspring.</span>
+
+<span class="sd">    Updates mean, evolution paths, covariance matrix, step size, and</span>
+<span class="sd">    performs eigendecomposition when needed. Modifies params dict in-place.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    params : dict</span>
+<span class="sd">        CMA-ES parameter dictionary from :func:`cmaes_init_params`</span>
+<span class="sd">    sorted_decs : np.ndarray</span>
+<span class="sd">        Offspring sorted by fitness (best first), shape (&gt;=mu, dim)</span>
+<span class="sd">    nfes : int</span>
+<span class="sd">        Current number of function evaluations (for eigendecomposition timing)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    restarted : bool</span>
+<span class="sd">        True if eigendecomposition failed and covariance was reset to identity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">params</span>
+
+    <span class="c1"># Update mean</span>
+    <span class="n">old_dec</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;m_dec&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">p</span><span class="p">[</span><span class="s1">&#39;m_dec&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;weights&#39;</span><span class="p">]</span> <span class="o">@</span> <span class="n">sorted_decs</span><span class="p">[:</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;mu&#39;</span><span class="p">]]</span>
+
+    <span class="c1"># Update evolution paths</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;m_dec&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">old_dec</span><span class="p">)</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span>
+    <span class="n">p</span><span class="p">[</span><span class="s1">&#39;ps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cs&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;ps&#39;</span><span class="p">]</span> <span class="o">+</span> \
+              <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;cs&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cs&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;mueff&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;invsqrtC&#39;</span><span class="p">]</span> <span class="o">@</span> <span class="n">diff</span><span class="p">)</span>
+
+    <span class="n">ps_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;ps&#39;</span><span class="p">])</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cs&#39;</span><span class="p">])</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">nfes</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;lam&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">factor</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">hsig</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ps_norm</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;chiN&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.4</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">hsig</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">p</span><span class="p">[</span><span class="s1">&#39;pc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cc&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;pc&#39;</span><span class="p">]</span> <span class="o">+</span> \
+              <span class="n">hsig</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;cc&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cc&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;mueff&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">diff</span>
+
+    <span class="c1"># Update covariance matrix</span>
+    <span class="n">artmp</span> <span class="o">=</span> <span class="p">(</span><span class="n">sorted_decs</span><span class="p">[:</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;mu&#39;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">old_dec</span><span class="p">)</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">hsig</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cc&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cc&#39;</span><span class="p">])</span>
+    <span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;c1&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cmu&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">+</span> \
+             <span class="n">p</span><span class="p">[</span><span class="s1">&#39;c1&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;pc&#39;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;pc&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">])</span> <span class="o">+</span> \
+             <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cmu&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">artmp</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;weights&#39;</span><span class="p">])</span> <span class="o">@</span> <span class="n">artmp</span><span class="p">)</span>
+
+    <span class="c1"># Update step size</span>
+    <span class="n">p</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;cs&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;damps&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">ps_norm</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;chiN&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Eigendecomposition (periodic)</span>
+    <span class="n">restarted</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">nfes</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;eigenFE&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;lam&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;c1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;cmu&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="n">p</span><span class="p">[</span><span class="s1">&#39;eigenFE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nfes</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">])):</span>
+            <span class="n">restarted</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigvals</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">restarted</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">p</span><span class="p">[</span><span class="s1">&#39;B&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigvecs</span>
+                    <span class="n">p</span><span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">eigvals</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="n">restarted</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">restarted</span><span class="p">:</span>
+            <span class="n">p</span><span class="p">[</span><span class="s1">&#39;B&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">])</span>
+            <span class="n">p</span><span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">])</span>
+            <span class="n">p</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">])</span>
+
+        <span class="n">p</span><span class="p">[</span><span class="s1">&#39;invsqrtC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;B&#39;</span><span class="p">]</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">])</span> <span class="o">@</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;B&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">return</span> <span class="n">restarted</span>
 </pre></div>
 
            </div>

@@ -318,14 +318,7 @@ class MTEA_AD:
         his_pop_unique = np.unique(his_pop, axis=0)
 
         # Ensure dimension compatibility
-        if his_pop_unique.shape[1] > d:
-            his_pop_unique = his_pop_unique[:, :d]
-        elif his_pop_unique.shape[1] < d:
-            n_pad = d - his_pop_unique.shape[1]
-            his_pop_unique = np.hstack([
-                his_pop_unique,
-                np.random.rand(his_pop_unique.shape[0], n_pad)
-            ])
+        his_pop_unique = align_dimensions(his_pop_unique, d)
 
         # Calculate anomaly scores (PDF values)
         try:

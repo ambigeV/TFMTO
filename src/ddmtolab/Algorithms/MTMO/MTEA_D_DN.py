@@ -198,7 +198,7 @@ class MTEA_D_DN:
                         if rand() < 0.5:
                             # Knowledge transfer: evaluate on target task and update
                             k = target_task
-                            offspring_dec_padded = self._align_dimensions(offspring_dec, problem.dims[k])
+                            offspring_dec_padded = align_dimensions(offspring_dec, problem.dims[k])
                             off_obj, off_con = evaluation_single(problem, offspring_dec_padded.reshape(1, -1), k)
                             nfes_per_task[k] += 1
                             pbar.update(1)
@@ -310,7 +310,7 @@ class MTEA_D_DN:
             Offspring decision variable of shape (target_dim,)
         """
         # Align all parents to target dimension
-        aligned_parents = [self._align_dimensions(p, target_dim) for p in parent_decs]
+        aligned_parents = [align_dimensions(p, target_dim) for p in parent_decs]
 
         # DE mutation: v = x1 + F * (x2 - x3)
         mutant = aligned_parents[0] + self.F * (aligned_parents[1] - aligned_parents[2])
@@ -351,33 +351,6 @@ class MTEA_D_DN:
         # Avoid division by zero
         weights_safe = np.maximum(weights, 1e-10)
         return np.max(np.abs(objs - z) * weights_safe, axis=1)
-
-    def _align_dimensions(self, dec, target_dim):
-        """
-        Align decision variable dimensions to target dimension.
-
-        Parameters
-        ----------
-        dec : np.ndarray
-            Decision variable of shape (dim,)
-        target_dim : int
-            Target dimension
-
-        Returns
-        -------
-        aligned_dec : np.ndarray
-            Aligned decision variable of shape (target_dim,)
-        """
-        current_dim = len(dec)
-        if current_dim == target_dim:
-            return dec
-        elif current_dim < target_dim:
-            # Pad with random values
-            padding = np.random.rand(target_dim - current_dim)
-            return np.concatenate([dec, padding])
-        else:
-            # Truncate
-            return dec[:target_dim]
 
 
 def rand():

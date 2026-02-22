@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Algorithms.STSO.EEI_BO &mdash; DDMTOLab 1.0.7 documentation</title>
+  <title>ddmtolab.Algorithms.STSO.EEI_BO &mdash; DDMTOLab 1.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
+      <script src="../../../../_static/documentation_options.js?v=aec50437"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -226,9 +226,10 @@
                 <span class="n">surrogate_problem</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">rbf</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dims</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
                 <span class="c1"># Use CMA-ES to extract distribution parameters from surrogate</span>
-                <span class="n">_</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">CMA_ES</span><span class="p">(</span><span class="n">surrogate_problem</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n1</span><span class="p">,</span> <span class="n">max_nfes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_nfes1</span><span class="p">,</span> <span class="n">save_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+                <span class="n">cmaes</span> <span class="o">=</span> <span class="n">CMA_ES</span><span class="p">(</span><span class="n">surrogate_problem</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n1</span><span class="p">,</span> <span class="n">max_nfes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_nfes1</span><span class="p">,</span> <span class="n">save_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">cmaes</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
 
-                <span class="n">params_i</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">params_i</span> <span class="o">=</span> <span class="n">cmaes</span><span class="o">.</span><span class="n">cmaes_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">mu</span> <span class="o">=</span> <span class="n">params_i</span><span class="p">[</span><span class="s1">&#39;m_dec&#39;</span><span class="p">]</span>  <span class="c1"># Mean of the distribution</span>
                 <span class="n">sigma</span> <span class="o">=</span> <span class="n">params_i</span><span class="p">[</span><span class="s1">&#39;sigma&#39;</span><span class="p">]</span>  <span class="c1"># Step size</span>
                 <span class="n">C</span> <span class="o">=</span> <span class="n">params_i</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span>  <span class="c1"># Covariance matrix</span>

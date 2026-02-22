@@ -1,18 +1,20 @@
 """
 Meta-Knowledge Transfer-based Differential Evolution (MKTDE)
 
-This module implements MKTDE for multi-task single-objective optimization problems.
+This module implements MKTDE for multi-task optimization using centroid-based
+meta-knowledge transfer between tasks in a multi-population DE framework.
 
 References
 ----------
-    [1] Li, Jian-Yu, Zhi-Hui Zhan, Kay Chen Tan, and Jun Zhang. "A Meta-Knowledge Transfer-Based Differential Evolution for Multitask Optimization." IEEE Transactions on Evolutionary Computation 26.4 (2022): 719-734. https://doi.org/10.1109/TEVC.2021.3131236
+    [1] Li, Jian-Yu, et al. "A Meta-Knowledge Transfer-Based Differential
+        Evolution for Multitask Optimization." IEEE Transactions on
+        Evolutionary Computation, 26(4): 719-734, 2022.
 
 Notes
 -----
-Author: Jiangtao Shen
-Email: j.shen5@exeter.ac.uk
-Date: 2026.01.04
-Version: 1.0
+Author: Jiangtao Shen (DDMTOLab adaptation)
+Date: 2026.02.22
+Version: 2.0
 """
 import time
 import numpy as np
@@ -22,13 +24,14 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import *
 
 class MKTDE:
     """
-    Meta-Knowledge Transfer-based Differential Evolution for multi-task optimization.
+    Meta-Knowledge Transfer-based Differential Evolution.
 
-    This algorithm features:
-    - Meta-knowledge transfer via centroid-based solution transformation
-    - DE/rand/1/bin mutation strategy with extended population
-    - Elite solution transfer between tasks
-    - Elitist selection mechanism
+    Uses centroid alignment to transform source task solutions into the
+    target task's search distribution, creating an extended donor pool for
+    DE/rand/1/bin. The base vector x1 is selected from the current task
+    only, while difference vectors x2, x3 come from the combined pool.
+    Additionally, an elite solution from the source task is transferred
+    each generation.
 
     Attributes
     ----------
@@ -45,8 +48,8 @@ class MKTDE:
         'n_cons': '[0, C]',
         'expensive': 'False',
         'knowledge_transfer': 'True',
-        'n': 'unequal',
-        'max_nfes': 'unequal'
+        'n': 'equal',
+        'max_nfes': 'equal'
     }
 
     @classmethod
@@ -54,7 +57,8 @@ class MKTDE:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, F=0.5, CR=0.6,
-                 save_data=True, save_path='./Data', name='MKTDE', disable_tqdm=True):
+                 save_data=True, save_path='./Data', name='MKTDE',
+                 disable_tqdm=True):
         """
         Initialize MKTDE algorithm.
 
@@ -62,20 +66,20 @@ class MKTDE:
         ----------
         problem : MTOP
             Multi-task optimization problem instance
-        n : int or List[int], optional
+        n : int, optional
             Population size per task (default: 100)
-        max_nfes : int or List[int], optional
+        max_nfes : int, optional
             Maximum number of function evaluations per task (default: 10000)
         F : float, optional
-            DE mutation factor (default: 0.5)
+            DE mutation scale factor (default: 0.5)
         CR : float, optional
             DE crossover rate (default: 0.6)
         save_data : bool, optional
             Whether to save optimization data (default: True)
         save_path : str, optional
-            Path to save results (default: './TestData')
+            Path to save results (default: './Data')
         name : str, optional
-            Name for the experiment (default: 'MKTDE_test')
+            Name for the experiment (default: 'MKTDE')
         disable_tqdm : bool, optional
             Whether to disable progress bar (default: True)
         """
@@ -96,34 +100,37 @@ class MKTDE:
         Returns
         -------
         Results
-            Optimization results containing decision variables, objectives, constraints, and runtime
+            Optimization results containing decision variables, objectives, and runtime
         """
         start_time = time.time()
         problem = self.problem
         nt = problem.n_tasks
         dims = problem.dims
-        n_per_task = par_list(self.n, nt)
+        n = self.n
         max_nfes_per_task = par_list(self.max_nfes, nt)
+        max_nfes = self.max_nfes * nt
 
-        # Initialize population and evaluate for each task
-        decs = initialization(problem, n_per_task)
+        # Initialize and evaluate in real space
+        decs = initialization(problem, n)
         objs, cons = evaluation(problem, decs)
-        nfes_per_task = n_per_task.copy()
+        nfes = n * nt
         all_decs, all_objs, all_cons = init_history(decs, objs, cons)
 
-        # Progress bar
-        total_nfes = sum(max_nfes_per_task)
-        pbar = tqdm(total=total_nfes, initial=sum(nfes_per_task), desc=f"{self.name}", disable=self.disable_tqdm)
+        # Convert to unified space for DE operations (matching MATLAB max-D space)
+        pop_decs, pop_cons = space_transfer(
+            problem=problem, decs=decs, cons=cons, type='uni', padding='mid')
+        pop_objs = objs
+        maxD = pop_decs[0].shape[1]
+        maxC = pop_cons[0].shape[1]
 
-        # Main optimization loop
-        while sum(nfes_per_task) < total_nfes:
-            # Compute centroids for all tasks
-            centroids = []
-            for t in range(nt):
-                centroid = np.mean(decs[t], axis=0)
-                centroids.append(centroid)
+        pbar = tqdm(total=max_nfes, initial=nfes, desc=f"{self.name}",
+                    disable=self.disable_tqdm)
 
-            # Source task selection for each task
+        while nfes < max_nfes:
+            # Compute centroids in unified space
+            centroids = [np.mean(pop_decs[t], axis=0) for t in range(nt)]
+
+            # Source task selection (random, different from t)
             source_tasks = []
             for t in range(nt):
                 s = np.random.randint(nt)
@@ -131,239 +138,94 @@ class MKTDE:
                     s = np.random.randint(nt)
                 source_tasks.append(s)
 
-            # Generation and selection for each task
+            # --- Generation and selection per task ---
             for t in range(nt):
-                if nfes_per_task[t] >= max_nfes_per_task[t]:
-                    continue
-
                 s = source_tasks[t]
-                ct = centroids[t]  # Current task centroid
-                cs = centroids[s]  # Source task centroid
+                ct, cs = centroids[t], centroids[s]
 
-                # Generate offspring using meta-knowledge transfer
-                off_decs = self._generation(decs[t], decs[s], ct, cs, dims[t], dims[s])
-                off_objs, off_cons = evaluation_single(problem, off_decs, t)
-                nfes_per_task[t] += len(off_decs)
-                pbar.update(len(off_decs))
+                # Meta-knowledge transfer: align source via centroids
+                spop_transformed = pop_decs[s] - cs + ct
 
-                # Elitist selection: compare parent vs offspring one-by-one
-                cvs = np.sum(np.maximum(0, cons[t]), axis=1) if cons[t] is not None and cons[t].size > 0 else np.zeros(len(objs[t]))
-                for i in range(len(decs[t])):
-                    parent_cv = cvs[i]
-                    parent_obj = objs[t][i, 0]
-                    off_cv = np.sum(np.maximum(0, off_cons[i])) if off_cons is not None and off_cons[i].size > 0 else 0
-                    off_obj = off_objs[i, 0]
+                # Combined donor pool: current task + transformed source
+                popf = np.vstack([pop_decs[t], spop_transformed])
+                n_combined = len(popf)
 
-                    # Constrained comparison: prefer lower CV, then lower objective
-                    if off_cv < parent_cv or (off_cv == parent_cv and off_obj < parent_obj):
-                        decs[t][i] = off_decs[i]
-                        objs[t][i] = off_objs[i]
-                        if cons[t] is not None:
-                            cons[t][i] = off_cons[i]
+                # DE/rand/1/bin generation
+                off_decs = np.zeros((n, maxD))
+                for i in range(n):
+                    # x1 from current task population only
+                    x1 = np.random.randint(n)
+                    while x1 == i:
+                        x1 = np.random.randint(n)
+                    # x2, x3 from combined pool
+                    x2 = np.random.randint(n_combined)
+                    while x2 == i or x2 == x1:
+                        x2 = np.random.randint(n_combined)
+                    x3 = np.random.randint(n_combined)
+                    while x3 == i or x3 == x1 or x3 == x2:
+                        x3 = np.random.randint(n_combined)
 
-            # Elite solution transfer: replace worst solution with elite from source task
+                    # DE/rand/1 mutation
+                    v = pop_decs[t][x1] + self.F * (popf[x2] - popf[x3])
+
+                    # Binomial crossover
+                    u = pop_decs[t][i].copy()
+                    j_rand = np.random.randint(maxD)
+                    mask = np.random.rand(maxD) < self.CR
+                    mask[j_rand] = True
+                    u[mask] = v[mask]
+
+                    off_decs[i] = np.clip(u, 0, 1)
+
+                # Evaluate offspring (trim to task dimension)
+                off_objs_t, off_cons_real = evaluation_single(
+                    problem, off_decs[:, :dims[t]], t)
+                off_cons_t = np.zeros((n, maxC))
+                if maxC > 0 and off_cons_real.shape[1] > 0:
+                    off_cons_t[:, :off_cons_real.shape[1]] = off_cons_real
+                nfes += n
+                pbar.update(n)
+
+                # Elitist selection (parents + offspring → best n)
+                merged_decs = np.vstack([pop_decs[t], off_decs])
+                merged_objs = np.vstack([pop_objs[t], off_objs_t])
+                merged_cons = np.vstack([pop_cons[t], off_cons_t])
+                sel = selection_elit(objs=merged_objs, n=n, cons=merged_cons)
+                pop_decs[t] = merged_decs[sel]
+                pop_objs[t] = merged_objs[sel]
+                pop_cons[t] = merged_cons[sel]
+
+            # --- Elite solution transfer ---
             for t in range(nt):
-                if nfes_per_task[t] >= max_nfes_per_task[t]:
-                    continue
-
                 s = source_tasks[t]
+                # Replace last (worst) with first (best) from source task
+                elite_dec = pop_decs[s][0].copy()
 
-                # Find elite (best) solution from source task
-                cvs_s = np.sum(np.maximum(0, cons[s]), axis=1) if cons[s] is not None and cons[s].size > 0 else np.zeros(len(objs[s]))
-                elite_idx = self._get_best_index(objs[s][:, 0], cvs_s)
-                elite_dec = decs[s][elite_idx].copy()
-
-                # Align dimensions if necessary
-                elite_dec = self._align_dimensions(elite_dec, dims[t])
-
-                # Evaluate elite in current task
-                elite_dec_2d = elite_dec.reshape(1, -1)
-                elite_obj, elite_con = evaluation_single(problem, elite_dec_2d, t)
-                nfes_per_task[t] += 1
+                elite_obj, elite_con_real = evaluation_single(
+                    problem, elite_dec[:dims[t]].reshape(1, -1), t)
+                nfes += 1
                 pbar.update(1)
 
-                # Replace the last (worst after sorting) individual
-                # First sort population by fitness
-                cvs_t = np.sum(np.maximum(0, cons[t]), axis=1) if cons[t] is not None and cons[t].size > 0 else np.zeros(len(objs[t]))
-                worst_idx = self._get_worst_index(objs[t][:, 0], cvs_t)
+                pop_decs[t][-1] = elite_dec
+                pop_objs[t][-1] = elite_obj.flatten()
+                pop_cons[t][-1] = 0
+                if maxC > 0 and elite_con_real.shape[1] > 0:
+                    pop_cons[t][-1, :elite_con_real.shape[1]] = \
+                        elite_con_real.flatten()
 
-                decs[t][worst_idx] = elite_dec
-                objs[t][worst_idx] = elite_obj[0]
-                if cons[t] is not None:
-                    cons[t][worst_idx] = elite_con[0]
-
-            # Append to history
-            for t in range(nt):
-                append_history(all_decs[t], decs[t], all_objs[t], objs[t], all_cons[t], cons[t])
+            # Record history in real space
+            real_decs, real_cons = space_transfer(
+                problem, decs=pop_decs, cons=pop_cons, type='real')
+            append_history(all_decs, real_decs, all_objs, pop_objs,
+                           all_cons, real_cons)
 
         pbar.close()
         runtime = time.time() - start_time
 
-        # Build and save results
-        results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,
-                                     all_cons=all_cons, bounds=problem.bounds, save_path=self.save_path,
-                                     filename=self.name, save_data=self.save_data)
+        results = build_save_results(
+            all_decs=all_decs, all_objs=all_objs, runtime=runtime,
+            max_nfes=max_nfes_per_task, all_cons=all_cons,
+            bounds=problem.bounds, save_path=self.save_path,
+            filename=self.name, save_data=self.save_data)
 
         return results
-
-    def _generation(self, pop_decs, spop_decs, ct, cs, dim_t, dim_s):
-        """
-        Generate offspring using meta-knowledge transfer-based DE.
-
-        The meta-knowledge transfer transforms solutions from the source task
-        to the target task space using centroid alignment: x_s - cs + ct
-
-        Parameters
-        ----------
-        pop_decs : np.ndarray
-            Current task population, shape (n, dim_t)
-        spop_decs : np.ndarray
-            Source task population, shape (n_s, dim_s)
-        ct : np.ndarray
-            Centroid of current task, shape (dim_t,)
-        cs : np.ndarray
-            Centroid of source task, shape (dim_s,)
-        dim_t : int
-            Dimension of current task
-        dim_s : int
-            Dimension of source task
-
-        Returns
-        -------
-        off_decs : np.ndarray
-            Offspring decision variables, shape (n, dim_t)
-        """
-        n = len(pop_decs)
-
-        # Transform source population to target task space via centroid alignment
-        # Align dimensions first
-        spop_aligned = np.zeros((len(spop_decs), dim_t))
-        cs_aligned = self._align_dimensions(cs, dim_t)
-
-        for i in range(len(spop_decs)):
-            dec_aligned = self._align_dimensions(spop_decs[i], dim_t)
-            # Meta-knowledge transfer: x_s - cs + ct
-            spop_aligned[i] = dec_aligned - cs_aligned + ct
-
-        # Combine current population with transformed source population
-        popf_dec = np.vstack([pop_decs, spop_aligned])
-        n_combined = len(popf_dec)
-
-        off_decs = np.zeros((n, dim_t))
-
-        for i in range(n):
-            # Select x1 from current population (different from i)
-            x1 = np.random.randint(n)
-            while x1 == i:
-                x1 = np.random.randint(n)
-
-            # Select x2 from combined population (different from i and x1)
-            x2 = np.random.randint(n_combined)
-            while x2 == i or x2 == x1:
-                x2 = np.random.randint(n_combined)
-
-            # Select x3 from combined population (different from i, x1, x2)
-            x3 = np.random.randint(n_combined)
-            while x3 == i or x3 == x2 or x3 == x1:
-                x3 = np.random.randint(n_combined)
-
-            # DE/rand/1 mutation
-            mutant = pop_decs[x1] + self.F * (popf_dec[x2] - popf_dec[x3])
-
-            # DE binomial crossover
-            off_dec = self._de_crossover(mutant, pop_decs[i])
-
-            # Boundary handling
-            off_decs[i] = np.clip(off_dec, 0, 1)
-
-        return off_decs
-
-    def _de_crossover(self, mutant, target):
-        """
-        Perform DE binomial crossover.
-
-        Parameters
-        ----------
-        mutant : np.ndarray
-            Mutant vector, shape (dim,)
-        target : np.ndarray
-            Target vector, shape (dim,)
-
-        Returns
-        -------
-        trial : np.ndarray
-            Trial vector after crossover, shape (dim,)
-        """
-        dim = len(target)
-        j_rand = np.random.randint(dim)
-        mask = np.random.rand(dim) < self.CR
-        mask[j_rand] = True  # Ensure at least one dimension from mutant
-        trial = np.where(mask, mutant, target)
-        return trial
-
-    def _align_dimensions(self, dec, target_dim):
-        """
-        Align decision variable dimensions to target dimension.
-
-        Parameters
-        ----------
-        dec : np.ndarray
-            Decision variable of shape (dim,)
-        target_dim : int
-            Target dimension
-
-        Returns
-        -------
-        aligned_dec : np.ndarray
-            Aligned decision variable of shape (target_dim,)
-        """
-        current_dim = len(dec)
-        if current_dim == target_dim:
-            return dec.copy()
-        elif current_dim < target_dim:
-            # Pad with random values in [0, 1]
-            padding = np.random.rand(target_dim - current_dim)
-            return np.concatenate([dec, padding])
-        else:
-            # Truncate to target dimension
-            return dec[:target_dim].copy()
-
-    def _get_best_index(self, objs, cvs):
-        """
-        Get index of the best individual considering constraints.
-
-        Parameters
-        ----------
-        objs : np.ndarray
-            Objective values, shape (n,)
-        cvs : np.ndarray
-            Constraint violations, shape (n,)
-
-        Returns
-        -------
-        best_idx : int
-            Index of the best individual
-        """
-        # Sort by CV first, then by objective
-        indices = np.lexsort((objs, cvs))
-        return indices[0]
-
-    def _get_worst_index(self, objs, cvs):
-        """
-        Get index of the worst individual considering constraints.
-
-        Parameters
-        ----------
-        objs : np.ndarray
-            Objective values, shape (n,)
-        cvs : np.ndarray
-            Constraint violations, shape (n,)
-
-        Returns
-        -------
-        worst_idx : int
-            Index of the worst individual
-        """
-        # Sort by CV first, then by objective
-        indices = np.lexsort((objs, cvs))
-        return indices[-1]

@@ -146,7 +146,8 @@ class EMEA:
                     for k in active_tasks:
                         if k == i:
                             continue
-                        his_rank = np.lexsort((objs[k], cons[k]))
+                        cvs_k = np.sum(np.maximum(0, cons[k]), axis=1)
+                        his_rank = constrained_sort(objs[k], cvs_k)
                         his_decs = decs[k][his_rank, :]
                         his_best_decs = his_decs[:inject_num, :dims[k]].squeeze()
 
@@ -216,10 +217,9 @@ def mDA(curr_decs, his_decs, his_best_decs):
     his_len = his_decs.shape[1]
 
     # Align dimensions by zero-padding the shorter one
-    if curr_len < his_len:
-        curr_decs = np.column_stack([curr_decs, np.zeros((curr_decs.shape[0], his_len - curr_len))])
-    elif curr_len > his_len:
-        his_decs = np.column_stack([his_decs, np.zeros((his_decs.shape[0], curr_len - his_len))])
+    max_dim = max(curr_len, his_len)
+    curr_decs = align_dimensions(curr_decs, max_dim, fill='zero')
+    his_decs = align_dimensions(his_decs, max_dim, fill='zero')
 
     # Transpose for matrix operations
     xx = curr_decs.T

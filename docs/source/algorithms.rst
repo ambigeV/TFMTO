@@ -436,7 +436,7 @@ You can easily implement custom algorithms by following the three construction r
 Available Algorithms
 --------------------
 
-DDMTOLab provides 90+ optimization algorithms organized into four categories:
+DDMTOLab provides 110+ optimization algorithms organized into four categories:
 
 STSO (Single-Task Single-Objective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -637,6 +637,34 @@ Multitask evolutionary algorithms with knowledge transfer for single-objective o
      - BO with LCB and Bidirectional Curriculum Knowledge Transfer
    * - ``EEI_BO_plus``
      - Enhanced EEI-BO for Multitask Optimization
+   * - ``BLKT_DE``
+     - Block-Level Knowledge Transfer DE
+   * - ``DTSKT``
+     - Distribution Direction-Assisted Two-Stage Knowledge Transfer
+   * - ``EMTO_AI``
+     - Evolutionary Multitask Optimization with Adaptive Intensity
+   * - ``MFEA_AKT``
+     - Multifactorial EA with Adaptive Knowledge Transfer
+   * - ``MFEA_DGD``
+     - MFEA Based on Diffusion Gradient Descent
+   * - ``MFEA_SSG``
+     - MFEA with Single-Step Generative Model
+   * - ``MFEA_VC``
+     - MFEA with Variational Crossover
+   * - ``MTDE_ADKT``
+     - Multitask DE with Adaptive Dual Knowledge Transfer
+   * - ``MTEA_HKTS``
+     - Multitask EA with Hierarchical Knowledge Transfer Strategy
+   * - ``MTEA_PAE``
+     - Multitask EA with Progressive Auto-Encoding
+   * - ``MTES_KG``
+     - Multitask Evolution Strategy with Knowledge-Guided Sampling
+   * - ``SaEF_AKT``
+     - Surrogate-Assisted Evolutionary Framework with Adaptive Knowledge Transfer
+   * - ``SSLT_DE``
+     - Scenario-based Self-Learning Transfer DE
+   * - ``TNG_SNES``
+     - Transfer Task-averaged Natural Gradient Separable NES
 
 MTMO (Multitask Multiobjective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -667,6 +695,16 @@ Multitask multiobjective evolutionary algorithms with knowledge transfer.
      - Evolutionary Multitasking with Probabilistic Distribution
    * - ``ParEGO_KT``
      - ParEGO with Knowledge Transfer
+   * - ``EMT_GS``
+     - Evolutionary Multitasking with Generative Strategies
+   * - ``MO_MTEA_PAE``
+     - Multiobjective MTEA with Progressive Auto-Encoding
+   * - ``MO_SBO``
+     - Multiobjective Symbiosis-Based Optimization
+   * - ``MTEA_D_TSD``
+     - Multitask EA/D with Transfer of Search Directions
+   * - ``MTEA_DCK``
+     - Multitask EA via Diversity- and Convergence-Oriented Knowledge Transfer
 
 See Also
 --------

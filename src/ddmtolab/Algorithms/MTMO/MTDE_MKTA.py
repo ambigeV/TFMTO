@@ -308,7 +308,7 @@ class MTDE_MKTA:
                     # Type 1: Direct transfer - randomly select a solution from helper task
                     xDeck = decs[k][np.random.randint(Np_k)]
                     # Align dimensions to current task
-                    xDeck = self._align_dimensions(xDeck, dim)
+                    xDeck = align_dimensions(xDeck, dim)
                 else:
                     # Type 2: Distribution-based transfer
                     # Transform solution from helper task's distribution to current task's distribution
@@ -319,7 +319,7 @@ class MTDE_MKTA:
                     xDeck_normalized = (xDeck - models[k]['mean']) / models[k]['std']
 
                     # Align dimensions after normalization
-                    xDeck_normalized_aligned = self._align_dimensions(xDeck_normalized, dim)
+                    xDeck_normalized_aligned = align_dimensions(xDeck_normalized, dim)
 
                     # Get aligned mean and std for current task
                     mean_t = models[t]['mean']
@@ -401,33 +401,6 @@ class MTDE_MKTA:
 
         candidates = [i for i in range(Np) if i not in exclude]
         return np.random.choice(candidates)
-
-    def _align_dimensions(self, dec, target_dim):
-        """
-        Align decision variable dimensions to target dimension.
-
-        Parameters
-        ----------
-        dec : np.ndarray
-            Decision variable of shape (dim,)
-        target_dim : int
-            Target dimension
-
-        Returns
-        -------
-        aligned_dec : np.ndarray
-            Aligned decision variable of shape (target_dim,)
-        """
-        current_dim = len(dec)
-        if current_dim == target_dim:
-            return dec.copy()
-        elif current_dim < target_dim:
-            # Pad with random values
-            padding = np.random.rand(target_dim - current_dim)
-            return np.concatenate([dec, padding])
-        else:
-            # Truncate
-            return dec[:target_dim].copy()
 
     def _selection_spea2(self, decs, objs, cons, params, n):
         """

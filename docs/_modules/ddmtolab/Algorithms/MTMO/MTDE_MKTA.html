@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Algorithms.MTMO.MTDE_MKTA &mdash; DDMTOLab 1.0.7 documentation</title>
+  <title>ddmtolab.Algorithms.MTMO.MTDE_MKTA &mdash; DDMTOLab 1.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=46dfa7f5"></script>
+      <script src="../../../../_static/documentation_options.js?v=aec50437"></script>
       <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -391,7 +391,7 @@
                     <span class="c1"># Type 1: Direct transfer - randomly select a solution from helper task</span>
                     <span class="n">xDeck</span> <span class="o">=</span> <span class="n">decs</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">Np_k</span><span class="p">)]</span>
                     <span class="c1"># Align dimensions to current task</span>
-                    <span class="n">xDeck</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_align_dimensions</span><span class="p">(</span><span class="n">xDeck</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+                    <span class="n">xDeck</span> <span class="o">=</span> <span class="n">align_dimensions</span><span class="p">(</span><span class="n">xDeck</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Type 2: Distribution-based transfer</span>
                     <span class="c1"># Transform solution from helper task&#39;s distribution to current task&#39;s distribution</span>
@@ -402,7 +402,7 @@
                     <span class="n">xDeck_normalized</span> <span class="o">=</span> <span class="p">(</span><span class="n">xDeck</span> <span class="o">-</span> <span class="n">models</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;mean&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">models</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;std&#39;</span><span class="p">]</span>
 
                     <span class="c1"># Align dimensions after normalization</span>
-                    <span class="n">xDeck_normalized_aligned</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_align_dimensions</span><span class="p">(</span><span class="n">xDeck_normalized</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+                    <span class="n">xDeck_normalized_aligned</span> <span class="o">=</span> <span class="n">align_dimensions</span><span class="p">(</span><span class="n">xDeck_normalized</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
 
                     <span class="c1"># Get aligned mean and std for current task</span>
                     <span class="n">mean_t</span> <span class="o">=</span> <span class="n">models</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;mean&#39;</span><span class="p">]</span>
@@ -484,33 +484,6 @@
 
         <span class="n">candidates</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Np</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_align_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">target_dim</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Align decision variable dimensions to target dimension.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        dec : np.ndarray</span>
-<span class="sd">            Decision variable of shape (dim,)</span>
-<span class="sd">        target_dim : int</span>
-<span class="sd">            Target dimension</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        aligned_dec : np.ndarray</span>
-<span class="sd">            Aligned decision variable of shape (target_dim,)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">current_dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">current_dim</span> <span class="o">==</span> <span class="n">target_dim</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">dec</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="n">current_dim</span> <span class="o">&lt;</span> <span class="n">target_dim</span><span class="p">:</span>
-            <span class="c1"># Pad with random values</span>
-            <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">target_dim</span> <span class="o">-</span> <span class="n">current_dim</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">dec</span><span class="p">,</span> <span class="n">padding</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Truncate</span>
-            <span class="k">return</span> <span class="n">dec</span><span class="p">[:</span><span class="n">target_dim</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_selection_spea2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decs</span><span class="p">,</span> <span class="n">objs</span><span class="p">,</span> <span class="n">cons</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

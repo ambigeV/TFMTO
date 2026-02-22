@@ -307,7 +307,7 @@ class SREMTO:
         """
         n = len(objs)
         # Sort by CV first, then by objective
-        indices = np.lexsort((objs, cvs))
+        indices = constrained_sort(objs, cvs)
         ranks = np.zeros(n, dtype=int)
         ranks[indices] = np.arange(1, n + 1)
         return ranks

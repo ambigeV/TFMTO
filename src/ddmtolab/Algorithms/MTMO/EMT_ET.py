@@ -164,7 +164,7 @@ class EMT_ET:
                 target_dim = problem.dims[t]
                 transfer_decs_aligned = np.zeros((len(transfer_decs), target_dim))
                 for i in range(len(transfer_decs)):
-                    transfer_decs_aligned[i] = self._align_dimensions(transfer_decs[i], target_dim)
+                    transfer_decs_aligned[i] = align_dimensions(transfer_decs[i], target_dim)
 
                 # Evaluate transferred solutions
                 transfer_objs, transfer_cons = evaluation_single(problem, transfer_decs_aligned, t)
@@ -350,33 +350,6 @@ class EMT_ET:
         transfer_origin = np.array(transfer_origin_list, dtype=int)
 
         return transfer_decs_list, transfer_is_trans, transfer_origin
-
-    def _align_dimensions(self, dec, target_dim):
-        """
-        Align decision variable dimensions to target dimension.
-
-        Parameters
-        ----------
-        dec : np.ndarray
-            Decision variable of shape (dim,)
-        target_dim : int
-            Target dimension
-
-        Returns
-        -------
-        aligned_dec : np.ndarray
-            Aligned decision variable of shape (target_dim,)
-        """
-        current_dim = len(dec)
-        if current_dim == target_dim:
-            return dec.copy()
-        elif current_dim < target_dim:
-            # Pad with random values
-            padding = np.random.rand(target_dim - current_dim)
-            return np.concatenate([dec, padding])
-        else:
-            # Truncate
-            return dec[:target_dim].copy()
 
     def _nsga2_sort(self, objs, cons=None):
         """

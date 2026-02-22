@@ -15,6 +15,7 @@ Date: 2025.01.09
 Version: 1.0
 """
 from tqdm import tqdm
+import copy
 import time
 import numpy as np
 from ddmtolab.Methods.Algo_Methods.algo_utils import *
@@ -115,75 +116,20 @@ class EBS:
         # Initialize CMA-ES parameters for each task (using unified dimension)
         params = []
         for t in range(nt):
-            # Use unified dimension for optimization
-            dim = d_max
-
             # Determine population size based on original task dimension
             if self.use_n:
                 lam = par_list(self.n, nt)[t]
             else:
                 lam = int(4 + 3 * np.log(dims[t]))
 
-            mu = int(lam / 2)
-
-            # Recombination weights
-            weights = np.log(mu + 0.5) - np.log(np.arange(1, mu + 1))
-            weights = weights / np.sum(weights)
-            mueff = 1.0 / np.sum(weights ** 2)
-
-            # Step size control parameters
-            cs = (mueff + 2) / (dim + mueff + 5)
-            damps = 1 + cs + 2 * max(np.sqrt((mueff - 1) / (dim + 1)) - 1, 0)
-
-            # Covariance update parameters
-            cc = (4 + mueff / dim) / (4 + dim + 2 * mueff / dim)
-            c1 = 2 / ((dim + 1.3) ** 2 + mueff)
-            cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2) ** 2 + 2 * mueff / 2))
-
-            chiN = np.sqrt(dim) * (1 - 1 / (4 * dim) + 1 / (21 * dim ** 2))
-
-            # Initialize mean vector (random in unified space)
-            m_dec_init = np.random.rand(dim)
-
             # Distribution for self-generated offspring (no knowledge transfer)
-            params_s = {
-                'm_dec': m_dec_init.copy(),
-                'ps': np.zeros(dim),
-                'pc': np.zeros(dim),
-                'B': np.eye(dim),
-                'D': np.ones(dim),
-                'C': np.eye(dim),
-                'invsqrtC': np.eye(dim),
-                'sigma': self.sigma0,
-                'eigenFE': 0
-            }
-
-            # Distribution for knowledge transfer offspring
-            params_o = {
-                'm_dec': m_dec_init.copy(),
-                'ps': np.zeros(dim),
-                'pc': np.zeros(dim),
-                'B': np.eye(dim),
-                'D': np.ones(dim),
-                'C': np.eye(dim),
-                'invsqrtC': np.eye(dim),
-                'sigma': self.sigma0,
-                'eigenFE': 0
-            }
+            params_s = cmaes_init_params(d_max, lam=lam, sigma0=self.sigma0)
+            # Distribution for knowledge transfer offspring (same starting point)
+            params_o = copy.deepcopy(params_s)
+            params_o['m_dec'] = params_s['m_dec'].copy()
 
             params.append({
-                'dim': dim,  # Unified dimension
                 'real_dim': dims[t],  # Real dimension for this task
-                'lam': lam,
-                'mu': mu,
-                'weights': weights,
-                'mueff': mueff,
-                'cs': cs,
-                'damps': damps,
-                'cc': cc,
-                'c1': c1,
-                'cmu': cmu,
-                'chiN': chiN,
                 'params_s': params_s,  # Self distribution (no transfer)
                 'params_o': params_o,  # Other distribution (with transfer)
             })
@@ -241,12 +187,8 @@ class EBS:
                     ps = p['params_s']  # Use self distribution
 
                 # Generate offspring using selected CMA-ES distribution
-                sample_decs = ebs_cmaes_generation(
-                    m_dec=ps['m_dec'],
-                    sigma=ps['sigma'],
-                    B=ps['B'],
-                    D=ps['D'],
-                    lam=p['lam']
+                sample_decs = cmaes_sample(
+                    ps['m_dec'], ps['sigma'], ps['B'], ps['D'], ps['lam']
                 )
                 offspring_list.append(sample_decs)
 
@@ -263,7 +205,7 @@ class EBS:
                 if is_transfer:
                     # Perform knowledge transfer: sample from concatenate offspring
                     # Randomly select lambda candidates from concatenate offspring
-                    n_candidates = min(p['lam'], concat_offspring.shape[0])
+                    n_candidates = min(p['params_s']['lam'], concat_offspring.shape[0])
                     candidate_indices = np.random.choice(
                         concat_offspring.shape[0],
                         size=n_candidates,
@@ -272,7 +214,7 @@ class EBS:
                     candidate_decs = concat_offspring[candidate_indices].copy()
 
                     # If we need more candidates, duplicate some
-                    while candidate_decs.shape[0] < p['lam']:
+                    while candidate_decs.shape[0] < p['params_s']['lam']:
                         extra_idx = np.random.choice(concat_offspring.shape[0])
                         candidate_decs = np.vstack([candidate_decs, concat_offspring[extra_idx:extra_idx + 1]])
 
@@ -296,7 +238,7 @@ class EBS:
 
                 # Sort by constraint violation first, then by objective
                 cvs = np.sum(np.maximum(0, sample_cons), axis=1)
-                sort_indices = np.lexsort((sample_objs.flatten(), cvs))
+                sort_indices = constrained_sort(sample_objs, cvs)
 
                 # Sort in unified space
                 sorted_decs = candidate_decs[sort_indices]
@@ -305,9 +247,9 @@ class EBS:
 
                 # Update evaluation counts
                 if is_transfer:
-                    evals_o[i] += p['lam']
+                    evals_o[i] += p['params_s']['lam']
                 else:
-                    evals_s[i] += p['lam']
+                    evals_s[i] += p['params_s']['lam']
 
                 # Check if best-so-far is improved
                 best_candidate_obj = sorted_objs[0, 0]
@@ -346,8 +288,8 @@ class EBS:
                 objs[i] = sorted_objs
                 cons[i] = sorted_cons
 
-                nfes_per_task[i] += p['lam']
-                pbar.update(p['lam'])
+                nfes_per_task[i] += p['params_s']['lam']
+                pbar.update(p['params_s']['lam'])
 
                 # Convert to real space for history (truncate to real dimension)
                 decs_real = sorted_decs[:, :dims[i]]
@@ -356,35 +298,13 @@ class EBS:
                 # Update the appropriate CMA-ES distribution
                 if is_transfer:
                     # Update knowledge transfer CMA-ES
-                    _update_cmaes_params(
-                        p['params_o'], sorted_decs, p,
-                        nfes_per_task[i]
-                    )
+                    cmaes_update(p['params_o'], sorted_decs, nfes_per_task[i])
                 else:
                     # Update self CMA-ES
-                    _update_cmaes_params(
-                        p['params_s'], sorted_decs, p,
-                        nfes_per_task[i]
-                    )
+                    cmaes_update(p['params_s'], sorted_decs, nfes_per_task[i])
 
         pbar.close()
         runtime = time.time() - start_time
-
-        # Collect final EBS parameters
-        ebs_params = []
-        for i in range(nt):
-            p = params[i]
-            ebs_params.append({
-                'params_s': {k: v.copy() if isinstance(v, np.ndarray) else v
-                             for k, v in p['params_s'].items()},
-                'params_o': {k: v.copy() if isinstance(v, np.ndarray) else v
-                             for k, v in p['params_o'].items()},
-                'gamma': gamma[i],
-                'improvements_s': improvements_s[i],
-                'improvements_o': improvements_o[i],
-                'evals_s': evals_s[i],
-                'evals_o': evals_o[i],
-            })
 
         # Save results (all_decs are already in real space)
         results = build_save_results(
@@ -393,105 +313,5 @@ class EBS:
             save_path=self.save_path, filename=self.name, save_data=self.save_data
         )
 
-        return results, ebs_params
+        return results
 
-
-def _update_cmaes_params(cmaes_params, sorted_decs, task_params, nfes):
-    """
-    Update CMA-ES distribution parameters.
-
-    Parameters
-    ----------
-    cmaes_params : dict
-        CMA-ES parameter dictionary to update (params_s or params_o)
-    sorted_decs : np.ndarray
-        Sorted offspring decision variables (best first), shape (lam, dim)
-    task_params : dict
-        Task-level parameters (weights, mu, cs, cc, c1, cmu, etc.)
-    nfes : int
-        Current number of function evaluations
-    """
-    p = cmaes_params
-    tp = task_params
-
-    # Update mean decision variables
-    old_dec = p['m_dec'].copy()
-    p['m_dec'] = tp['weights'] @ sorted_decs[:tp['mu']]
-
-    # Update evolution paths
-    diff = (p['m_dec'] - old_dec) / p['sigma']
-    p['ps'] = (1 - tp['cs']) * p['ps'] + \
-              np.sqrt(tp['cs'] * (2 - tp['cs']) * tp['mueff']) * (p['invsqrtC'] @ diff)
-
-    ps_norm = np.linalg.norm(p['ps'])
-    hsig = ps_norm / np.sqrt(1 - (1 - tp['cs']) ** (2 * nfes / tp['lam'])) / tp['chiN'] < 1.4 + 2 / (tp['dim'] + 1)
-
-    p['pc'] = (1 - tp['cc']) * p['pc'] + \
-              hsig * np.sqrt(tp['cc'] * (2 - tp['cc']) * tp['mueff']) * diff
-
-    # Update covariance matrix
-    artmp = (sorted_decs[:tp['mu']] - old_dec) / p['sigma']
-    delta = (1 - hsig) * tp['cc'] * (2 - tp['cc'])
-    p['C'] = (1 - tp['c1'] - tp['cmu']) * p['C'] + \
-             tp['c1'] * (np.outer(p['pc'], p['pc']) + delta * p['C']) + \
-             tp['cmu'] * (artmp.T @ np.diag(tp['weights']) @ artmp)
-
-    # Update step size
-    p['sigma'] = p['sigma'] * np.exp(tp['cs'] / tp['damps'] * (ps_norm / tp['chiN'] - 1))
-
-    # Update eigendecomposition periodically
-    if nfes - p['eigenFE'] > tp['lam'] / (tp['c1'] + tp['cmu']) / tp['dim'] / 10:
-        p['eigenFE'] = nfes
-        p['C'] = np.triu(p['C']) + np.triu(p['C'], 1).T
-
-        eigvals, eigvecs = np.linalg.eigh(p['C'])
-
-        if np.min(eigvals) <= 0:
-            p['B'] = np.eye(tp['dim'])
-            p['D'] = np.ones(tp['dim'])
-            p['C'] = np.eye(tp['dim'])
-            print(f"Warning: Covariance matrix not positive definite, resetting to identity.")
-        else:
-            p['B'] = eigvecs
-            p['D'] = np.sqrt(eigvals)
-
-        p['invsqrtC'] = p['B'] @ np.diag(1.0 / p['D']) @ p['B'].T
-
-
-def ebs_cmaes_generation(m_dec: np.ndarray, sigma: float, B: np.ndarray,
-                         D: np.ndarray, lam: int = None) -> np.ndarray:
-    """
-    Generate offspring population using CMA-ES sampling strategy.
-
-    Parameters
-    ----------
-    m_dec : np.ndarray
-        Mean decision vector, shape (d,)
-    sigma : float
-        Step size (global scaling factor)
-    B : np.ndarray
-        Eigenvector matrix from covariance matrix decomposition, shape (d, d)
-    D : np.ndarray
-        Square root of eigenvalues (standard deviations), shape (d,)
-    lam : int, optional
-        Number of offspring to generate (default: None)
-
-    Returns
-    -------
-    offdecs : np.ndarray
-        Offspring decision variables, shape (lam, d)
-    """
-    d = len(m_dec)
-
-    if lam is None:
-        lam = int(4 + 3 * np.log(d))
-
-    offdecs = np.zeros((lam, d))
-
-    for i in range(lam):
-        z = np.random.randn(d)
-        offdec = m_dec + sigma * (B @ (D * z))
-        offdec = np.clip(offdec, 0, 1)
-        offdecs[i] = offdec
-
-    return offdecs

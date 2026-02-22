@@ -131,21 +131,15 @@ class IPOP_CMA_ES:
             for i in active_tasks:
                 p = params[i]
 
-                # Generate offspring using cmaes_generation
-                sample_decs = cmaes_generation(
-                    m_dec=p['m_dec'],
-                    sigma=p['sigma'],
-                    B=p['B'],
-                    D=p['D'],
-                    lam=p['lam']
-                )
+                # Generate offspring using cmaes_sample
+                sample_decs = cmaes_sample(p['m_dec'], p['sigma'], p['B'], p['D'], p['lam'])
 
                 # Evaluate samples
                 sample_objs, sample_cons = evaluation_single(problem, sample_decs, i)
 
                 # Sort by constraint violation first, then by objective
                 cvs = np.sum(np.maximum(0, sample_cons), axis=1)
-                sort_indices = np.lexsort((sample_objs.flatten(), cvs))
+                sort_indices = constrained_sort(sample_objs, cvs)
 
                 sample_decs = sample_decs[sort_indices]
                 sample_objs = sample_objs[sort_indices]
@@ -168,47 +162,8 @@ class IPOP_CMA_ES:
                 # Append to history
                 append_history(all_decs[i], decs[i], all_objs[i], objs[i], all_cons[i], cons[i])
 
-                # Update mean decision variables
-                old_dec = p['m_dec'].copy()
-                p['m_dec'] = p['weights'] @ sample_decs[:p['mu']]
-
-                # Update evolution paths
-                diff = (p['m_dec'] - old_dec) / p['sigma']
-                p['ps'] = (1 - p['cs']) * p['ps'] + \
-                          np.sqrt(p['cs'] * (2 - p['cs']) * p['mueff']) * (p['invsqrtC'] @ diff)
-
-                ps_norm = np.linalg.norm(p['ps'])
-                hsig = ps_norm / np.sqrt(1 - (1 - p['cs']) ** (2 * nfes_per_task[i] / p['lam'])) / p['chiN'] < 1.4 + 2 / (p['dim'] + 1)
-
-                p['pc'] = (1 - p['cc']) * p['pc'] + \
-                          hsig * np.sqrt(p['cc'] * (2 - p['cc']) * p['mueff']) * diff
-
-                # Update covariance matrix
-                artmp = (sample_decs[:p['mu']] - old_dec) / p['sigma']
-                delta = (1 - hsig) * p['cc'] * (2 - p['cc'])
-                p['C'] = (1 - p['c1'] - p['cmu']) * p['C'] + \
-                         p['c1'] * (np.outer(p['pc'], p['pc']) + delta * p['C']) + \
-                         p['cmu'] * (artmp.T @ np.diag(p['weights']) @ artmp)
-
-                # Update step size
-                p['sigma'] = p['sigma'] * np.exp(p['cs'] / p['damps'] * (ps_norm / p['chiN'] - 1))
-
-                # Update eigendecomposition periodically
-                if nfes_per_task[i] - p['eigenFE'] > p['lam'] / (p['c1'] + p['cmu']) / p['dim'] / 10:
-                    p['eigenFE'] = nfes_per_task[i]
-                    p['C'] = np.triu(p['C']) + np.triu(p['C'], 1).T
-
-                    eigvals, eigvecs = np.linalg.eigh(p['C'])
-
-                    if np.min(eigvals) <= 0:
-                        p['B'] = np.eye(p['dim'])
-                        p['D'] = np.ones(p['dim'])
-                        p['C'] = np.eye(p['dim'])
-                    else:
-                        p['B'] = eigvecs
-                        p['D'] = np.sqrt(eigvals)
-
-                    p['invsqrtC'] = p['B'] @ np.diag(1.0 / p['D']) @ p['B'].T
+                # Update CMA-ES parameters (mean, paths, covariance, step size)
+                cmaes_update(p, sample_decs, nfes_per_task[i])
 
                 # Restart strategy IPOP
                 pre_gen = 10 + (30 * int(p['dim'] / p['lam']))
@@ -257,41 +212,7 @@ class IPOP_CMA_ES:
         dict
             Dictionary containing all CMA-ES parameters
         """
-
-        mu = int(np.round(lam / 2))
-
-        # Recombination weights
-        weights = np.log(mu + 0.5) - np.log(np.arange(1, mu + 1))
-        weights = weights / np.sum(weights)
-        mueff = 1.0 / np.sum(weights ** 2)
-
-        # Step size control parameters
-        cs = (mueff + 2) / (dim + mueff + 5)
-        damps = 1 + cs + 2 * max(np.sqrt((mueff - 1) / (dim + 1)) - 1, 0)
-
-        # Covariance update parameters
-        cc = (4 + mueff / dim) / (4 + dim + 2 * mueff / dim)
-        c1 = 2 / ((dim + 1.3) ** 2 + mueff)
-        cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2) ** 2 + 2 * mueff / 2))
-
-        # Initialize
-        m_dec = np.random.rand(dim)
-        ps = np.zeros(dim)
-        pc = np.zeros(dim)
-        B = np.eye(dim)
-        D = np.ones(dim)
-        C = np.eye(dim)
-        invsqrtC = np.eye(dim)
-        sigma = self.sigma0
-        eigenFE = 0
-        chiN = np.sqrt(dim) * (1 - 1 / (4 * dim) + 1 / (21 * dim ** 2))
-
-        return {
-            'dim': dim, 'lam': lam, 'mu': mu, 'weights': weights, 'mueff': mueff,
-            'cs': cs, 'damps': damps, 'cc': cc, 'c1': c1, 'cmu': cmu,
-            'm_dec': m_dec, 'ps': ps, 'pc': pc, 'B': B, 'D': D, 'C': C,
-            'invsqrtC': invsqrtC, 'sigma': sigma, 'eigenFE': eigenFE, 'chiN': chiN
-        }
+        return cmaes_init_params(dim, lam=lam, sigma0=self.sigma0)
 
     def _should_restart(self, p, obj_list):
         """
@@ -326,42 +247,3 @@ class IPOP_CMA_ES:
         cond4 = (np.max(obj_list) - np.min(obj_list)) < 1e-12
 
         return cond1 or cond2 or cond3 or cond4
-
-
-def cmaes_generation(m_dec: np.ndarray, sigma: float, B: np.ndarray, D: np.ndarray, lam: int = None) -> np.ndarray:
-    """
-    Generate offspring population using CMA-ES sampling strategy.
-
-    Parameters
-    ----------
-    m_dec : np.ndarray
-        Mean decision vector, shape (d,)
-    sigma : float
-        Step size (global scaling factor)
-    B : np.ndarray
-        Eigenvector matrix from covariance matrix decomposition, shape (d, d)
-    D : np.ndarray
-        Square root of eigenvalues (standard deviations), shape (d,)
-    lam : int, optional
-        Number of offspring to generate (default: None)
-
-    Returns
-    -------
-    offdecs : np.ndarray
-        Offspring decision variables, shape (lam, d)
-    """
-    d = len(m_dec)
-
-    # If lam is None, generate a default number
-    if lam is None:
-        lam = int(4 + 3 * np.log(d))
-
-    offdecs = np.zeros((lam, d))
-
-    for i in range(lam):
-        z = np.random.randn(d)
-        offdec = m_dec + sigma * (B @ (D * z))
-        offdec = np.clip(offdec, 0, 1)
-        offdecs[i] = offdec
-
-    return offdecs

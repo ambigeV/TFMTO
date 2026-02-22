@@ -341,35 +341,10 @@ class MO_MTEA_SaO:
             dec = decs[rand_t][rand_p].copy()
 
             # Align dimensions
-            dec = self._align_dimensions(dec, dims[t])
+            dec = align_dimensions(dec, dims[t])
             transfer_decs.append(dec)
 
         return np.array(transfer_decs)
-
-    def _align_dimensions(self, dec, target_dim):
-        """
-        Align decision variable dimensions to target dimension.
-
-        Parameters
-        ----------
-        dec : np.ndarray
-            Decision variable of shape (dim,)
-        target_dim : int
-            Target dimension
-
-        Returns
-        -------
-        aligned_dec : np.ndarray
-            Aligned decision variable of shape (target_dim,)
-        """
-        current_dim = len(dec)
-        if current_dim == target_dim:
-            return dec.copy()
-        elif current_dim < target_dim:
-            padding = np.random.rand(target_dim - current_dim)
-            return np.concatenate([dec, padding])
-        else:
-            return dec[:target_dim].copy()
 
     def _generation_ga(self, parent_decs):
         """

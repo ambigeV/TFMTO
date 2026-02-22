@@ -29,13 +29,13 @@
 
 ## 📖 Overview
 
-**DDMTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **91+ algorithms**, **180+ benchmark problems**, and powerful experiment tools for problem definition, algorithm development, and performance evaluation.
+**DDMTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **110+ algorithms**, **180+ benchmark problems**, and powerful experiment tools for problem definition, algorithm development, and performance evaluation.
 
 Whether you're working on expensive black-box optimization, multiobjective optimization, or complex multitask scenarios, DDMTOLab provides a flexible and extensible framework to accelerate your **research** and support real-world **applications**.
 
 ## ✨ Features
 
-- 🚀 **Comprehensive Algorithms** - 91+ algorithms for expensive/inexpensive, single/multitask, single/multiobjective, unconstrained/constrained optimization
+- 🚀 **Comprehensive Algorithms** - 110+ algorithms for expensive/inexpensive, single/multitask, single/multiobjective, unconstrained/constrained optimization
 - 📊 **Rich Problem Suite** - 180+ benchmark problems and real-world applications
 - 🤖 **Data-Driven Optimization** - Surrogate modelling for expensive optimization
 - 🔧 **Flexible Framework** - Simple API and intuitive workflow for rapid prototyping
@@ -150,14 +150,14 @@ animation = create_optimization_animation(max_nfes=100, merge=2, title='BO vs MT
 
 ## 🎯 Key Components
 
-### Algorithms (91+)
+### Algorithms (110+)
 
 | Category | Description                  | Algorithms |
 |----------|------------------------------|------------|
 | **STSO** | Single-task single-objective | GA, DE, PSO, SL_PSO, KLPSO, CSO, CMA_ES, IPOP_CMA_ES, sep_CMA_ES, MA_ES, xNES, OpenAI_ES, AO, GWO, EO, BO, EEI_BO, ESAO, SHPSO, SA_COSO, TLRBF, GL_SADE, AutoSAEA, DDEA_MESS, LSADE |
 | **STMO** | Single-task multiobjective   | NSGA_II, NSGA_III, NSGA_II_SDR, SPEA2, MOEA_D, MOEA_DD, MOEA_D_FRRMAB, MOEA_D_STM, RVEA, IBEA, TwoArch2, MSEA, C_TAEA, CCMO, MCEA_D, CPS_MOEA, ParEGO, K_RVEA, DSAEA_PS, KTA2, REMO, ADSAPSO, CSEA, DISK, DRLSAEA, DirHV_EI, EDN_ARMOEA, EIM_EGO, EM_SAEA, KTS, MGSAEA, MMRAEA, MOEA_D_EGO, MultiObjectiveEGO, PCSAEA, PEA, PIEA, SAEA_DBLL, SSDE, TEA |
-| **MTSO** | Multitask single-objective   | MFEA, MFEA_II, EMEA, EBS, G_MFEA, MTEA_AD, MKTDE, MTEA_SaO, SREMTO, LCB_EMT, MTBO, RAMTEA, SELF, EEI_BO_plus, MUMBO, BO_LCB_CKT, BO_LCB_BCKT |
-| **MTMO** | Multitask multiobjective     | MO_MFEA, MO_MFEA_II, MO_EMEA, MO_MTEA_SaO, MTDE_MKTA, MTEA_D_DN, EMT_ET, EMT_PD, ParEGO_KT |
+| **MTSO** | Multitask single-objective   | MFEA, MFEA_II, EMEA, EBS, G_MFEA, MTEA_AD, MKTDE, MTEA_SaO, SREMTO, LCB_EMT, MTBO, RAMTEA, SELF, EEI_BO_plus, MUMBO, BO_LCB_CKT, BO_LCB_BCKT, BLKT_DE, DTSKT, EMTO_AI, MFEA_AKT, MFEA_DGD, MFEA_SSG, MFEA_VC, MTDE_ADKT, MTEA_HKTS, MTEA_PAE, MTES_KG, SaEF_AKT, SSLT_DE, TNG_SNES |
+| **MTMO** | Multitask multiobjective     | MO_MFEA, MO_MFEA_II, MO_EMEA, MO_MTEA_SaO, MTDE_MKTA, MTEA_D_DN, EMT_ET, EMT_PD, ParEGO_KT, EMT_GS, MO_MTEA_PAE, MO_SBO, MTEA_D_TSD, MTEA_DCK |
 
 ### Problems (180+)
 

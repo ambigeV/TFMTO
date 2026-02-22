@@ -144,9 +144,10 @@ class EEI_BO:
                 surrogate_problem.add_task(rbf, dim=dims[i])
 
                 # Use CMA-ES to extract distribution parameters from surrogate
-                _, params = CMA_ES(surrogate_problem, n=self.n1, max_nfes=self.max_nfes1, save_data=False).optimize()
+                cmaes = CMA_ES(surrogate_problem, n=self.n1, max_nfes=self.max_nfes1, save_data=False)
+                cmaes.optimize()
 
-                params_i = params[0]
+                params_i = cmaes.cmaes_params[0]
                 mu = params_i['m_dec']  # Mean of the distribution
                 sigma = params_i['sigma']  # Step size
                 C = params_i['C']  # Covariance matrix

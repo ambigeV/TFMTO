@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ddmtolab.Methods.batch_experiment &mdash; DDMTOLab 1.0.0 documentation</title>
+  <title>ddmtolab.Methods.batch_experiment &mdash; DDMTOLab 1.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/documentation_options.js?v=aec50437"></script>
       <script src="../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../algorithms.html">Algorithms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../methods.html">Methods</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../problems.html">Problems</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -213,8 +213,6 @@
         <span class="p">})</span></div>
 
 
-<div class="viewcode-block" id="BatchExperiment.save_config">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.batch_experiment.BatchExperiment.save_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_runs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_workers</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save experiment configuration to YAML file with custom formatting</span>
@@ -267,11 +265,8 @@
 
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;💾 Configuration saved to: </span><span class="si">{</span><span class="n">config_path</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️ Warning: Failed to save configuration: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️ Warning: Failed to save configuration: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="BatchExperiment.from_config">
-<a class="viewcode-back" href="../../../api.html#ddmtolab.Methods.batch_experiment.BatchExperiment.from_config">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -366,8 +361,7 @@
         <span class="n">batch_exp</span><span class="o">.</span><span class="n">_loaded_run_settings</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;run_settings&#39;</span><span class="p">,</span> <span class="p">{})</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Configuration loaded successfully!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">batch_exp</span></div>
-
+        <span class="k">return</span> <span class="n">batch_exp</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run_single_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
