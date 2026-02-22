@@ -532,6 +532,7 @@ Algorithm Information:
 <section id="stso-single-task-single-objective">
 <h3>STSO (Single-Task Single-Objective)<a class="headerlink" href="#stso-single-task-single-objective" title="Link to this heading"></a></h3>
 <p>Classical evolutionary algorithms and surrogate-assisted methods for single-objective optimization.</p>
+<p><strong>Inexpensive</strong></p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20.0%" />
@@ -552,51 +553,56 @@ Algorithm Information:
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PSO</span></code></p></td>
 <td><p>Particle Swarm Optimization</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CMA_ES</span></code></p></td>
-<td><p>Covariance Matrix Adaptation Evolution Strategy</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SL_PSO</span></code></p></td>
+<td><p>Social Learning PSO</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IPOP_CMA_ES</span></code></p></td>
-<td><p>CMA-ES with Increasing Population</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sep_CMA_ES</span></code></p></td>
-<td><p>Separable CMA-ES</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MA_ES</span></code></p></td>
-<td><p>Matrix Adaptation Evolution Strategy</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OpenAI_ES</span></code></p></td>
-<td><p>OpenAI Evolution Strategy</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xNES</span></code></p></td>
-<td><p>Exponential Natural Evolution Strategy</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KLPSO</span></code></p></td>
+<td><p>Knowledge Learning PSO</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CSO</span></code></p></td>
 <td><p>Competitive Swarm Optimizer</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SL_PSO</span></code></p></td>
-<td><p>Social Learning PSO</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CMA_ES</span></code></p></td>
+<td><p>Covariance Matrix Adaptation Evolution Strategy</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KLPSO</span></code></p></td>
-<td><p>Knowledge Learning PSO</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IPOP_CMA_ES</span></code></p></td>
+<td><p>CMA-ES with Increasing Population</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SHPSO</span></code></p></td>
-<td><p>Self-adaptive Hierarchical PSO</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sep_CMA_ES</span></code></p></td>
+<td><p>Separable CMA-ES</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GWO</span></code></p></td>
-<td><p>Grey Wolf Optimizer</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MA_ES</span></code></p></td>
+<td><p>Matrix Adaptation Evolution Strategy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xNES</span></code></p></td>
+<td><p>Exponential Natural Evolution Strategy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OpenAI_ES</span></code></p></td>
+<td><p>OpenAI Evolution Strategy</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AO</span></code></p></td>
 <td><p>Aquila Optimizer</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EO</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GWO</span></code></p></td>
+<td><p>Grey Wolf Optimizer</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EO</span></code></p></td>
 <td><p>Equilibrium Optimizer</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GL_SADE</span></code></p></td>
-<td><p>Gaussian Local Search with Self-adaptive DE</p></td>
+</tbody>
+</table>
+<p><strong>Expensive</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>Description</p></th>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SA_COSO</span></code></p></td>
-<td><p>Surrogate-Assisted Competitive Swarm Optimizer</p></td>
-</tr>
+</thead>
+<tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BO</span></code></p></td>
 <td><p>Bayesian Optimization</p></td>
 </tr>
@@ -606,16 +612,25 @@ Algorithm Information:
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ESAO</span></code></p></td>
 <td><p>Efficient Surrogate-Assisted Optimization</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SHPSO</span></code></p></td>
+<td><p>Self-adaptive Hierarchical PSO</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SA_COSO</span></code></p></td>
+<td><p>Surrogate-Assisted Competitive Swarm Optimizer</p></td>
+</tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TLRBF</span></code></p></td>
 <td><p>Two-Layer RBF Surrogate-Assisted Optimization</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AutoSAEA</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GL_SADE</span></code></p></td>
+<td><p>Gaussian Local Search with Self-adaptive DE</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AutoSAEA</span></code></p></td>
 <td><p>Surrogate-Assisted EA with Auto-Configuration</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DDEA_MESS</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DDEA_MESS</span></code></p></td>
 <td><p>Data-Driven EA with Multi-Evolutionary Sampling Strategy</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LSADE</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LSADE</span></code></p></td>
 <td><p>Lipschitz Surrogate-Assisted Differential Evolution</p></td>
 </tr>
 </tbody>
@@ -624,6 +639,7 @@ Algorithm Information:
 <section id="stmo-single-task-multiobjective">
 <h3>STMO (Single-Task Multiobjective)<a class="headerlink" href="#stmo-single-task-multiobjective" title="Link to this heading"></a></h3>
 <p>Multiobjective evolutionary algorithms and surrogate-assisted methods.</p>
+<p><strong>Inexpensive</strong></p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20.0%" />
@@ -644,59 +660,67 @@ Algorithm Information:
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NSGA_II_SDR</span></code></p></td>
 <td><p>NSGA-II with Stochastic Dominance Ranking</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MOEA_D</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPEA2</span></code></p></td>
+<td><p>Strength Pareto Evolutionary Algorithm 2</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MOEA_D</span></code></p></td>
 <td><p>Multiobjective Evolutionary Algorithm based on Decomposition</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MOEA_DD</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MOEA_DD</span></code></p></td>
 <td><p>MOEA/D with Diversity Enhancement</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MOEA_D_STM</span></code></p></td>
-<td><p>MOEA/D with Stable Matching</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MOEA_D_FRRMAB</span></code></p></td>
 <td><p>MOEA/D with Fitness-Rate-Rank Multi-Armed Bandit</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MCEA_D</span></code></p></td>
-<td><p>Multi-Criteria Evolutionary Algorithm based on Decomposition</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MOEA_D_STM</span></code></p></td>
+<td><p>MOEA/D with Stable Matching</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RVEA</span></code></p></td>
 <td><p>Reference Vector Guided Evolutionary Algorithm</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">K_RVEA</span></code></p></td>
-<td><p>Kriging-assisted RVEA</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IBEA</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IBEA</span></code></p></td>
 <td><p>Indicator-Based Evolutionary Algorithm</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SPEA2</span></code></p></td>
-<td><p>Strength Pareto Evolutionary Algorithm 2</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TwoArch2</span></code></p></td>
 <td><p>Two-Archive Algorithm 2</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CCMO</span></code></p></td>
-<td><p>Coevolutionary Constrained Multiobjective Optimization</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MSEA</span></code></p></td>
+<td><p>Multi-Surrogate Evolutionary Algorithm</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">C_TAEA</span></code></p></td>
 <td><p>Constrained Two-Archive Evolutionary Algorithm</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CPS_MOEA</span></code></p></td>
-<td><p>Constrained Push and Search MOEA</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CCMO</span></code></p></td>
+<td><p>Coevolutionary Constrained Multiobjective Optimization</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KTA2</span></code></p></td>
-<td><p>Kriging-assisted Two-Archive Algorithm</p></td>
+</tbody>
+</table>
+<p><strong>Expensive</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>Description</p></th>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ParEGO</span></code></p></td>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ParEGO</span></code></p></td>
 <td><p>Pareto Efficient Global Optimization</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MSEA</span></code></p></td>
-<td><p>Multi-Surrogate Evolutionary Algorithm</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REMO</span></code></p></td>
-<td><p>Reference-based Multiobjective Optimization</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">K_RVEA</span></code></p></td>
+<td><p>Kriging-assisted RVEA</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DSAEA_PS</span></code></p></td>
 <td><p>Data-driven Surrogate-Assisted EA with Pareto Selection</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KTA2</span></code></p></td>
+<td><p>Kriging-assisted Two-Archive Algorithm</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REMO</span></code></p></td>
+<td><p>Reference-based Multiobjective Optimization</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ADSAPSO</span></code></p></td>
 <td><p>Adaptive Dropout Surrogate-Assisted PSO</p></td>
@@ -755,12 +779,19 @@ Algorithm Information:
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TEA</span></code></p></td>
 <td><p>Two-phase EA with Probabilistic Dominance</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CPS_MOEA</span></code></p></td>
+<td><p>Constrained Push and Search MOEA</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MCEA_D</span></code></p></td>
+<td><p>Multi-Criteria Evolutionary Algorithm based on Decomposition</p></td>
+</tr>
 </tbody>
 </table>
 </section>
 <section id="mtso-multitask-single-objective">
 <h3>MTSO (Multitask Single-Objective)<a class="headerlink" href="#mtso-multitask-single-objective" title="Link to this heading"></a></h3>
 <p>Multitask evolutionary algorithms with knowledge transfer for single-objective optimization.</p>
+<p><strong>Inexpensive</strong></p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20.0%" />
@@ -778,68 +809,44 @@ Algorithm Information:
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_II</span></code></p></td>
 <td><p>Multi-Factorial Evolutionary Algorithm II</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EMEA</span></code></p></td>
+<td><p>Evolutionary Multitask Evolutionary Algorithm</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EBS</span></code></p></td>
+<td><p>Evolution by Similarity</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">G_MFEA</span></code></p></td>
 <td><p>Generalized MFEA</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_AD</span></code></p></td>
 <td><p>Multitask Evolutionary Algorithm with Adaptive Distribution</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_SaO</span></code></p></td>
-<td><p>Multitask EA with Surrogate-assisted Optimization</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EMEA</span></code></p></td>
-<td><p>Evolutionary Multitask Evolutionary Algorithm</p></td>
-</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MKTDE</span></code></p></td>
 <td><p>Multi-Knowledge Transfer Differential Evolution</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SREMTO</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_SaO</span></code></p></td>
+<td><p>Multitask EA with Surrogate-assisted Optimization</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SREMTO</span></code></p></td>
 <td><p>Self-Regulated Evolutionary Multitask Optimization</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RAMTEA</span></code></p></td>
-<td><p>Resource Allocation Multitask Evolutionary Algorithm</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SELF</span></code></p></td>
-<td><p>Self-adaptive Evolutionary Learning Framework</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EBS</span></code></p></td>
-<td><p>Evolution by Similarity</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTBO</span></code></p></td>
-<td><p>Multitask Bayesian Optimization</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MUMBO</span></code></p></td>
-<td><p>Multitask Multiobjective Bayesian Optimization</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LCB_EMT</span></code></p></td>
 <td><p>Lower Confidence Bound Evolutionary Multitasking</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BO_LCB_CKT</span></code></p></td>
-<td><p>BO with LCB and Curriculum Knowledge Transfer</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BO_LCB_BCKT</span></code></p></td>
-<td><p>BO with LCB and Bidirectional Curriculum Knowledge Transfer</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EEI_BO_plus</span></code></p></td>
-<td><p>Enhanced EEI-BO for Multitask Optimization</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BLKT_DE</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BLKT_DE</span></code></p></td>
 <td><p>Block-Level Knowledge Transfer DE</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DTSKT</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DTSKT</span></code></p></td>
 <td><p>Distribution Direction-Assisted Two-Stage Knowledge Transfer</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EMTO_AI</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EMTO_AI</span></code></p></td>
 <td><p>Evolutionary Multitask Optimization with Adaptive Intensity</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_AKT</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_AKT</span></code></p></td>
 <td><p>Multifactorial EA with Adaptive Knowledge Transfer</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_DGD</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_DGD</span></code></p></td>
 <td><p>MFEA Based on Diffusion Gradient Descent</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_SSG</span></code></p></td>
-<td><p>MFEA with Single-Step Generative Model</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_VC</span></code></p></td>
 <td><p>MFEA with Variational Crossover</p></td>
@@ -856,14 +863,52 @@ Algorithm Information:
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTES_KG</span></code></p></td>
 <td><p>Multitask Evolution Strategy with Knowledge-Guided Sampling</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SaEF_AKT</span></code></p></td>
-<td><p>Surrogate-Assisted Evolutionary Framework with Adaptive Knowledge Transfer</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SSLT_DE</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SSLT_DE</span></code></p></td>
 <td><p>Scenario-based Self-Learning Transfer DE</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TNG_SNES</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TNG_SNES</span></code></p></td>
 <td><p>Transfer Task-averaged Natural Gradient Separable NES</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Expensive</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MTBO</span></code></p></td>
+<td><p>Multitask Bayesian Optimization</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RAMTEA</span></code></p></td>
+<td><p>Resource Allocation Multitask Evolutionary Algorithm</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SELF</span></code></p></td>
+<td><p>Self-adaptive Evolutionary Learning Framework</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EEI_BO_plus</span></code></p></td>
+<td><p>Enhanced EEI-BO for Multitask Optimization</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MUMBO</span></code></p></td>
+<td><p>Multitask Multiobjective Bayesian Optimization</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BO_LCB_CKT</span></code></p></td>
+<td><p>BO with LCB and Curriculum Knowledge Transfer</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BO_LCB_BCKT</span></code></p></td>
+<td><p>BO with LCB and Bidirectional Curriculum Knowledge Transfer</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MFEA_SSG</span></code></p></td>
+<td><p>MFEA with Single-Step Generative Model</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SaEF_AKT</span></code></p></td>
+<td><p>Surrogate-Assisted Evolutionary Framework with Adaptive Knowledge Transfer</p></td>
 </tr>
 </tbody>
 </table>
@@ -871,6 +916,7 @@ Algorithm Information:
 <section id="mtmo-multitask-multiobjective">
 <h3>MTMO (Multitask Multiobjective)<a class="headerlink" href="#mtmo-multitask-multiobjective" title="Link to this heading"></a></h3>
 <p>Multitask multiobjective evolutionary algorithms with knowledge transfer.</p>
+<p><strong>Inexpensive</strong></p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20.0%" />
@@ -894,11 +940,11 @@ Algorithm Information:
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MO_MTEA_SaO</span></code></p></td>
 <td><p>Multiobjective MTEA with Surrogate-assisted Optimization</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_D_DN</span></code></p></td>
-<td><p>Multitask EA/D with Dynamic Neighborhood</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTDE_MKTA</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MTDE_MKTA</span></code></p></td>
 <td><p>Multitask DE with Multi-Knowledge Transfer Adaptation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_D_DN</span></code></p></td>
+<td><p>Multitask EA/D with Dynamic Neighborhood</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EMT_ET</span></code></p></td>
 <td><p>Evolutionary Multitasking with Explicit Transfer</p></td>
@@ -906,23 +952,37 @@ Algorithm Information:
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EMT_PD</span></code></p></td>
 <td><p>Evolutionary Multitasking with Probabilistic Distribution</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ParEGO_KT</span></code></p></td>
-<td><p>ParEGO with Knowledge Transfer</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EMT_GS</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EMT_GS</span></code></p></td>
 <td><p>Evolutionary Multitasking with Generative Strategies</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MO_MTEA_PAE</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MO_MTEA_PAE</span></code></p></td>
 <td><p>Multiobjective MTEA with Progressive Auto-Encoding</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MO_SBO</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MO_SBO</span></code></p></td>
 <td><p>Multiobjective Symbiosis-Based Optimization</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_D_TSD</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_D_TSD</span></code></p></td>
 <td><p>Multitask EA/D with Transfer of Search Directions</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_DCK</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MTEA_DCK</span></code></p></td>
 <td><p>Multitask EA via Diversity- and Convergence-Oriented Knowledge Transfer</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Expensive</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ParEGO_KT</span></code></p></td>
+<td><p>ParEGO with Knowledge Transfer</p></td>
 </tr>
 </tbody>
 </table>

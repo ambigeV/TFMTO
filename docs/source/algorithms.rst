@@ -443,6 +443,8 @@ STSO (Single-Task Single-Objective)
 
 Classical evolutionary algorithms and surrogate-assisted methods for single-objective optimization.
 
+**Inexpensive**
+
 .. list-table::
    :header-rows: 1
    :widths: 20 80
@@ -455,6 +457,12 @@ Classical evolutionary algorithms and surrogate-assisted methods for single-obje
      - Differential Evolution
    * - ``PSO``
      - Particle Swarm Optimization
+   * - ``SL_PSO``
+     - Social Learning PSO
+   * - ``KLPSO``
+     - Knowledge Learning PSO
+   * - ``CSO``
+     - Competitive Swarm Optimizer
    * - ``CMA_ES``
      - Covariance Matrix Adaptation Evolution Strategy
    * - ``IPOP_CMA_ES``
@@ -463,36 +471,39 @@ Classical evolutionary algorithms and surrogate-assisted methods for single-obje
      - Separable CMA-ES
    * - ``MA_ES``
      - Matrix Adaptation Evolution Strategy
-   * - ``OpenAI_ES``
-     - OpenAI Evolution Strategy
    * - ``xNES``
      - Exponential Natural Evolution Strategy
-   * - ``CSO``
-     - Competitive Swarm Optimizer
-   * - ``SL_PSO``
-     - Social Learning PSO
-   * - ``KLPSO``
-     - Knowledge Learning PSO
-   * - ``SHPSO``
-     - Self-adaptive Hierarchical PSO
-   * - ``GWO``
-     - Grey Wolf Optimizer
+   * - ``OpenAI_ES``
+     - OpenAI Evolution Strategy
    * - ``AO``
      - Aquila Optimizer
+   * - ``GWO``
+     - Grey Wolf Optimizer
    * - ``EO``
      - Equilibrium Optimizer
-   * - ``GL_SADE``
-     - Gaussian Local Search with Self-adaptive DE
-   * - ``SA_COSO``
-     - Surrogate-Assisted Competitive Swarm Optimizer
+
+**Expensive**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
    * - ``BO``
      - Bayesian Optimization
    * - ``EEI_BO``
      - Expected Exploration Improvement BO
    * - ``ESAO``
      - Efficient Surrogate-Assisted Optimization
+   * - ``SHPSO``
+     - Self-adaptive Hierarchical PSO
+   * - ``SA_COSO``
+     - Surrogate-Assisted Competitive Swarm Optimizer
    * - ``TLRBF``
      - Two-Layer RBF Surrogate-Assisted Optimization
+   * - ``GL_SADE``
+     - Gaussian Local Search with Self-adaptive DE
    * - ``AutoSAEA``
      - Surrogate-Assisted EA with Auto-Configuration
    * - ``DDEA_MESS``
@@ -504,6 +515,8 @@ STMO (Single-Task Multiobjective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Multiobjective evolutionary algorithms and surrogate-assisted methods.
+
+**Inexpensive**
 
 .. list-table::
    :header-rows: 1
@@ -517,42 +530,47 @@ Multiobjective evolutionary algorithms and surrogate-assisted methods.
      - Non-dominated Sorting Genetic Algorithm III
    * - ``NSGA_II_SDR``
      - NSGA-II with Stochastic Dominance Ranking
+   * - ``SPEA2``
+     - Strength Pareto Evolutionary Algorithm 2
    * - ``MOEA_D``
      - Multiobjective Evolutionary Algorithm based on Decomposition
    * - ``MOEA_DD``
      - MOEA/D with Diversity Enhancement
-   * - ``MOEA_D_STM``
-     - MOEA/D with Stable Matching
    * - ``MOEA_D_FRRMAB``
      - MOEA/D with Fitness-Rate-Rank Multi-Armed Bandit
-   * - ``MCEA_D``
-     - Multi-Criteria Evolutionary Algorithm based on Decomposition
+   * - ``MOEA_D_STM``
+     - MOEA/D with Stable Matching
    * - ``RVEA``
      - Reference Vector Guided Evolutionary Algorithm
-   * - ``K_RVEA``
-     - Kriging-assisted RVEA
    * - ``IBEA``
      - Indicator-Based Evolutionary Algorithm
-   * - ``SPEA2``
-     - Strength Pareto Evolutionary Algorithm 2
    * - ``TwoArch2``
      - Two-Archive Algorithm 2
-   * - ``CCMO``
-     - Coevolutionary Constrained Multiobjective Optimization
-   * - ``C_TAEA``
-     - Constrained Two-Archive Evolutionary Algorithm
-   * - ``CPS_MOEA``
-     - Constrained Push and Search MOEA
-   * - ``KTA2``
-     - Kriging-assisted Two-Archive Algorithm
-   * - ``ParEGO``
-     - Pareto Efficient Global Optimization
    * - ``MSEA``
      - Multi-Surrogate Evolutionary Algorithm
-   * - ``REMO``
-     - Reference-based Multiobjective Optimization
+   * - ``C_TAEA``
+     - Constrained Two-Archive Evolutionary Algorithm
+   * - ``CCMO``
+     - Coevolutionary Constrained Multiobjective Optimization
+
+**Expensive**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
+   * - ``ParEGO``
+     - Pareto Efficient Global Optimization
+   * - ``K_RVEA``
+     - Kriging-assisted RVEA
    * - ``DSAEA_PS``
      - Data-driven Surrogate-Assisted EA with Pareto Selection
+   * - ``KTA2``
+     - Kriging-assisted Two-Archive Algorithm
+   * - ``REMO``
+     - Reference-based Multiobjective Optimization
    * - ``ADSAPSO``
      - Adaptive Dropout Surrogate-Assisted PSO
    * - ``CSEA``
@@ -591,11 +609,17 @@ Multiobjective evolutionary algorithms and surrogate-assisted methods.
      - Self-Organizing Surrogate-Assisted Non-Dominated Sorting DE
    * - ``TEA``
      - Two-phase EA with Probabilistic Dominance
+   * - ``CPS_MOEA``
+     - Constrained Push and Search MOEA
+   * - ``MCEA_D``
+     - Multi-Criteria Evolutionary Algorithm based on Decomposition
 
 MTSO (Multitask Single-Objective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Multitask evolutionary algorithms with knowledge transfer for single-objective optimization.
+
+**Inexpensive**
 
 .. list-table::
    :header-rows: 1
@@ -607,36 +631,22 @@ Multitask evolutionary algorithms with knowledge transfer for single-objective o
      - Multi-Factorial Evolutionary Algorithm
    * - ``MFEA_II``
      - Multi-Factorial Evolutionary Algorithm II
+   * - ``EMEA``
+     - Evolutionary Multitask Evolutionary Algorithm
+   * - ``EBS``
+     - Evolution by Similarity
    * - ``G_MFEA``
      - Generalized MFEA
    * - ``MTEA_AD``
      - Multitask Evolutionary Algorithm with Adaptive Distribution
-   * - ``MTEA_SaO``
-     - Multitask EA with Surrogate-assisted Optimization
-   * - ``EMEA``
-     - Evolutionary Multitask Evolutionary Algorithm
    * - ``MKTDE``
      - Multi-Knowledge Transfer Differential Evolution
+   * - ``MTEA_SaO``
+     - Multitask EA with Surrogate-assisted Optimization
    * - ``SREMTO``
      - Self-Regulated Evolutionary Multitask Optimization
-   * - ``RAMTEA``
-     - Resource Allocation Multitask Evolutionary Algorithm
-   * - ``SELF``
-     - Self-adaptive Evolutionary Learning Framework
-   * - ``EBS``
-     - Evolution by Similarity
-   * - ``MTBO``
-     - Multitask Bayesian Optimization
-   * - ``MUMBO``
-     - Multitask Multiobjective Bayesian Optimization
    * - ``LCB_EMT``
      - Lower Confidence Bound Evolutionary Multitasking
-   * - ``BO_LCB_CKT``
-     - BO with LCB and Curriculum Knowledge Transfer
-   * - ``BO_LCB_BCKT``
-     - BO with LCB and Bidirectional Curriculum Knowledge Transfer
-   * - ``EEI_BO_plus``
-     - Enhanced EEI-BO for Multitask Optimization
    * - ``BLKT_DE``
      - Block-Level Knowledge Transfer DE
    * - ``DTSKT``
@@ -647,8 +657,6 @@ Multitask evolutionary algorithms with knowledge transfer for single-objective o
      - Multifactorial EA with Adaptive Knowledge Transfer
    * - ``MFEA_DGD``
      - MFEA Based on Diffusion Gradient Descent
-   * - ``MFEA_SSG``
-     - MFEA with Single-Step Generative Model
    * - ``MFEA_VC``
      - MFEA with Variational Crossover
    * - ``MTDE_ADKT``
@@ -659,17 +667,44 @@ Multitask evolutionary algorithms with knowledge transfer for single-objective o
      - Multitask EA with Progressive Auto-Encoding
    * - ``MTES_KG``
      - Multitask Evolution Strategy with Knowledge-Guided Sampling
-   * - ``SaEF_AKT``
-     - Surrogate-Assisted Evolutionary Framework with Adaptive Knowledge Transfer
    * - ``SSLT_DE``
      - Scenario-based Self-Learning Transfer DE
    * - ``TNG_SNES``
      - Transfer Task-averaged Natural Gradient Separable NES
 
+**Expensive**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
+   * - ``MTBO``
+     - Multitask Bayesian Optimization
+   * - ``RAMTEA``
+     - Resource Allocation Multitask Evolutionary Algorithm
+   * - ``SELF``
+     - Self-adaptive Evolutionary Learning Framework
+   * - ``EEI_BO_plus``
+     - Enhanced EEI-BO for Multitask Optimization
+   * - ``MUMBO``
+     - Multitask Multiobjective Bayesian Optimization
+   * - ``BO_LCB_CKT``
+     - BO with LCB and Curriculum Knowledge Transfer
+   * - ``BO_LCB_BCKT``
+     - BO with LCB and Bidirectional Curriculum Knowledge Transfer
+   * - ``MFEA_SSG``
+     - MFEA with Single-Step Generative Model
+   * - ``SaEF_AKT``
+     - Surrogate-Assisted Evolutionary Framework with Adaptive Knowledge Transfer
+
 MTMO (Multitask Multiobjective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Multitask multiobjective evolutionary algorithms with knowledge transfer.
+
+**Inexpensive**
 
 .. list-table::
    :header-rows: 1
@@ -685,16 +720,14 @@ Multitask multiobjective evolutionary algorithms with knowledge transfer.
      - Multiobjective Evolutionary Multitask EA
    * - ``MO_MTEA_SaO``
      - Multiobjective MTEA with Surrogate-assisted Optimization
-   * - ``MTEA_D_DN``
-     - Multitask EA/D with Dynamic Neighborhood
    * - ``MTDE_MKTA``
      - Multitask DE with Multi-Knowledge Transfer Adaptation
+   * - ``MTEA_D_DN``
+     - Multitask EA/D with Dynamic Neighborhood
    * - ``EMT_ET``
      - Evolutionary Multitasking with Explicit Transfer
    * - ``EMT_PD``
      - Evolutionary Multitasking with Probabilistic Distribution
-   * - ``ParEGO_KT``
-     - ParEGO with Knowledge Transfer
    * - ``EMT_GS``
      - Evolutionary Multitasking with Generative Strategies
    * - ``MO_MTEA_PAE``
@@ -705,6 +738,17 @@ Multitask multiobjective evolutionary algorithms with knowledge transfer.
      - Multitask EA/D with Transfer of Search Directions
    * - ``MTEA_DCK``
      - Multitask EA via Diversity- and Convergence-Oriented Knowledge Transfer
+
+**Expensive**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Algorithm
+     - Description
+   * - ``ParEGO_KT``
+     - ParEGO with Knowledge Transfer
 
 See Also
 --------
