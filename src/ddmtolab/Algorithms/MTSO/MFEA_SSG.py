@@ -90,7 +90,7 @@ class SelfAttention(nn.Module):
 
 
 class TeacherUNet(nn.Module):
-    """U-Net teacher model for diffusion-based denoising with attention."""
+    """U-Net teacher model for diffusion-based denoising with attention (10 ResBlocks, 4 Attention)."""
 
     def __init__(self, in_ch=1, base_ch=64, time_dim=128):
         super().__init__()
@@ -100,40 +100,58 @@ class TeacherUNet(nn.Module):
             nn.SiLU(),
         )
         self.conv_in = nn.Conv2d(in_ch, base_ch, 3, padding=1)
-        self.enc1_res = ResBlock(base_ch, base_ch, time_dim)
+        # Encoder 1: 2 ResBlocks + 1 Attention
+        self.enc1_res1 = ResBlock(base_ch, base_ch, time_dim)
+        self.enc1_res2 = ResBlock(base_ch, base_ch, time_dim)
         self.enc1_attn = SelfAttention(base_ch)
         self.down1 = nn.Conv2d(base_ch, base_ch, 3, stride=2, padding=1)
-        self.enc2_res = ResBlock(base_ch, base_ch * 2, time_dim)
+        # Encoder 2: 2 ResBlocks + 1 Attention
+        self.enc2_res1 = ResBlock(base_ch, base_ch * 2, time_dim)
+        self.enc2_res2 = ResBlock(base_ch * 2, base_ch * 2, time_dim)
         self.enc2_attn = SelfAttention(base_ch * 2)
         self.down2 = nn.Conv2d(base_ch * 2, base_ch * 2, 3, stride=2, padding=1)
+        # Bridge: 2 ResBlocks + 1 Attention
         self.bridge_res1 = ResBlock(base_ch * 2, base_ch * 4, time_dim)
         self.bridge_attn = SelfAttention(base_ch * 4)
         self.bridge_res2 = ResBlock(base_ch * 4, base_ch * 4, time_dim)
+        # Decoder 1: 2 ResBlocks + 1 Attention
         self.up1 = nn.ConvTranspose2d(base_ch * 4, base_ch * 2, 4, stride=2, padding=1)
-        self.dec1_res = ResBlock(base_ch * 4, base_ch * 2, time_dim)
+        self.dec1_res1 = ResBlock(base_ch * 4, base_ch * 2, time_dim)
+        self.dec1_res2 = ResBlock(base_ch * 2, base_ch * 2, time_dim)
         self.dec1_attn = SelfAttention(base_ch * 2)
+        # Decoder 2: 2 ResBlocks
         self.up2 = nn.ConvTranspose2d(base_ch * 2, base_ch, 4, stride=2, padding=1)
-        self.dec2_res = ResBlock(base_ch * 2, base_ch, time_dim)
+        self.dec2_res1 = ResBlock(base_ch * 2, base_ch, time_dim)
+        self.dec2_res2 = ResBlock(base_ch, base_ch, time_dim)
         self.conv_out = nn.Conv2d(base_ch, in_ch, 1)
 
     def forward(self, x, t):
         t_emb = self.time_embed(t)
         h = self.conv_in(x)
-        h1 = self.enc1_attn(self.enc1_res(h, t_emb))
+        # Encoder 1
+        h = self.enc1_res1(h, t_emb)
+        h1 = self.enc1_attn(self.enc1_res2(h, t_emb))
         h = self.down1(h1)
-        h2 = self.enc2_attn(self.enc2_res(h, t_emb))
+        # Encoder 2
+        h = self.enc2_res1(h, t_emb)
+        h2 = self.enc2_attn(self.enc2_res2(h, t_emb))
         h = self.down2(h2)
+        # Bridge
         h = self.bridge_res1(h, t_emb)
         h = self.bridge_attn(h)
         h = self.bridge_res2(h, t_emb)
+        # Decoder 1 (skip from enc2)
         h = self.up1(h)
         h = h[:, :, :h2.shape[2], :h2.shape[3]]
         h = torch.cat([h, h2], dim=1)
-        h = self.dec1_attn(self.dec1_res(h, t_emb))
+        h = self.dec1_res1(h, t_emb)
+        h = self.dec1_attn(self.dec1_res2(h, t_emb))
+        # Decoder 2 (skip from enc1)
         h = self.up2(h)
         h = h[:, :, :h1.shape[2], :h1.shape[3]]
         h = torch.cat([h, h1], dim=1)
-        h = self.dec2_res(h, t_emb)
+        h = self.dec2_res1(h, t_emb)
+        h = self.dec2_res2(h, t_emb)
         return self.conv_out(h)
 
 
@@ -193,21 +211,25 @@ def generate_with_student(student, elite_data, grid_h, grid_w, grid_dim,
     """
     Generate samples using single-step student model with elite-guided denoising.
 
-    Takes elite solutions, adds moderate noise at timestep denoise_t, and denoises in one step.
+    Adds noise to elite solutions at timestep denoise_t via forward diffusion,
+    then denoises in one step. Dimension shuffling (meta-learning inspired) is
+    applied before noising and inverse-shuffled after denoising.
     """
     student.eval()
     with torch.no_grad():
         indices = np.random.randint(0, len(elite_data), size=n_samples)
         x0_np = elite_data[indices].copy()
 
-        # Random dimension shuffling (meta-learning inspired)
+        # Random dimension shuffling — track permutations for inverse
+        shuffle_perms = []
         for i in range(len(x0_np)):
-            shuffle_idx = np.random.permutation(x0_np.shape[1])
-            x0_np[i] = x0_np[i][shuffle_idx]
+            perm = np.random.permutation(x0_np.shape[1])
+            shuffle_perms.append(perm)
+            x0_np[i] = x0_np[i][perm]
 
         x0 = torch.tensor(x0_np, dtype=torch.float32, device=device).view(-1, 1, grid_h, grid_w)
 
-        # Add moderate noise
+        # Forward diffusion: add noise at timestep denoise_t
         t = torch.full((n_samples,), denoise_t, device=device, dtype=torch.long)
         alpha_bar_t = torch.tensor(alpha_bars[denoise_t], dtype=torch.float32, device=device)
         noise = torch.randn_like(x0)
@@ -218,7 +240,14 @@ def generate_with_student(student, elite_data, grid_h, grid_w, grid_dim,
         x_denoised = (x_t - torch.sqrt(1 - alpha_bar_t) * pred_noise) / torch.sqrt(alpha_bar_t)
         x_denoised = torch.clamp(x_denoised, 0.0, 1.0)
 
-    return x_denoised.cpu().numpy().reshape(n_samples, -1)[:, :grid_dim]
+    result = x_denoised.cpu().numpy().reshape(n_samples, -1)[:, :grid_dim]
+
+    # Inverse shuffle to restore original dimension ordering
+    for i in range(n_samples):
+        inv_perm = np.argsort(shuffle_perms[i])
+        result[i] = result[i][inv_perm[:grid_dim]]
+
+    return result
 
 
 # ============================================================================
@@ -266,6 +295,7 @@ def distill_student(teacher, student, train_data, alpha_bars, n_steps, device, g
     Knowledge distillation from teacher to student (Algorithm 3 in paper).
 
     Student learns to mimic teacher's noise predictions for single-step generation.
+    No dimension shuffling is applied during distillation (per Algorithm 3).
     """
     teacher.eval()
     student.train()
@@ -277,10 +307,6 @@ def distill_student(teacher, student, train_data, alpha_bars, n_steps, device, g
         for start in range(0, len(perm), effective_bs):
             batch_idx = perm[start:start + effective_bs]
             batch = train_data[batch_idx].copy()
-
-            for i in range(len(batch)):
-                shuffle_idx = np.random.permutation(batch.shape[1])
-                batch[i] = batch[i][shuffle_idx]
 
             x0 = torch.tensor(batch, dtype=torch.float32, device=device)
             x0 = x0.view(-1, 1, grid_h, grid_w)
@@ -335,9 +361,9 @@ class MFEA_SSG:
         return get_algorithm_information(cls, print_info)
 
     def __init__(self, problem, n=None, max_nfes=None, rmp=0.3, muc=2, mum=5,
-                 max_gen=None, refine_freq=3,
+                 max_gen=None, refine_freq=3, n_pairs_per_gen=None,
                  n_diffusion_steps=100, train_epochs=5, distill_epochs=5,
-                 batch_size=512, lr=5e-4, base_ch=32, denoise_t=50,
+                 batch_size=512, lr=5e-4, base_ch=64,
                  save_data=True, save_path='./Data', name='MFEA-SSG', disable_tqdm=True):
         """
         Initialize MFEA-SSG algorithm.
@@ -363,17 +389,15 @@ class MFEA_SSG:
         n_diffusion_steps : int, optional
             Number of diffusion timesteps N (default: 100)
         train_epochs : int, optional
-            Training epochs for teacher model (default: 5)
+            Training epochs for teacher model (default: 50)
         distill_epochs : int, optional
-            Knowledge distillation epochs (default: 5)
+            Knowledge distillation epochs (default: 50)
         batch_size : int, optional
             Mini-batch size for training (default: 512)
         lr : float, optional
             Learning rate for Adam optimizer (default: 5e-4)
         base_ch : int, optional
-            Base channel count for U-Net models (default: 32)
-        denoise_t : int, optional
-            Timestep for denoising during generation (default: 50)
+            Base channel count for U-Net models (default: 64)
         save_data : bool, optional
             Whether to save optimization data (default: True)
         save_path : str, optional
@@ -391,13 +415,13 @@ class MFEA_SSG:
         self.mum = mum
         self.max_gen = max_gen
         self.refine_freq = refine_freq
+        self.n_pairs_per_gen = n_pairs_per_gen  # None = auto (nt pairs per gen)
         self.n_diffusion_steps = n_diffusion_steps
         self.train_epochs = train_epochs
         self.distill_epochs = distill_epochs
         self.batch_size = batch_size
         self.lr = lr
         self.base_ch = base_ch
-        self.denoise_t = denoise_t
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -418,9 +442,9 @@ class MFEA_SSG:
             indices = np.argsort(task_objs.flatten())[:n_elite]
             elite = task_decs[indices]
 
-            # Pad to grid_dim if needed
+            # Pad to grid_dim if needed (constant 0.5 padding for unused grid cells)
             if elite.shape[1] < grid_dim:
-                pad = np.random.rand(elite.shape[0], grid_dim - elite.shape[1])
+                pad = np.full((elite.shape[0], grid_dim - elite.shape[1]), 0.5)
                 elite = np.hstack([elite, pad])
             elif elite.shape[1] > grid_dim:
                 elite = elite[:, :grid_dim]
@@ -446,12 +470,11 @@ class MFEA_SSG:
         max_nfes = self.max_nfes * nt
         max_dim = max(dims)
 
-        # Grid dimensions for 2D reshape (paper: 5x10 for dim=50)
-        grid_dim = max(max_dim, 50)
-        if grid_dim % 10 != 0:
-            grid_dim = ((grid_dim // 10) + 1) * 10
-        grid_h = grid_dim // 10
-        grid_w = 10
+        # Grid dimensions for 2D reshape: fixed grid_h=5, grid_w=ceil(max_dim/5)
+        # e.g., 50D→5×10, 15D→5×3, 13D→5×3 (truncate 2 extra dims)
+        grid_h = 5
+        grid_w = max((max_dim + grid_h - 1) // grid_h, 1)
+        grid_dim = grid_h * grid_w
 
         # Device setup
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -483,11 +506,16 @@ class MFEA_SSG:
         distill_student(teacher, student, model_data, alpha_bars, self.n_diffusion_steps, device,
                         grid_h, grid_w, self.distill_epochs, self.batch_size, self.lr)
 
+        # Determine pairs per generation (controls offspring count per generation)
+        # Default: nt pairs → ~nt offspring per gen → many generations for model refinement
+        n_pairs_per_gen = self.n_pairs_per_gen if self.n_pairs_per_gen is not None else nt
+
         # Estimate MaxGen: half of total generations use the generative model
+        evals_per_gen = max(n_pairs_per_gen * 2, 1)  # ~2 evals per pair (1 gen, 2 GA)
         if self.max_gen is not None:
             max_gen_generative = self.max_gen
         else:
-            est_total_gen = max((max_nfes - nfes) // max(n * nt // 2, 1), 1)
+            est_total_gen = max((max_nfes - nfes) // evals_per_gen, 1)
             max_gen_generative = max(est_total_gen // 2, 1)
 
         gen = 0
@@ -504,14 +532,23 @@ class MFEA_SSG:
             uni_dim = pop_decs.shape[1]
             n_cons_uni = pop_cons.shape[1]
 
+            # Precompute elite data ONCE per generation for generative model
+            if gen <= max_gen_generative:
+                elite_data = self._prepare_model_data(
+                    [pop_decs[pop_sfs.flatten() == t] for t in range(nt)],
+                    [pop_objs[pop_sfs.flatten() == t] for t in range(nt)],
+                    grid_dim, top_ratio=0.5)
+
             off_decs_list = []
             off_objs_list = []
             off_sfs_list = []
 
             # Line 4: FOR each pair of parents (p1, p2) selected from P
             shuffled_index = np.random.permutation(pop_decs.shape[0])
+            max_pairs = min(n_pairs_per_gen, len(shuffled_index) // 2)
 
-            for i in range(0, len(shuffled_index), 2):
+            for pair_idx in range(max_pairs):
+                i = pair_idx * 2
                 if nfes >= max_nfes:
                     break
 
@@ -522,14 +559,10 @@ class MFEA_SSG:
 
                 # Line 5: IF gen <= MaxGen AND (Same task OR rand < RMP)
                 if gen <= max_gen_generative and (sf1 == sf2 or np.random.rand() < self.rmp):
-                    # Lines 6-9: Generate from model, mutate, create one offspring
-                    elite_data = self._prepare_model_data(
-                        [pop_decs[pop_sfs.flatten() == t] for t in range(nt)],
-                        [pop_objs[pop_sfs.flatten() == t] for t in range(nt)],
-                        grid_dim, top_ratio=0.5)
+                    # Lines 6-9: Generate from student model, mutate, create one offspring
                     dec_gen = generate_with_student(
                         student, elite_data, grid_h, grid_w, grid_dim,
-                        alpha_bars, device, n_samples=1, denoise_t=self.denoise_t)
+                        alpha_bars, device, n_samples=1)
                     dec_gen = dec_gen.flatten()
 
                     # Truncate/pad to unified space dimension
@@ -597,7 +630,7 @@ class MFEA_SSG:
             decs, cons = space_transfer(problem, decs=pop_decs, cons=pop_cons, type='real')
             append_history(all_decs, decs, all_objs, pop_objs, all_cons, cons)
 
-            # Lines 18-20: Progressively refine generative model G
+            # Lines 18-20: Progressively refine generative model G (IF mod(gen, tau) == 0)
             if gen % self.refine_freq == 0:
                 model_data = self._prepare_model_data(pop_decs, pop_objs, grid_dim, top_ratio=0.5)
                 train_teacher(teacher, model_data, alpha_bars, self.n_diffusion_steps, device,

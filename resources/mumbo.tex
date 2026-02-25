@@ -1,0 +1,298 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---- packages ----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+% ---- theorem environments ----
+\newtheorem{definition}{定义}[section]
+\newtheorem{remark}{注记}[section]
+
+% ---- commands ----
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bz}{\mathbf{z}}
+\newcommand{\cX}{\mathcal{X}}
+\newcommand{\cZ}{\mathcal{Z}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\R}{\mathbb{R}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{MUMBO 实现流程}\\[4pt]
+\large MUlti-task Max-value Bayesian Optimization}
+\author{基于 Moss, Leslie \& Rayson (2020) 整理}
+\date{}
+
+\begin{document}
+\maketitle
+
+%=============================================================
+\section{问题定义}
+%=============================================================
+
+\subsection{标准贝叶斯优化目标}
+
+给定 $d$ 维可行域 $\cX\subset\R^{d}$，目标是求解
+\begin{equation}\label{eq:bo-obj}
+  \bx^{*} = \argmax_{\bx\in\cX}\, g(\bx),
+\end{equation}
+其中 $g$ 为黑箱目标函数，评估代价高昂且含噪声，无梯度信息。
+
+\subsection{多任务/多保真扩展}
+
+除直接查询 $g$ 之外，还可查询一族相关函数，由保真度参数 $\bz\in\cZ$ 索引。
+每次查询获得含噪观测
+\begin{equation}
+  y = f(\bx,\bz) + \epsilon, \qquad \epsilon\sim\mathcal{N}(0,\sigma_\epsilon^{2}),
+\end{equation}
+其中 $f(\bx,\bz)$ 为在参数 $\bx$、保真度 $\bz$ 处的评估结果。
+当 $\bz$ 对应目标保真度 $\bz_0$ 时，$f(\bx,\bz_0)=g(\bx)$。
+
+经过 $n$ 次查询，我们积累观测集合 $\cD_n = \{(\bx_t,\bz_t,y_t)\}_{t=1}^{n}$。
+
+\subsection{多任务采集函数框架}
+
+每步需同时选择参数 $\bx$ 和保真度 $\bz$，通过最大化信息增益与评估代价之比：
+\begin{equation}\label{eq:acq-ratio}
+  (\bx_{n+1},\bz_{n+1}) = \argmax_{(\bx,\bz)\in\cX\times\cZ}\;
+  \frac{\alpha_n(\bx,\bz)}{c(\bx,\bz)},
+\end{equation}
+其中 $\alpha_n:\cX\times\cZ\to\R$ 为采集函数，$c:\cX\times\cZ\to\R^{+}$ 为代价函数。
+
+%=============================================================
+\section{高斯过程建模}
+%=============================================================
+
+\subsection{核函数定义}
+
+在 $\cX\times\cZ$ 上定义核函数 $k$，使
+$k\bigl((\bx,\bz),(\bx',\bz')\bigr)$
+表示 $(\bx,\bz)$ 与 $(\bx',\bz')$ 处评估之间的先验协方差。
+
+\paragraph{离散保真度空间.}
+常用内在协区域化核（Intrinsic Coregionalization）：
+\begin{equation}
+  k\bigl((\bx,\bz),(\bx',\bz')\bigr) = k_{\cX}(\bx,\bx')\cdot B(\bz,\bz'),
+\end{equation}
+其中 $k_{\cX}$ 为基核（如 Mat\'ern 5/2），$B$ 为 $|\cZ|\times|\cZ|$ 半正定矩阵，通过最大化模型似然估计。
+
+\paragraph{连续保真度空间（FABOLAS 型）.}
+使用退化核：
+\begin{equation}
+  k\bigl((\bx,z),(\bx',z')\bigr) = k_{\cX}(\bx,\bx')\cdot\bigl(\phi(z)^\top\Sigma_1\,\phi(z')\bigr),
+\end{equation}
+其中 $\phi(z)=(z,\,(1-z)^2)^\top$，$\Sigma_1\in\R^{2\times 2}$ 待估。
+
+\subsection{预测分布}
+
+记核矩阵 $K_n = \bigl[k\bigl((\bx_i,\bz_i),(\bx_j,\bz_j)\bigr)\bigr]_{i,j=1}^{n}$，
+核向量 $\mathbf{k}_n(\bx,\bz) = \bigl[k\bigl((\bx_i,\bz_i),(\bx,\bz)\bigr)\bigr]_{i=1}^{n}$。
+给定 $\cD_n$，对任意 $(\bx,\bz)$，后验预测分布为高斯分布，其参数为：
+\begin{align}
+  \mu^n(\bx,\bz) &= \mathbf{k}_n(\bx,\bz)^\top(K_n+\sigma_\epsilon^2 I)^{-1}\mathbf{y}_n, \label{eq:mu}\\
+  \Sigma^n\bigl((\bx,\bz),(\bx',\bz')\bigr) &= k\bigl((\bx,\bz),(\bx',\bz')\bigr) - \mathbf{k}_n(\bx,\bz)^\top(K_n+\sigma_\epsilon^2 I)^{-1}\mathbf{k}_n(\bx',\bz'). \label{eq:sigma}
+\end{align}
+
+\subsection{关键二元高斯分布}
+
+MUMBO 的核心在于：对给定 $(\bx,\bz)$，目标函数值 $g\triangleq g(\bx)=f(\bx,\bz_0)$ 与含噪观测 $y\triangleq f(\bx,\bz)+\epsilon$ 的联合后验为二元高斯分布：
+\begin{equation}\label{eq:bivariate}
+  \begin{pmatrix} g \\ y \end{pmatrix}
+  \;\sim\;
+  \mathcal{N}\!\left(
+  \begin{pmatrix} \mu_g \\ \mu_f \end{pmatrix},\;
+  \begin{pmatrix} \sigma_g^2 & \Sigma_{gf} \\ \Sigma_{gf} & \sigma_f^2+\sigma_\epsilon^2 \end{pmatrix}
+  \right),
+\end{equation}
+其中各分量由 \eqref{eq:mu}--\eqref{eq:sigma} 给出：
+\begin{align}
+  \mu_g &= \mu^n(\bx,\bz_0), &
+  \mu_f &= \mu^n(\bx,\bz), \notag\\
+  \sigma_g^2 &= \Sigma^n\bigl((\bx,\bz_0),(\bx,\bz_0)\bigr), &
+  \sigma_f^2 &= \Sigma^n\bigl((\bx,\bz),(\bx,\bz)\bigr), \notag\\
+  \Sigma_{gf} &= \Sigma^n\bigl((\bx,\bz),(\bx,\bz_0)\bigr). \notag
+\end{align}
+
+定义预测相关系数：
+\begin{equation}\label{eq:rho}
+  \rho(\bx,\bz) = \frac{\Sigma_{gf}}{\sigma_g\,\sqrt{\sigma_f^2+\sigma_\epsilon^2}}.
+\end{equation}
+
+%=============================================================
+\section{MUMBO 采集函数推导}
+%=============================================================
+
+\subsection{信息论动机}
+
+MUMBO 选择减少关于目标最优值 $g^*=g(\bx^*)$ 之不确定性的评估，而非直接减少关于最优位置 $\bx^*$ 的不确定性。其采集函数定义为互信息：
+\begin{equation}\label{eq:mumbo-def}
+  \alpha_n^{\mathrm{MUMBO}}(\bx,\bz)
+  = H\bigl(y(\bx,\bz)\mid\cD_n\bigr)
+    - \mathbb{E}_{g^*}\!\bigl[H\bigl(y(\bx,\bz)\mid g^*,\cD_n\bigr)\bigr].
+\end{equation}
+
+\subsection{第一项：观测的微分熵}
+
+由 \eqref{eq:bivariate}，$y\mid\cD_n\sim\mathcal{N}(\mu_f,\,\sigma_f^2+\sigma_\epsilon^2)$，故
+\begin{equation}\label{eq:term1}
+  H(y\mid\cD_n) = \tfrac{1}{2}\log\bigl(2\pi e\,(\sigma_f^2+\sigma_\epsilon^2)\bigr).
+\end{equation}
+
+\subsection{$g^*$ 的蒙特卡洛近似}
+
+采用 Wang \& Jegelka (2017) 的方法，利用均场近似与极值理论从 $g^*\mid\cD_n$ 中近似采样 $N$ 个样本
+$\mathcal{G}=\{g_1^*,\ldots,g_N^*\}$。
+
+具体而言，在 $\cX$ 上取 $10{,}000\,d$ 个随机点及已评估点组成网格，计算各点 GP 预测均值，基于 Gumbel 极值分布进行采样。
+
+\subsection{第二项：条件熵的推导}
+
+\begin{definition}[扩展偏正态分布]
+对给定 $g^*$，定义标准化变量
+\begin{equation}
+  Z_{g^*} \triangleq \frac{y-\mu_f}{\sqrt{\sigma_f^2+\sigma_\epsilon^2}}\;\Big|\;g < g^*,
+\end{equation}
+其概率密度函数为扩展偏正态分布（Extended Skew-Normal, ESN）：
+\begin{equation}\label{eq:esn-pdf}
+  p(\theta) = \frac{1}{\Phi(\gamma_{g^*})}\,\phi(\theta)\,
+  \Phi\!\left(\frac{\gamma_{g^*}-\rho\,\theta}{\sqrt{1-\rho^2}}\right),
+\end{equation}
+其中 $\gamma_{g^*}(\bx) = \dfrac{g^*-\mu_g(\bx)}{\sigma_g(\bx)}$，$\phi(\cdot)$ 和 $\Phi(\cdot)$ 分别为标准正态密度和累积分布函数。
+\end{definition}
+
+该分布的前两阶矩为：
+\begin{align}
+  \mathbb{E}[Z_{g^*}] &= \rho\,\frac{\phi(\gamma_{g^*})}{\Phi(\gamma_{g^*})}, \label{eq:esn-mean}\\
+  \mathrm{Var}[Z_{g^*}] &= 1 - \rho^2\,\frac{\phi(\gamma_{g^*})}{\Phi(\gamma_{g^*})}\!\left(\gamma_{g^*}+\frac{\phi(\gamma_{g^*})}{\Phi(\gamma_{g^*})}\right). \label{eq:esn-var}
+\end{align}
+
+\begin{remark}
+Arellano-Valle et al.\ (2013) 证明扩展偏正态分布的微分熵无解析形式，因此 $H(y\mid g<g^*,\cD_n)$ 不可解析计算，这是 MUMBO 与标准 MES 的关键区别。
+\end{remark}
+
+\subsection{完整采集函数表达式}
+
+通过分解 $H(Z_{g^*})$ 并利用 \eqref{eq:esn-mean}--\eqref{eq:esn-var}，可将 \eqref{eq:mumbo-def} 化简为：
+\begin{equation}\label{eq:mumbo-final}
+\boxed{
+  \alpha_n^{\mathrm{MUMBO}}(\bx,\bz)
+  = \frac{1}{N}\sum_{g^*\in\mathcal{G}}\left[
+    \frac{\rho(\bx,\bz)^2\,\gamma_{g^*}(\bx)\,\phi\!\bigl(\gamma_{g^*}(\bx)\bigr)}{2\,\Phi\!\bigl(\gamma_{g^*}(\bx)\bigr)}
+    - \log\Phi\!\bigl(\gamma_{g^*}(\bx)\bigr)
+    + \mathbb{E}_{\theta\sim Z_{g^*}(\bx,\bz)}\!\left[\log\Phi\!\left(\frac{\gamma_{g^*}(\bx)-\rho(\bx,\bz)\,\theta}{\sqrt{1-\rho(\bx,\bz)^2}}\right)\right]
+  \right]
+}
+\end{equation}
+
+\paragraph{推导要点.}
+记 $H(y\mid g^*,\cD_n) = H(Z_{g^*}) + \frac{1}{2}\log(\sigma_f^2+\sigma_\epsilon^2)$，与 \eqref{eq:term1} 相减，得
+\[
+  \alpha_n^{\mathrm{MUMBO}} = \tfrac{1}{2}\log(2\pi e) - \mathbb{E}_{g^*}[H(Z_{g^*})].
+\]
+将 $H(Z_{g^*})$ 按 ESN 密度 \eqref{eq:esn-pdf} 展开为三项：
+\begin{align*}
+  H(Z_{g^*}) &= \mathbb{E}_{\theta\sim Z_{g^*}}\!\Big[-\log\phi(\theta) + \log\Phi(\gamma_{g^*}) - \log\Phi\!\Big(\frac{\gamma_{g^*}-\rho\,\theta}{\sqrt{1-\rho^2}}\Big)\Big].
+\end{align*}
+其中第一项 $\mathbb{E}[-\log\phi(\theta)] = \frac{1}{2}\mathbb{E}[\theta^2]+\frac{1}{2}\log(2\pi)$，利用 \eqref{eq:esn-mean}--\eqref{eq:esn-var} 展开 $\mathbb{E}[\theta^2]=\mathrm{Var}[Z_{g^*}]+(\mathbb{E}[Z_{g^*}])^2$ 后，与 $\frac{1}{2}\log(2\pi e)$ 合并化简即得 \eqref{eq:mumbo-final}。
+
+%=============================================================
+\section{数值积分处理}
+%=============================================================
+
+表达式 \eqref{eq:mumbo-final} 中唯一不可解析计算的部分是最后一项关于 $\theta\sim Z_{g^*}(\bx,\bz)$ 的期望：
+\begin{equation}\label{eq:integral}
+  I = \mathbb{E}_{\theta\sim Z_{g^*}}\!\left[\log\Phi\!\left(\frac{\gamma_{g^*}-\rho\,\theta}{\sqrt{1-\rho^2}}\right)\right].
+\end{equation}
+
+\paragraph{关键性质.} 这是一个\textbf{一维积分}，与搜索空间维度 $d$ 无关。这正是 MUMBO 相对于 MTBO（需要 $d$ 维分布采样近似）的核心计算优势。
+
+\paragraph{实现方法.}
+\begin{enumerate}[nosep]
+  \item 由 \eqref{eq:esn-mean}--\eqref{eq:esn-var} 计算 $Z_{g^*}$ 的均值 $m$ 与标准差 $s$；
+  \item 在区间 $[m-4s,\;m+4s]$（即8个标准差范围）上取等距网格；
+  \item 用 Simpson 规则数值积分近似 \eqref{eq:integral}：
+  \[
+    I \approx \int_{m-4s}^{m+4s} p(\theta)\,\log\Phi\!\left(\frac{\gamma_{g^*}-\rho\,\theta}{\sqrt{1-\rho^2}}\right)\mathrm{d}\theta,
+  \]
+  其中 $p(\theta)$ 为 \eqref{eq:esn-pdf} 给出的 ESN 密度。
+\end{enumerate}
+
+%=============================================================
+\section{特殊情形分析}
+%=============================================================
+
+\subsection{退化为标准 MES}
+
+当 $\bz=\bz_0$（直接查询目标函数），$\rho(\bx,\bz_0)=1$，此时 \eqref{eq:mumbo-final} 退化为
+\begin{equation}
+  \alpha_n(\bx,\bz_0) = \frac{1}{N}\sum_{g^*\in\mathcal{G}}\left[
+    \frac{\gamma_{g^*}(\bx)\,\phi\!\bigl(\gamma_{g^*}(\bx)\bigr)}{2\,\Phi\!\bigl(\gamma_{g^*}(\bx)\bigr)}
+    - \log\Phi\!\bigl(\gamma_{g^*}(\bx)\bigr)
+  \right],
+\end{equation}
+这恰好是 Wang \& Jegelka (2017) 的 MES 采集函数，因为当 $\rho=1$ 时最后一项的期望内 $\log\Phi$ 的参数趋于 $+\infty$（概率1），积分贡献为零。
+
+\subsection{FASTCV 多任务框架}
+
+当目标函数 $g$ 为 $K$ 折交叉验证的平均分数时，$g(\bx)=\frac{1}{K}\sum_{z\in\cZ}\!f(\bx,z)$，$\cZ=\{1,\ldots,K\}$。
+此时所需的预测均值、方差和相关系数分别为：
+\begin{align}
+  \mu_g(\bx) &= \frac{1}{K}\sum_{z\in\cZ}\mu^n(\bx,z), \\
+  \sigma_g^2(\bx) &= \frac{1}{K^2}\sum_{z\in\cZ}\sum_{z'\in\cZ}\Sigma^n\bigl((\bx,z),(\bx,z')\bigr), \\
+  \rho(\bx,z) &= \frac{\frac{1}{K}\sum_{z'\in\cZ}\Sigma^n\bigl((\bx,z),(\bx,z')\bigr)}{\sqrt{\sigma_g^2(\bx)\cdot\Sigma^n\bigl((\bx,z),(\bx,z)\bigr)}}.
+\end{align}
+
+%=============================================================
+\section{完整算法流程}
+%=============================================================
+
+\begin{algorithm}[H]
+\caption{MUMBO：多任务最大值贝叶斯优化}
+\label{alg:mumbo}
+\begin{algorithmic}[1]
+\Require 预算 $B$，$g^*$ 采样数 $N$
+\State 初始化 $n\gets 0$，已用预算 $b\gets 0$
+\State 收集初始设计 $\cD_0$（随机采样若干点，在所有保真度上评估）
+\While{$b < B$}
+  \State $n\gets n+1$
+  \State 用 $\cD_{n-1}$ 拟合高斯过程（最大化边际似然估计核参数）
+  \State 从 $g^*\mid\cD_{n-1}$ 中采样 $N$ 个样本 $\mathcal{G}=\{g_1^*,\ldots,g_N^*\}$ \Comment{极值理论+均场近似}
+  \State 构建采集函数 $\alpha_{n-1}^{\mathrm{MUMBO}}(\bx,\bz)$，按公式 \eqref{eq:mumbo-final} 计算
+  \State 求解 $(\bx_n,\bz_n)\gets\displaystyle\argmax_{(\bx,\bz)\in\cX\times\cZ}\;\frac{\alpha_{n-1}^{\mathrm{MUMBO}}(\bx,\bz)}{c(\bx,\bz)}$ \Comment{DIRECT 全局优化器}
+  \State 查询 $y_n\gets f(\bx_n,\bz_n)+\epsilon_n$，$\epsilon_n\sim\mathcal{N}(0,\sigma_\epsilon^2)$
+  \State $\cD_n\gets\cD_{n-1}\cup\{(\bx_n,\bz_n,y_n)\}$
+  \State $b\gets b+c(\bx_n,\bz_n)$
+\EndWhile
+\State \Return 历史评估中在目标保真度上的最佳 $\bx$
+\end{algorithmic}
+\end{algorithm}
+
+%=============================================================
+\section{计算复杂度分析}
+%=============================================================
+
+\begin{itemize}[nosep]
+  \item \textbf{GP 预测}：给定已分解的核矩阵，每次预测为 $O(n^2)$（$n$ 为观测数），对参数维度 $d$ 为 $O(d)$。
+  \item \textbf{单次采集函数评估}：对 $N$ 个 $g^*$ 样本各执行一次一维数值积分（$O(1)$ 固定网格），故为 $O(Nd)$。
+  \item \textbf{维度可扩展性}：由于仅需一维积分，$N$ 无需随 $d$ 增大而增加，因此 MUMBO 关于搜索空间维度\textbf{线性扩展}。
+  \item \textbf{对比 MTBO}：MTBO 需要对 $d$ 维分布 $\bx^*\mid\cD_n$ 进行采样近似，样本量随 $d$ 指数增长，在中等维度即不可行。
+\end{itemize}
+
+%=============================================================
+\section{实现要点总结}
+%=============================================================
+
+\begin{enumerate}
+  \item \textbf{GP 拟合}：选用 Mat\'ern 5/2 基核，搭配适当的保真度空间核；通过最大化边际似然或 MCMC 估计核参数。
+  \item \textbf{$g^*$ 采样}：基于均场近似与 Gumbel 极值分布，在大规模随机网格上采样；$N=10$ 通常即可提供鲁棒性能。
+  \item \textbf{数值积分}：ESN 分布上的 Simpson 规则积分，积分区间由 \eqref{eq:esn-mean}--\eqref{eq:esn-var} 确定的均值和方差决定。
+  \item \textbf{采集最大化}：使用 DIRECT 无导数全局优化器在 $\cX\times\cZ$ 上最大化 $\alpha/c$。
+  \item \textbf{代价模型}：代价函数 $c(\bx,\bz)$ 可先验已知，或用额外 GP 在对数空间建模估计。
+\end{enumerate}
+
+\end{document}

@@ -689,13 +689,15 @@ Multitask evolutionary algorithms with knowledge transfer for single-objective o
    * - ``EEI_BO_plus``
      - Enhanced EEI-BO for Multitask Optimization
    * - ``MUMBO``
-     - Multitask Multiobjective Bayesian Optimization
+     - Multi-task Max-value Bayesian Optimization
    * - ``BO_LCB_CKT``
      - BO with LCB and Curriculum Knowledge Transfer
    * - ``BO_LCB_BCKT``
      - BO with LCB and Bidirectional Curriculum Knowledge Transfer
    * - ``MFEA_SSG``
      - MFEA with Single-Step Generative Model
+   * - ``MFEA_FM``
+     - MFEA with OT-Based Cross-Task Generation
    * - ``SaEF_AKT``
      - Surrogate-Assisted Evolutionary Framework with Adaptive Knowledge Transfer
 
