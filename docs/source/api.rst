@@ -912,16 +912,6 @@ Multitask Single-Objective (MTSO)
    :special-members: __init__
    :exclude-members: algorithm_information, get_algorithm_information
 
-.. automodule:: ddmtolab.Algorithms.MTSO.MFEA_FM
-   :no-members:
-
-.. autoclass:: ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM
-   :members: optimize
-   :undoc-members:
-   :show-inheritance:
-   :special-members: __init__
-   :exclude-members: algorithm_information, get_algorithm_information
-
 .. automodule:: ddmtolab.Algorithms.MTSO.MFEA_VC
    :no-members:
 

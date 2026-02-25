@@ -696,8 +696,6 @@ Multitask evolutionary algorithms with knowledge transfer for single-objective o
      - BO with LCB and Bidirectional Curriculum Knowledge Transfer
    * - ``MFEA_SSG``
      - MFEA with Single-Step Generative Model
-   * - ``MFEA_FM``
-     - MFEA with OT-Based Cross-Task Generation
    * - ``SaEF_AKT``
      - Surrogate-Assisted Evolutionary Framework with Adaptive Knowledge Transfer
 

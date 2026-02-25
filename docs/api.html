@@ -145,7 +145,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#ddmtolab.Algorithms.MTSO.MFEA_AKT.MFEA_AKT"><code class="docutils literal notranslate"><span class="pre">MFEA_AKT</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ddmtolab.Algorithms.MTSO.MFEA_DGD.MFEA_DGD"><code class="docutils literal notranslate"><span class="pre">MFEA_DGD</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ddmtolab.Algorithms.MTSO.MFEA_SSG.MFEA_SSG"><code class="docutils literal notranslate"><span class="pre">MFEA_SSG</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM"><code class="docutils literal notranslate"><span class="pre">MFEA_FM</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ddmtolab.Algorithms.MTSO.MFEA_VC.MFEA_VC"><code class="docutils literal notranslate"><span class="pre">MFEA_VC</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ddmtolab.Algorithms.MTSO.MTDE_ADKT.MTDE_ADKT"><code class="docutils literal notranslate"><span class="pre">MTDE_ADKT</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ddmtolab.Algorithms.MTSO.MTEA_HKTS.MTEA_HKTS"><code class="docutils literal notranslate"><span class="pre">MTEA_HKTS</span></code></a></li>
@@ -5882,49 +5881,6 @@ model into a lightweight student for single-step inference.</p>
 </dd>
 </dl>
 </dd></dl>
-
-</dd></dl>
-
-<p id="module-ddmtolab.Algorithms.MTSO.MFEA_FM">Multifactorial Evolutionary Algorithm with OT-Based Cross-Task Generation (MFEA-FM)</p>
-<p>This module implements MFEA-FM for expensive multi-task optimization using
-Optimal Transport theory for principled cross-task knowledge transfer:</p>
-<ol class="arabic simple">
-<li><p><strong>Gaussian OT Maps</strong>: Each task’s elite population is modeled as a Gaussian.
-The OT map between Gaussians has a closed-form solution.</p></li>
-<li><p><strong>Wasserstein Barycenter</strong>: The W2 barycenter captures shared structure
-across tasks. New solutions are sampled from barycenter-interpolated
-distributions, achieving principled knowledge transfer.</p></li>
-<li><p><strong>Surrogate Pre-Screening</strong>: RBF surrogates rank batch-generated candidates
-before expensive evaluation.</p></li>
-<li><p><strong>UCB Operator Selection</strong>: Adaptively balances OT generation vs GA crossover.</p></li>
-</ol>
-<p class="rubric">References</p>
-<dl class="simple">
-<dt>[1] M. Agueh and G. Carlier, “Barycenters in the Wasserstein Space,”</dt><dd><p>SIAM J. Math. Anal., 43(2), 904-924, 2011.</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Author: XiaoYu (AI Assistant)
-Date: 2026.02.23
-Version: 4.0</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ddmtolab.Algorithms.MTSO.MFEA_FM.</span></span><span class="sig-name descname"><span class="pre">MFEA_FM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nfes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rmp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_strength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ot_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ucb_c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./Data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MFEA-FM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_tqdm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ddmtolab/Algorithms/MTSO/MFEA_FM.html#MFEA_FM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Multifactorial EA with OT-Based Cross-Task Generation.</p>
-<p>OT branch: generate K candidates from barycenter-interpolated Gaussian →
-surrogate pre-screen → evaluate top-1.
-GA branch: standard SBX crossover + mutation.
-UCB1 selects between branches adaptively.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nfes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rmp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">muc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_strength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ot_reg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ucb_c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./Data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MFEA-FM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_tqdm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ddmtolab/Algorithms/MTSO/MFEA_FM.html#MFEA_FM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM.__init__" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM.optimize">
-<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ddmtolab/Algorithms/MTSO/MFEA_FM.html#MFEA_FM.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ddmtolab.Algorithms.MTSO.MFEA_FM.MFEA_FM.optimize" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
