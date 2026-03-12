@@ -77,6 +77,20 @@ dmypy.json
 .claude/
 CLAUDE.md
 
+# Docs build artifacts
+docs/build/
+docs/.doctrees/
+docs/_modules/
+docs/_images/
+docs/_sources/
+docs/_static/
+docs/*.html
+docs/.buildinfo
+docs/.nojekyll
+docs/objects.inv
+docs/searchindex.js
+docs/source/*.html
+
 # Project specific
 matlab_resources/
 tests/
