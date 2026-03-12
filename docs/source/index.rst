@@ -1,7 +1,7 @@
 Data-Driven Multitask Optimization Laboratory
 ==============================================
 
-.. image:: _static/logo.svg
+.. image:: _static/logo_new.svg
    :alt: D²MTOLab Logo
    :width: 500
    :align: center

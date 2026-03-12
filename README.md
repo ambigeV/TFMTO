@@ -1,7 +1,7 @@
 # Data-Driven Multitask Optimization Laboratory
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/JiangtaoShen/DDMTOLab/main/docs/source/_static/logo.svg" alt="D²MTOLab Logo" width="530">
+  <img src="https://raw.githubusercontent.com/JiangtaoShen/DDMTOLab/main/docs/source/_static/logo_new.svg" alt="D²MTOLab Logo" width="530">
 </p>
 
 <p align="center">
