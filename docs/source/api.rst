@@ -3,7 +3,7 @@
 API Reference
 =============
 
-This page provides API documentation for the main classes and methods in DDMTOLab.
+This page provides API documentation for the main classes and methods in D²MTOLab.
 
 Algorithms
 ----------

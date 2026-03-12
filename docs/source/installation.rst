@@ -6,7 +6,7 @@ Installation
 Requirements
 ------------
 
-DDMTOLab requires:
+D²MTOLab requires:
 
 * Python 3.10+
 * PyTorch 2.5+ with CUDA 12.1 support (for GPU acceleration)
@@ -38,7 +38,7 @@ Method 1: Using pip (Recommended)
 
 **Quick Installation**
 
-The easiest way to install DDMTOLab is directly from PyPI:
+The easiest way to install D²MTOLab is directly from PyPI:
 
 .. code-block:: bash
 
@@ -74,7 +74,7 @@ This will automatically install all required dependencies except PyTorch. You ne
    # Install PyTorch
    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-   # Install DDMTOLab
+   # Install D²MTOLab
    pip install ddmtolab
 
 Method 2: Using Conda
@@ -100,7 +100,7 @@ Method 2: Using Conda
    # For CPU only
    conda install pytorch cpuonly -c pytorch
 
-**Step 3: Install DDMTOLab**
+**Step 3: Install D²MTOLab**
 
 .. code-block:: bash
 
@@ -121,7 +121,7 @@ Method 2: Using Conda
    conda install numpy scipy scikit-learn pandas matplotlib seaborn tqdm openpyxl pyyaml bottleneck -c conda-forge
    conda install pyro-ppl -c conda-forge
 
-   # Install DDMTOLab
+   # Install D²MTOLab
    pip install ddmtolab
 
 Method 3: Install from Source
@@ -159,7 +159,7 @@ For the latest development version or if you want to contribute:
    # For CPU only
    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-**Step 4: Install DDMTOLab and Dependencies**
+**Step 4: Install D²MTOLab and Dependencies**
 
 .. code-block:: bash
 
@@ -169,7 +169,7 @@ For the latest development version or if you want to contribute:
 Development Installation
 ------------------------
 
-For development work, install DDMTOLab in editable mode. This allows you to modify the code and see changes immediately without reinstalling.
+For development work, install D²MTOLab in editable mode. This allows you to modify the code and see changes immediately without reinstalling.
 
 **Step 1: Clone the Repository**
 
@@ -213,7 +213,7 @@ For development work, install DDMTOLab in editable mode. This allows you to modi
 
    pip install -e .
 
-This installs DDMTOLab in development mode, allowing you to:
+This installs D²MTOLab in development mode, allowing you to:
 
 * Modify source code and see changes immediately
 * Run tests and contribute to development
@@ -235,7 +235,7 @@ This installs DDMTOLab in development mode, allowing you to:
 Verify Installation
 -------------------
 
-To verify that DDMTOLab and all dependencies are correctly installed:
+To verify that D²MTOLab and all dependencies are correctly installed:
 
 .. code-block:: python
 
@@ -284,7 +284,7 @@ Run a quick test to ensure everything works:
    print(f"Best objective: {result.best_objs[0][0]:.6f}")
    print("DDMTOLab installation successful!")
 
-Upgrading DDMTOLab
+Upgrading D²MTOLab
 ------------------
 
 To upgrade to the latest version:
@@ -299,10 +299,10 @@ To upgrade to the latest version:
    git pull
    pip install --upgrade -e .
 
-Uninstalling DDMTOLab
+Uninstalling D²MTOLab
 ---------------------
 
-To uninstall DDMTOLab:
+To uninstall D²MTOLab:
 
 .. code-block:: bash
 
@@ -315,7 +315,7 @@ Troubleshooting
 
 1. **PyTorch not found:**
 
-   Install PyTorch first before installing DDMTOLab:
+   Install PyTorch first before installing D²MTOLab:
 
    .. code-block:: bash
 
@@ -344,7 +344,7 @@ Troubleshooting
 
 5. **BoTorch/GPyTorch installation fails:**
 
-   Install PyTorch first, then install DDMTOLab which will handle BoTorch and GPyTorch dependencies.
+   Install PyTorch first, then install D²MTOLab which will handle BoTorch and GPyTorch dependencies.
 
 6. **Version conflicts:**
 

@@ -3,12 +3,12 @@
 Algorithms
 ==========
 
-This chapter introduces the algorithm design philosophy and construction rules in **DDMTOLab**, providing comprehensive guidance for implementing custom optimization algorithms.
+This chapter introduces the algorithm design philosophy and construction rules in **D²MTOLab**, providing comprehensive guidance for implementing custom optimization algorithms.
 
 Algorithm Construction
 ----------------------
 
-Considering the complexity and diversity of data-driven multitask optimization, **DDMTOLab** adopts a **loosely-coupled algorithm design philosophy**. The platform does not mandate algorithms to inherit specific base classes or implement fixed interface methods, thereby avoiding restrictions on algorithm flexibility. This design approach offers the following advantages:
+Considering the complexity and diversity of data-driven multitask optimization, **D²MTOLab** adopts a **loosely-coupled algorithm design philosophy**. The platform does not mandate algorithms to inherit specific base classes or implement fixed interface methods, thereby avoiding restrictions on algorithm flexibility. This design approach offers the following advantages:
 
 1. **Enhanced Platform Compatibility**: Traditional gradient-based methods, evolutionary algorithms, advanced data-driven multitask optimization algorithms, and hybrid innovative architectures can all be seamlessly integrated into the platform.
 
@@ -16,7 +16,7 @@ Considering the complexity and diversity of data-driven multitask optimization, 
 
 3. **Guaranteed Algorithm Freedom**: Users are free to design data structures, optimization workflows, and knowledge transfer strategies according to specific problem characteristics and algorithm mechanisms, without framework constraints.
 
-To facilitate subsequent data processing and efficient coordination with the platform's experiment modules and data analysis modules, **DDMTOLab** imposes only **3 basic rules** on algorithm construction, ensuring normal platform functionality while maximizing algorithm development flexibility.
+To facilitate subsequent data processing and efficient coordination with the platform's experiment modules and data analysis modules, **D²MTOLab** imposes only **3 basic rules** on algorithm construction, ensuring normal platform functionality while maximizing algorithm development flexibility.
 
 Rule 1: Algorithm Framework
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,7 +195,7 @@ Algorithms must declare their basic characteristics through the ``algorithm_info
 Viewing Algorithm Metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**DDMTOLab** provides the ``get_algorithm_information`` class method for each algorithm to retrieve and display metadata:
+**D²MTOLab** provides the ``get_algorithm_information`` class method for each algorithm to retrieve and display metadata:
 
 .. code-block:: python
 
@@ -436,7 +436,7 @@ You can easily implement custom algorithms by following the three construction r
 Available Algorithms
 --------------------
 
-DDMTOLab provides 110+ optimization algorithms organized into four categories:
+D²MTOLab provides 110+ optimization algorithms organized into four categories:
 
 STSO (Single-Task Single-Objective)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

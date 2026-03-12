@@ -3,7 +3,7 @@
 Methods
 =======
 
-This chapter introduces the utility modules provided by **DDMTOLab**, including batch experiments, data analysis, performance metrics, and algorithm components. These modules provide standardized testing workflows and rich algorithm building tools.
+This chapter introduces the utility modules provided by **D²MTOLab**, including batch experiments, data analysis, performance metrics, and algorithm components. These modules provide standardized testing workflows and rich algorithm building tools.
 
 Batch Experiments
 -----------------

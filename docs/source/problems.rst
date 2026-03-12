@@ -3,7 +3,7 @@
 Problems
 ========
 
-This chapter introduces the **MTOP (Multitask Optimization Problem)** class, the core component of DDMTOLab for defining and managing multitask optimization problems.
+This chapter introduces the **MTOP (Multitask Optimization Problem)** class, the core component of D²MTOLab for defining and managing multitask optimization problems.
 
 MTOP Class Overview
 -------------------
@@ -537,7 +537,7 @@ Implementation Guidelines
 Benchmark Problems
 ------------------
 
-DDMTOLab provides 180+ benchmark problems organized by optimization type. All problems are implemented as classes that return configured MTOP instances.
+D²MTOLab provides 180+ benchmark problems organized by optimization type. All problems are implemented as classes that return configured MTOP instances.
 
 Single-Task Single-Objective (STSO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -729,7 +729,7 @@ Multitask Multiobjective (MTMO)
 Real-World Optimization (RWO)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DDMTOLab includes real-world optimization problems in the ``Problems/RWO/`` directory:
+D²MTOLab includes real-world optimization problems in the ``Problems/RWO/`` directory:
 
 .. list-table::
    :header-rows: 1

@@ -1,7 +1,7 @@
 # Data-Driven Multitask Optimization Laboratory
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/JiangtaoShen/DDMTOLab/main/docs/source/_static/logo.svg" alt="DDMTOLab Logo" width="530">
+  <img src="https://raw.githubusercontent.com/JiangtaoShen/DDMTOLab/main/docs/source/_static/logo.svg" alt="D²MTOLab Logo" width="530">
 </p>
 
 <p align="center">
@@ -29,9 +29,9 @@
 
 ## 📖 Overview
 
-**DDMTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **110+ algorithms**, **180+ benchmark problems**, and powerful experiment tools for problem definition, algorithm development, and performance evaluation.
+**D<sup>2</sup>MTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **110+ algorithms**, **180+ benchmark problems**, and powerful experiment tools for problem definition, algorithm development, and performance evaluation.
 
-Whether you're working on expensive black-box optimization, multiobjective optimization, or complex multitask scenarios, DDMTOLab provides a flexible and extensible framework to accelerate your **research** and support real-world **applications**.
+Whether you're working on expensive black-box optimization, multiobjective optimization, or complex multitask scenarios, D<sup>2</sup>MTOLab provides a flexible and extensible framework to accelerate your **research** and support real-world **applications**.
 
 ## ✨ Features
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
 ### Optimization Process Visualization
 
-DDMTOLab provides built-in animation tools to visualize the optimization process:
+D<sup>2</sup>MTOLab provides built-in animation tools to visualize the optimization process:
 
 ```python
 from ddmtolab.Problems.MTSO.cec17_mtso_10d import CEC17MTSO_10D
@@ -193,12 +193,12 @@ animation = create_optimization_animation(max_nfes=100, merge=2, title='BO vs MT
 
 ## 📄 Citation
 
-If you use DDMTOLab in your research, please cite:
+If you use D<sup>2</sup>MTOLab in your research, please cite:
 
 ```bibtex
 @software{ddmtolab2025,
   author = {Jiangtao Shen},
-  title = {DDMTOLab: A Python Platform for Data-Driven Multitask Optimization},
+  title = {D$^2$MTOLab: A Python Platform for Data-Driven Multitask Optimization},
   year = {2025},
   url = {https://github.com/JiangtaoShen/DDMTOLab}
 }

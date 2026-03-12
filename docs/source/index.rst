@@ -2,7 +2,7 @@ Data-Driven Multitask Optimization Laboratory
 ==============================================
 
 .. image:: _static/logo.svg
-   :alt: DDMTOLab Logo
+   :alt: D²MTOLab Logo
    :width: 500
    :align: center
 
@@ -37,9 +37,9 @@ Data-Driven Multitask Optimization Laboratory
 Overview
 --------
 
-**DDMTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **110+ algorithms**, **180+ benchmark problems**, and powerful tools for problem definition, algorithm development, and performance evaluation.
+**D²MTOLab (Data-Driven Multitask Optimization Laboratory)** is a comprehensive Python platform for optimization research, featuring **110+ algorithms**, **180+ benchmark problems**, and powerful tools for problem definition, algorithm development, and performance evaluation.
 
-Whether you're working on expensive black-box optimization, multiobjective optimization, or complex multitask scenarios, DDMTOLab provides a flexible and extensible framework to accelerate your **research** and support real-world **applications**.
+Whether you're working on expensive black-box optimization, multiobjective optimization, or complex multitask scenarios, D²MTOLab provides a flexible and extensible framework to accelerate your **research** and support real-world **applications**.
 
 Features
 --------
@@ -191,13 +191,13 @@ Problems (180+)
 Citation
 --------
 
-If you use DDMTOLab in your research, please cite:
+If you use D²MTOLab in your research, please cite:
 
 .. code-block:: bibtex
 
    @software{ddmtolab2025,
      author = {Jiangtao Shen},
-     title = {DDMTOLab: A Python Platform for Data-Driven Multitask Optimization},
+     title = {D$^2$MTOLab: A Python Platform for Data-Driven Multitask Optimization},
      year = {2025},
      url = {https://github.com/JiangtaoShen/DDMTOLab}
    }

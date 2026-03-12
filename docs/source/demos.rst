@@ -3,12 +3,12 @@
 Demos
 =====
 
-This chapter provides comprehensive demonstrations of DDMTOLab's capabilities through 10 carefully designed examples. Each demo illustrates key concepts and workflows for different optimization scenarios.
+This chapter provides comprehensive demonstrations of D²MTOLab's capabilities through 10 carefully designed examples. Each demo illustrates key concepts and workflows for different optimization scenarios.
 
 Overview
 --------
 
-DDMTOLab supports four categories of optimization problems:
+D²MTOLab supports four categories of optimization problems:
 
 .. list-table::
    :header-rows: 1
