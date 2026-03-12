@@ -91,6 +91,9 @@ docs/objects.inv
 docs/searchindex.js
 docs/source/*.html
 
+# PDF files
+*.pdf
+
 # Project specific
 matlab_resources/
 tests/
