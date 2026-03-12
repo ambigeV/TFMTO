@@ -2,7 +2,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!-- 由 Microsoft Visio, SVG Export 生成 logo_new.svg Page-1 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
-		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" viewBox="160 190 485 150" xml:space="preserve" color-interpolation-filters="sRGB" class="st11">
+		xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" viewBox="168 205 460 140" xml:space="preserve" color-interpolation-filters="sRGB" class="st11">
 	<v:documentProperties v:langID="2052" v:metric="true" v:viewMarkup="false">
 		<v:userDefs>
 			<v:ud v:nameU="msvSubprocessMaster" v:prompt="" v:val="VT4(Rectangle)"/>
@@ -22,7 +22,7 @@
 		.st8 {fill:#000000;fill-opacity:0.4;filter:url(#filter_2.6666667461395);stroke:none}
 		.st9 {fill:url(#grad0-21);stroke:none;stroke-width:0.25}
 		.st10 {fill:url(#grad0-28);stroke:none;stroke-width:0.25}
-		.st11 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+		.st11 {fill:none;fill-rule:evenodd;font-size:12px;overflow:hidden;stroke-linecap:square;stroke-miterlimit:3}
 	]]>
 	</style>
 
