@@ -93,7 +93,7 @@ docs/source/*.html
 
 # PDF files
 *.pdf
-!paper.pdf
+!sm.pdf
 
 # Project specific
 matlab_resources/
