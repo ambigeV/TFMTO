@@ -68,7 +68,7 @@ def _load_logo(parent):
     import numpy as np
     import io
 
-    svg_logo = _ui_dir / "assets" / "logo.svg"
+    svg_logo = _ui_dir / "assets" / "logo_new.svg"
     img = None
 
     # Try loading from SVG first

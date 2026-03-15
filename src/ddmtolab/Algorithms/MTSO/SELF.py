@@ -246,6 +246,11 @@ class SELF:
         runtime = time.time() - start_time
 
         all_decs, all_objs = build_staircase_history(decs, objs, k=1)
+        # Trim excess samples so each task has exactly max_nfes_per_task points
+        max_nfes_per_task = par_list(self.max_nfes, nt)
+        all_decs, all_objs, nfes_per_task = trim_excess_evaluations(
+            all_decs, all_objs, nt, max_nfes_per_task, nfes_per_task
+        )
         # Save results
         results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,
                                      bounds=problem.bounds, save_path=self.save_path,

@@ -1213,6 +1213,10 @@ Benchmark Problem Suites
    :members:
    :undoc-members:
 
+.. autoclass:: ddmtolab.Problems.MTSO.many_task_10d.ManyTask_10D
+   :members:
+   :undoc-members:
+
 **MTMO Problems:**
 
 .. autoclass:: ddmtolab.Problems.MTMO.cec17_mtmo.CEC17MTMO

@@ -689,7 +689,7 @@ Multitask evolutionary algorithms with knowledge transfer for single-objective o
    * - ``EEI_BO_plus``
      - Enhanced EEI-BO for Multitask Optimization
    * - ``MUMBO``
-     - Multi-task Max-value Bayesian Optimization
+     - Multitask Max-value Bayesian Optimization
    * - ``BO_LCB_CKT``
      - BO with LCB and Curriculum Knowledge Transfer
    * - ``BO_LCB_BCKT``

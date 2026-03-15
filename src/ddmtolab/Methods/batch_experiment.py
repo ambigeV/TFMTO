@@ -280,6 +280,26 @@ class BatchExperiment:
         print("✅ Configuration loaded successfully!")
         return batch_exp
 
+    def _scan_completed(self, tasks: List[Dict[str, Any]]) -> set:
+        """
+        Scan data folder for already completed experiments.
+
+        Args:
+            tasks: List of all task dicts (used to know which algo folders to check)
+
+        Returns:
+            Set of (algo_name, problem_name, run_id) tuples that are already done
+        """
+        completed = set()
+        for task in tasks:
+            save_path = task['save_path']
+            file_name = task['file_name']
+            # Check for .pkl file matching this experiment
+            pkl_path = os.path.join(save_path, f"{file_name}.pkl")
+            if os.path.isfile(pkl_path):
+                completed.add((task['algo_name'], task['problem_name'], task['run_id']))
+        return completed
+
     def _run_single_experiment(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
         Run a single experiment task - recreate problem and algorithm in child process
@@ -389,7 +409,7 @@ class BatchExperiment:
         start_time = time.time()
 
         # Prepare all tasks for parallel execution
-        tasks = []
+        all_tasks = []
         for problem_creator, problem_name, problem_params in self.problems:
             for algo_class, algo_name, algo_params in self.algorithms:
                 for run_id in range(1, n_runs + 1):
@@ -408,7 +428,23 @@ class BatchExperiment:
                         'save_path': save_path,
                         'file_name': file_name
                     }
-                    tasks.append(task)
+                    all_tasks.append(task)
+
+        # Scan for completed experiments and skip them
+        completed_set = self._scan_completed(all_tasks)
+        tasks = [t for t in all_tasks
+                 if (t['algo_name'], t['problem_name'], t['run_id']) not in completed_set]
+        n_skipped = len(completed_set)
+
+        if n_skipped > 0:
+            print(f"📂 Found {n_skipped}/{total_experiments} completed experiments, skipping.")
+
+        if not tasks:
+            print("✅ All experiments already completed, nothing to run.")
+            return
+
+        total_remaining = len(tasks)
+        print(f"▶️  Remaining experiments to run: {total_remaining}\n")
 
         # Execute experiments in parallel using process pool
         completed_count = 0
@@ -429,9 +465,9 @@ class BatchExperiment:
 
                     # Display progress information if verbose mode is enabled
                     if verbose:
-                        progress = (completed_count / total_experiments) * 100
-                        if completed_count % max(1, total_experiments // 100) == 0:
-                            print(f"⏳ Progress: {completed_count}/{total_experiments} ({progress:.1f}%)")
+                        progress = (completed_count / total_remaining) * 100
+                        if completed_count % max(1, total_remaining // 100) == 0:
+                            print(f"⏳ Progress: {completed_count}/{total_remaining} ({progress:.1f}%)")
 
                 except Exception as e:
                     # Handle task execution failures
@@ -460,7 +496,9 @@ class BatchExperiment:
 
         # Display final summary
         print(f"\n⏰ Total time: {elapsed_time:.2f} seconds ({elapsed_time / 60:.2f} minutes)")
-        print(f"💥 Parallel speedup: {total_experiments / max_workers / (elapsed_time / 60):.2f}x")
+        if n_skipped > 0:
+            print(f"⏩ Skipped: {n_skipped}, Executed: {total_remaining}")
+        print(f"💥 Parallel speedup: {total_remaining / max_workers / (elapsed_time / 60):.2f}x")
         print(f"📊 Timing summary saved to: {csv_path}\n")
         print(f"=" * 60)
         print(f"🎉🎉🎉 All Experiments Completed! 🎉🎉🎉")

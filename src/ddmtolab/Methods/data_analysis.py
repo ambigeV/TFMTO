@@ -932,16 +932,12 @@ class TableGenerator:
         else:
             # LaTeX format
             if self.config.statistic_type == StatisticType.MEAN:
-                stat_str = f"{stat_value:.4e}".replace('e-', 'e$-$')
-                std_str = f"{std_value:.2e}".replace('e-', 'e$-$')
-                cell_content = f"{stat_str}({std_str})"
+                cell_content = f"${stat_value:.4e}$(${std_value:.2e}$)"
             else:
-                stat_str = f"{stat_value:.4e}".replace('e-', 'e$-$')
-                cell_content = stat_str
+                cell_content = f"${stat_value:.4e}$"
 
             if symbol:
-                symbol_map = {'+': '~$+$', '-': '~$-$', '=': '~='}
-                cell_content += symbol_map.get(symbol, '')
+                cell_content += f" ${symbol}$"
 
         return cell_content
 
@@ -975,7 +971,7 @@ class TableGenerator:
             cell = row[algo]
             if cell != 'N/A':
                 try:
-                    val_str = cell.split('(')[0].replace('e$-$', 'e-')
+                    val_str = cell.split('(')[0].replace('$', '')
                     val = float(val_str)
 
                     if direction == OptimizationDirection.MINIMIZE:
@@ -1168,8 +1164,16 @@ class TableGenerator:
         col_format = '|'.join(['c'] * num_cols)
         col_format = '|' + col_format + '|'
 
-        # Initialize LaTeX table
-        latex_str = "\\begin{table*}[htbp]\n"
+        # Initialize LaTeX document
+        latex_str = "\\documentclass[]{article}\n"
+        latex_str += "\\usepackage[table]{xcolor}\n"
+        latex_str += "\\usepackage{graphicx}\n\n"
+        latex_str += "\\newcommand{\\best}{\\cellcolor[rgb]{0.68,0.85,1.0}}\n\n"
+        latex_str += "\\title{}\n"
+        latex_str += "\\author{}\n\n"
+        latex_str += "\\begin{document}\n"
+        latex_str += "\\maketitle\n\n"
+        latex_str += "\\begin{table*}[htbp]\n"
         latex_str += "\\renewcommand{\\arraystretch}{1.2}\n"
         latex_str += "\\centering\n"
         latex_str += "\\caption{Your caption here}\n"
@@ -1191,7 +1195,7 @@ class TableGenerator:
             for algo in algorithm_order:
                 cell = row[algo]
                 if algo == best_algo:
-                    cell = f"\\textbf{{{cell}}}"
+                    cell = f"\\best {cell}"
                 row_str += f" & {cell}"
             row_str += " \\\\\n"
             latex_str += row_str
@@ -1199,10 +1203,10 @@ class TableGenerator:
 
         # Summary row
         if self.config.rank_sum_test:
-            summary_str = "\\multicolumn{2}{|c|}{+/$-$/=}"
+            summary_str = "\\multicolumn{2}{|c|}{$+$/$-$/$=$}"
             for algo in algorithm_order[:-1]:
                 counts = comparison_counts[algo]
-                summary_str += f" & {counts.plus}/{counts.minus}/{counts.equal}"
+                summary_str += f" & ${counts.plus}$/${counts.minus}$/${counts.equal}$"
             summary_str += " & Base \\\\\n"
             latex_str += summary_str
             latex_str += "\\hline\n"
@@ -1229,11 +1233,11 @@ class TableGenerator:
             if np.isnan(avg_ranks[algo]):
                 cell_content = "N/A"
             else:
-                cell_content = f"{avg_ranks[algo]:.2f}"
+                cell_content = f"${avg_ranks[algo]:.2f}$"
 
-            # Bold the best rank
+            # Highlight the best rank with gray background
             if algo == best_rank_algo:
-                cell_content = f"\\textbf{{{cell_content}}}"
+                cell_content = f"\\best {cell_content}"
 
             avg_rank_str += f" & {cell_content}"
 
@@ -1242,7 +1246,8 @@ class TableGenerator:
         latex_str += "\\hline\n"
 
         latex_str += "\\end{tabular}}\n"
-        latex_str += "\\end{table*}\n"
+        latex_str += "\\end{table*}\n\n"
+        latex_str += "\\end{document}\n"
 
         # Save to file
         save_dir = Path(self.config.save_path)

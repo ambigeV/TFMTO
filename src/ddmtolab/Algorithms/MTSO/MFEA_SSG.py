@@ -362,7 +362,7 @@ class MFEA_SSG:
 
     def __init__(self, problem, n=None, max_nfes=None, rmp=0.3, muc=2, mum=5,
                  max_gen=None, refine_freq=3, n_pairs_per_gen=None,
-                 n_diffusion_steps=100, train_epochs=5, distill_epochs=5,
+                 n_diffusion_steps=100, train_epochs=50, distill_epochs=50,
                  batch_size=512, lr=5e-4, base_ch=64,
                  save_data=True, save_path='./Data', name='MFEA-SSG', disable_tqdm=True):
         """
