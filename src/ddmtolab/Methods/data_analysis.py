@@ -923,18 +923,18 @@ class TableGenerator:
 
         if self.config.table_format == TableFormat.EXCEL:
             if self.config.statistic_type == StatisticType.MEAN:
-                cell_content = f"{stat_value:.4e}({std_value:.2e})"
+                cell_content = f"{stat_value:.3e} ({std_value:.1e})"
             else:
-                cell_content = f"{stat_value:.4e}"
+                cell_content = f"{stat_value:.3e}"
 
             if symbol:
                 cell_content += f" {symbol}"
         else:
             # LaTeX format
             if self.config.statistic_type == StatisticType.MEAN:
-                cell_content = f"${stat_value:.4e}$(${std_value:.2e}$)"
+                cell_content = f"${stat_value:.3e}$ (${std_value:.1e}$)"
             else:
-                cell_content = f"${stat_value:.4e}$"
+                cell_content = f"${stat_value:.3e}$"
 
             if symbol:
                 cell_content += f" ${symbol}$"
@@ -1166,6 +1166,7 @@ class TableGenerator:
 
         # Initialize LaTeX document
         latex_str = "\\documentclass[]{article}\n"
+        latex_str += "\\usepackage[margin=2cm]{geometry}\n"
         latex_str += "\\usepackage[table]{xcolor}\n"
         latex_str += "\\usepackage{graphicx}\n\n"
         latex_str += "\\newcommand{\\best}{\\cellcolor[rgb]{0.68,0.85,1.0}}\n\n"
@@ -1191,7 +1192,7 @@ class TableGenerator:
         for _, row in df.iterrows():
             best_algo = self._find_best_value_in_row(row, algorithm_order, direction)
 
-            row_str = f"{row['Problem']} & {row['Task']}"
+            row_str = f"{row['Problem'].replace('_', '-')} & {row['Task']}"
             for algo in algorithm_order:
                 cell = row[algo]
                 if algo == best_algo:
@@ -1594,11 +1595,18 @@ class PlotGenerator:
             axes_flat[i].set_visible(False)
 
         # Add single legend at the top of the figure
-        handles, labels = axes_flat[0].get_legend_handles_labels()
+        # Collect handles from all subplots to ensure completeness, then sort by algorithm_order
+        handle_dict = {}
+        for ax_item in axes_flat[:n_plots]:
+            for h, l in zip(*ax_item.get_legend_handles_labels()):
+                if l not in handle_dict:
+                    handle_dict[l] = h
+        handles = [handle_dict[algo] for algo in algorithm_order if algo in handle_dict]
+        labels = [algo for algo in algorithm_order if algo in handle_dict]
         legend_fontsize = 18
 
         # Calculate legend columns
-        n_legend_cols = min(len(algorithm_order), 6)
+        n_legend_cols = min(len(algorithm_order), 7)
 
         # First apply tight_layout to position subplots
         fig.tight_layout(h_pad=2.0, w_pad=1.5)
@@ -3017,7 +3025,7 @@ if __name__ == '__main__':
         # In _plot_combined_convergence_for_problem():
         legend_fontsize = 18                    # Fixed legend font size
         legend_padding_cm = 0.3                 # Gap between legend and plots (cm)
-        n_legend_cols = min(len(algorithms), 6) # Max 6 columns in legend
+        n_legend_cols = min(len(algorithms), 7) # Max 7 columns in legend
 
     To modify these values, edit the corresponding methods in PlotGenerator class.
 
