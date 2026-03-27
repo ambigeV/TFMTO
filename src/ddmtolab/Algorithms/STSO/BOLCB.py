@@ -1,0 +1,162 @@
+"""
+Bayesian Optimization with Lower Confidence Bound (BO-LCB)
+
+This module implements Bayesian Optimization using the LCB acquisition function
+for expensive single-objective optimization problems.
+
+The next candidate is selected by minimizing:
+    LCB(x) = mu(x) - beta * sigma(x)
+
+which is equivalent to maximizing UCB in BoTorch's convention:
+    UCB(x) = mu(x) + sqrt(beta) * sigma(x)  (beta here = kappa^2)
+
+References
+----------
+    [1] Srinivas, N., Krause, A., Kakade, S. M., & Seeger, M. (2010).
+        Gaussian process optimization in the bandit setting: No regret and
+        experimental design. ICML.
+
+Notes
+-----
+Author: Jiangtao Shen
+Email: j.shen5@exeter.ac.uk
+Date: 2025.11.11
+Version: 1.0
+"""
+from tqdm import tqdm
+import torch
+from ddmtolab.Methods.Algo_Methods.bo_utils import bo_next_point_lcb
+from ddmtolab.Methods.Algo_Methods.algo_utils import *
+import warnings
+import time
+
+warnings.filterwarnings("ignore")
+
+
+class BOLCB:
+    """
+    Bayesian Optimization with Lower Confidence Bound acquisition function.
+
+    Attributes
+    ----------
+    algorithm_information : dict
+        Dictionary containing algorithm capabilities and requirements
+    """
+
+    algorithm_information = {
+        'n_tasks': '[1, K]',
+        'dims': 'unequal',
+        'objs': 'equal',
+        'n_objs': '1',
+        'cons': 'equal',
+        'n_cons': '0',
+        'expensive': 'True',
+        'knowledge_transfer': 'False',
+        'n_initial': 'unequal',
+        'max_nfes': 'unequal'
+    }
+
+    @classmethod
+    def get_algorithm_information(cls, print_info=True):
+        return get_algorithm_information(cls, print_info)
+
+    def __init__(self, problem, n_initial=None, max_nfes=None, beta=1.0, save_data=True,
+                 save_path='./Data', name='BO-LCB', disable_tqdm=True):
+        """
+        Initialize BO-LCB algorithm.
+
+        Parameters
+        ----------
+        problem : MTOP
+            Multi-task optimization problem instance
+        n_initial : int or List[int], optional
+            Number of initial samples per task (default: 50)
+        max_nfes : int or List[int], optional
+            Maximum number of function evaluations per task (default: 100)
+        beta : float, optional
+            Exploration-exploitation trade-off coefficient.
+            LCB(x) = mu(x) - beta * sigma(x). Higher beta encourages
+            more exploration. (default: 1.0)
+        save_data : bool, optional
+            Whether to save optimization data (default: True)
+        save_path : str, optional
+            Path to save results (default: './Data')
+        name : str, optional
+            Name for the experiment (default: 'BO-LCB')
+        disable_tqdm : bool, optional
+            Whether to disable progress bar (default: True)
+        """
+        self.problem = problem
+        self.n_initial = n_initial if n_initial is not None else 50
+        self.max_nfes = max_nfes if max_nfes is not None else 100
+        self.beta = beta
+        self.save_data = save_data
+        self.save_path = save_path
+        self.name = name
+        self.disable_tqdm = disable_tqdm
+
+    def optimize(self):
+        """
+        Execute the BO-LCB algorithm.
+
+        Returns
+        -------
+        Results
+            Optimization results containing decision variables, objectives, and runtime
+        """
+        data_type = torch.float
+        start_time = time.time()
+        problem = self.problem
+        nt = problem.n_tasks
+        dims = problem.dims
+        n_initial_per_task = par_list(self.n_initial, nt)
+        max_nfes_per_task = par_list(self.max_nfes, nt)
+
+        # Generate initial samples using Latin Hypercube Sampling
+        decs = initialization(problem, self.n_initial, method='lhs')
+        objs, _ = evaluation(problem, decs)
+        nfes_per_task = n_initial_per_task.copy()
+
+        # Initialize database lists storing all real evaluation points per task
+        db_decs = [decs[i].copy() for i in range(nt)]
+        db_objs = [objs[i].copy() for i in range(nt)]
+
+        pbar = tqdm(total=sum(max_nfes_per_task), initial=sum(n_initial_per_task), desc=f"{self.name}",
+                    disable=self.disable_tqdm)
+
+        while sum(nfes_per_task) < sum(max_nfes_per_task):
+            active_tasks = [i for i in range(nt) if nfes_per_task[i] < max_nfes_per_task[i]]
+            if not active_tasks:
+                break
+
+            for i in active_tasks:
+                # Fit GP surrogate and select next candidate via LCB acquisition
+                candidate_np, _ = bo_next_point_lcb(
+                    dims[i], decs[i], objs[i],
+                    data_type=data_type,
+                    kappa=self.beta
+                )
+
+                # Evaluate the candidate solution
+                obj, _ = evaluation_single(problem, candidate_np, i)
+
+                # Update dataset with new sample
+                decs[i], objs[i] = vstack_groups((decs[i], candidate_np), (objs[i], obj))
+
+                db_decs[i] = decs[i].copy()
+                db_objs[i] = objs[i].copy()
+
+                nfes_per_task[i] += 1
+                pbar.update(1)
+
+        pbar.close()
+        runtime = time.time() - start_time
+
+        # Convert database to staircase history structure for results
+        all_decs, all_objs = build_staircase_history(db_decs, db_objs, k=1)
+
+        results = build_save_results(all_decs=all_decs, all_objs=all_objs, runtime=runtime, max_nfes=nfes_per_task,
+                                     bounds=problem.bounds, save_path=self.save_path,
+                                     filename=self.name, save_data=self.save_data)
+
+        return results
