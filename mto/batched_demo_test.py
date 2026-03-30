@@ -52,97 +52,99 @@ DATA_PATH = './Data_Batch'
 RESULTS_PATH = './Results_Batch'
 
 # =============================================================================
-# Batch Experiment Setup
+# Entry point — required on macOS/Windows (spawn-based multiprocessing)
 # =============================================================================
 
-batch_exp = BatchExperiment(base_path=DATA_PATH, clear_folder=False)
+if __name__ == '__main__':
+    # -------------------------------------------------------------------------
+    # Batch Experiment Setup
+    # -------------------------------------------------------------------------
+    batch_exp = BatchExperiment(base_path=DATA_PATH, clear_folder=False)
 
-# --- Problems ---
-benchmark = CEC17MTSO_10D()
-for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
-    batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
+    # --- Problems ---
+    benchmark = CEC17MTSO_10D()
+    for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
+        batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
 
-# --- Algorithms ---
-batch_exp.add_algorithm(GA, 'GA',
-    n=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
+    # --- Algorithms ---
+    batch_exp.add_algorithm(GA, 'GA',
+        n=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
-batch_exp.add_algorithm(BO, 'BO',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
+    batch_exp.add_algorithm(BO, 'BO',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
-batch_exp.add_algorithm(BOLCB, 'BO-LCB',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA, disable_tqdm=True)
+    batch_exp.add_algorithm(BOLCB, 'BO-LCB',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO, 'MTBO',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO, 'MTBO',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
-batch_exp.add_algorithm(BO_LCB_BCKT, 'BO-LCB-BCKT',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
+    batch_exp.add_algorithm(BO_LCB_BCKT, 'BO-LCB-BCKT',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
-batch_exp.add_algorithm(BO_TFM, 'BO-TFM',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+    batch_exp.add_algorithm(BO_TFM, 'BO-TFM',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
-# --- CMA-ES acquisition variants ---
-batch_exp.add_algorithm(BO_TFM, 'BO-TFM-CMA',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    # --- CMA-ES acquisition variants ---
+    batch_exp.add_algorithm(BO_TFM, 'BO-TFM-CMA',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni-CMA',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni-CMA',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite-CMA',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite-CMA',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH-CMA',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH-CMA',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
-batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH-CMA',
-    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH-CMA',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
-# =============================================================================
-# Run (parallel across workers)
-# =============================================================================
+    # -------------------------------------------------------------------------
+    # Run (parallel across workers)
+    # -------------------------------------------------------------------------
+    batch_exp.run(n_runs=N_RUNS, verbose=True, max_workers=MAX_WORKERS)
 
-batch_exp.run(n_runs=N_RUNS, verbose=True, max_workers=MAX_WORKERS)
-
-# =============================================================================
-# Results Analysis (all problems in one pass)
-# =============================================================================
-
-analyzer = DataAnalyzer(
-    data_path=DATA_PATH,
-    save_path=RESULTS_PATH,
-    algorithm_order=ALGO_ORDER,
-    figure_format='png',
-    log_scale=False,
-    show_std_band=True,
-    std_scale=0.5,
-    best_so_far=True,
-    clear_results=True,
-)
-analyzer.run()
+    # -------------------------------------------------------------------------
+    # Results Analysis (all problems in one pass)
+    # -------------------------------------------------------------------------
+    analyzer = DataAnalyzer(
+        data_path=DATA_PATH,
+        save_path=RESULTS_PATH,
+        algorithm_order=ALGO_ORDER,
+        figure_format='png',
+        log_scale=False,
+        show_std_band=True,
+        std_scale=0.5,
+        best_so_far=True,
+        clear_results=True,
+    )
+    analyzer.run()

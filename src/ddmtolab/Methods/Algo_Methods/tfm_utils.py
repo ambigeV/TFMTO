@@ -16,7 +16,7 @@ import numpy as np
 from scipy.stats import norm as scipy_norm
 
 _Z_80 = scipy_norm.ppf(0.90)   # 1.2816
-_CHUNK = 1000                   # max test points per predict() call
+_CHUNK = 500                    # max test points per predict() call
 
 
 def _build_model(n_estimators: int, random_state: int):

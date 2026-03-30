@@ -1,0 +1,225 @@
+created_at: 2026-03-30T18:17:18.750485
+base_path: ./Data_Batch
+clear_folder: False
+
+problems:
+  - name: P1
+    class: CEC17MTSO_10D
+    creator_name: P1
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P2
+    class: CEC17MTSO_10D
+    creator_name: P2
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P3
+    class: CEC17MTSO_10D
+    creator_name: P3
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P4
+    class: CEC17MTSO_10D
+    creator_name: P4
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P5
+    class: CEC17MTSO_10D
+    creator_name: P5
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P6
+    class: CEC17MTSO_10D
+    creator_name: P6
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P7
+    class: CEC17MTSO_10D
+    creator_name: P7
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P8
+    class: CEC17MTSO_10D
+    creator_name: P8
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+  - name: P9
+    class: CEC17MTSO_10D
+    creator_name: P9
+    module: ddmtolab.Problems.MTSO.cec17_mtso_10d
+    params: {}
+
+algorithms:
+  - name: GA
+    class: GA
+    module: ddmtolab.Algorithms.STSO.GA
+    parameters:
+      n: 20
+      max_nfes: 100
+      disable_tqdm: True
+
+  - name: BO
+    class: BO
+    module: ddmtolab.Algorithms.STSO.BO
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      disable_tqdm: True
+
+  - name: BO-LCB
+    class: BOLCB
+    module: ddmtolab.Algorithms.STSO.BOLCB
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      disable_tqdm: True
+
+  - name: MTBO
+    class: MTBO
+    module: ddmtolab.Algorithms.MTSO.MTBO
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      disable_tqdm: True
+
+  - name: BO-LCB-BCKT
+    class: BO_LCB_BCKT
+    module: ddmtolab.Algorithms.MTSO.BO_LCB_BCKT
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      disable_tqdm: True
+
+  - name: BO-TFM
+    class: BO_TFM
+    module: ddmtolab.Algorithms.STSO.BO_TFM
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      n_candidates: 1000
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Uni
+    class: MTBO_TFM_Uniform
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      n_candidates: 1000
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Elite
+    class: MTBO_TFM_Elite
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      n_candidates: 1000
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Uni-OH
+    class: MTBO_TFM_Uniform_OH
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_OH
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      n_candidates: 1000
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Elite-OH
+    class: MTBO_TFM_Elite_OH
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_OH
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      n_candidates: 1000
+      disable_tqdm: True
+
+  - name: BO-TFM-CMA
+    class: BO_TFM
+    module: ddmtolab.Algorithms.STSO.BO_TFM
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      acq_optimizer: cmaes
+      cmaes_popsize: 20
+      cmaes_maxiter: 50
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Uni-CMA
+    class: MTBO_TFM_Uniform
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      acq_optimizer: cmaes
+      cmaes_popsize: 20
+      cmaes_maxiter: 50
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Elite-CMA
+    class: MTBO_TFM_Elite
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      acq_optimizer: cmaes
+      cmaes_popsize: 20
+      cmaes_maxiter: 50
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Uni-OH-CMA
+    class: MTBO_TFM_Uniform_OH
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_OH
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      acq_optimizer: cmaes
+      cmaes_popsize: 20
+      cmaes_maxiter: 50
+      disable_tqdm: True
+
+  - name: MTBO-TFM-Elite-OH-CMA
+    class: MTBO_TFM_Elite_OH
+    module: ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_OH
+    parameters:
+      n_initial: 20
+      max_nfes: 100
+      beta: 1.0
+      n_estimators: 8
+      acq_optimizer: cmaes
+      cmaes_popsize: 20
+      cmaes_maxiter: 50
+      disable_tqdm: True
+
+run_settings:
+  n_runs: 5
+  max_workers: 4
+  start_time: 2026-03-30T18:17:18.750569
