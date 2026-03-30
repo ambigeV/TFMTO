@@ -40,8 +40,8 @@ MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite']
 
-DATA_PATH = './Data'
-RESULTS_PATH = './Results'
+DATA_PATH = './Data_Batch'
+RESULTS_PATH = './Results_Batch'
 
 # =============================================================================
 # Batch Experiment Setup
