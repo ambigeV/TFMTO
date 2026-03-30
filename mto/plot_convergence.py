@@ -76,23 +76,31 @@ def load_algo_data(prob_dir: Path, algo_name: str, prob_name: str):
     Returns
     -------
     curves_per_task : list of list of np.ndarray
-        curves_per_task[task][run] = convergence array of shape (n_nfes,)
+        curves_per_task[task][run] = convergence array of shape (n_points,)
+        n_points varies by algorithm (GA has fewer points than BO).
+    max_nfes_per_task : list of int
+        Total NFE budget per task — used to stretch the x-axis to [0, max_nfes]
+        so GA (few generation points) and BO (many points) share the same scale.
     n_tasks : int
     """
     algo_dir = prob_dir / algo_name
     if not algo_dir.exists():
-        return None, 0
+        return None, None, 0
 
     pkl_files = sorted(algo_dir.glob(f'{algo_name}_{prob_name}_*.pkl'))
     if not pkl_files:
-        return None, 0
+        return None, None, 0
 
     all_runs = []
+    max_nfes_per_task = None
     for pkl_path in pkl_files:
         data = load_pkl(pkl_path)
         all_objs = data['all_objs']   # List[List[np.ndarray]]
         run_curves = [best_so_far(all_objs[t]) for t in range(len(all_objs))]
         all_runs.append(run_curves)
+        # max_nfes is consistent across runs — take from the first file
+        if max_nfes_per_task is None:
+            max_nfes_per_task = list(data['max_nfes'])
 
     n_tasks = len(all_runs[0])
     # curves_per_task[t] = list of convergence arrays (one per run)
@@ -101,7 +109,7 @@ def load_algo_data(prob_dir: Path, algo_name: str, prob_name: str):
         task_curves = [all_runs[r][t] for r in range(len(all_runs))]
         curves_per_task.append(task_curves)
 
-    return curves_per_task, n_tasks
+    return curves_per_task, max_nfes_per_task, n_tasks
 
 
 def align_curves(curves: list) -> np.ndarray:
@@ -137,14 +145,16 @@ def plot_problem(prob_name: str):
         return
 
     # --- load data ---
-    algo_data = {}
-    n_tasks   = 0
+    algo_data    = {}   # algo -> curves_per_task
+    algo_max_nfes = {}  # algo -> max_nfes_per_task
+    n_tasks      = 0
     for algo in algos:
-        curves, nt = load_algo_data(prob_dir, algo, prob_name)
+        curves, max_nfes_per_task, nt = load_algo_data(prob_dir, algo, prob_name)
         if curves is None:
             print(f'  [WARN] No pkl files found for {algo}, skipping.')
             continue
-        algo_data[algo] = curves
+        algo_data[algo]     = curves
+        algo_max_nfes[algo] = max_nfes_per_task
         n_tasks = max(n_tasks, nt)
 
     if not algo_data:
@@ -174,10 +184,14 @@ def plot_problem(prob_name: str):
             if t >= len(curves_per_task):
                 continue
 
-            mat   = align_curves(curves_per_task[t])   # (n_runs, n_nfes)
-            mean  = mat.mean(axis=0)
-            std   = mat.std(axis=0)
-            x     = np.arange(1, len(mean) + 1)
+            mat  = align_curves(curves_per_task[t])   # (n_runs, n_points)
+            mean = mat.mean(axis=0)
+            std  = mat.std(axis=0)
+            # Stretch x to [0, max_nfes] regardless of how many curve points
+            # exist — GA has ~5 generation points, BO has ~100 iteration points,
+            # but both should span the same NFE budget on the x-axis.
+            nfes = algo_max_nfes[algo][t] if t < len(algo_max_nfes[algo]) else len(mean)
+            x    = np.linspace(0, nfes, len(mean))
 
             color  = color_map.get(algo, '#333333')
             marker = marker_map.get(algo, 'o')
