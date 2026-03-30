@@ -216,6 +216,7 @@ class PlotConfig:
     merge_plots: bool = False
     merge_columns: int = 3
     show_std_band: bool = False
+    std_scale: float = 1.0
     save_path: Path = Path('./Results')
     colors: List[str] = field(default_factory=lambda: DEFAULT_COLORS.copy())
     markers: List[str] = field(default_factory=lambda: DEFAULT_MARKERS.copy())
@@ -1465,8 +1466,9 @@ class PlotGenerator:
             )
 
             if self.config.show_std_band and len(std_curve) > 0:
+                half = self.config.std_scale * std_curve
                 ax.fill_between(
-                    x, curve - std_curve, curve + std_curve,
+                    x, curve - half, curve + half,
                     alpha=0.15, color=color
                 )
 
@@ -2231,6 +2233,7 @@ class DataAnalyzer:
             merge_plots: bool = False,
             merge_columns: int = 3,
             show_std_band: bool = False,
+            std_scale: float = 1.0,
             best_so_far: bool = True,
             clear_results: bool = True,
             convergence_k: Optional[int] = None
@@ -2333,6 +2336,7 @@ class DataAnalyzer:
             merge_plots=merge_plots,
             merge_columns=merge_columns,
             show_std_band=show_std_band,
+            std_scale=std_scale,
             save_path=Path(save_path)
         )
 
