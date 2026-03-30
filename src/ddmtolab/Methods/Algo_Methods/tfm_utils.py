@@ -1,13 +1,36 @@
 """
 TabPFN utility functions for surrogate-based Bayesian Optimization.
 
+Model version: TabPFN v2.5 (loaded via ModelVersion.V2_5).
+
 The predictive std is derived from the 80% CI (10th–90th percentile) under a
 Gaussian assumption:  std = (q90 - q10) / (2 * z_{0.90})  where z_{0.90} ≈ 1.2816.
+
+Batch prediction advice:
+  - Always pass the full candidate pool in a single predict() call.
+  - Each predict() recomputes the training context, so N separate calls
+    is ~N× slower than one batched call.
+  - If n_test > 1000, split into chunks of 1000 and concatenate results.
 """
 import numpy as np
 from scipy.stats import norm as scipy_norm
 
 _Z_80 = scipy_norm.ppf(0.90)   # 1.2816
+_CHUNK = 1000                   # max test points per predict() call
+
+
+def _build_model(n_estimators: int, random_state: int):
+    """Instantiate a TabPFN v2.5 regressor with the given settings."""
+    from tabpfn import TabPFNRegressor
+    from tabpfn.constants import ModelVersion
+
+    model = TabPFNRegressor.create_default_for_version(ModelVersion.V2_5)
+    model.set_params(
+        n_estimators=n_estimators,
+        random_state=random_state,
+        ignore_pretraining_limits=True,
+    )
+    return model
 
 
 def tabpfn_predict(
@@ -19,7 +42,7 @@ def tabpfn_predict(
     n_estimators: int = 8,
     random_state: int = 42,
 ) -> 'np.ndarray | tuple[np.ndarray, np.ndarray]':
-    """Fit TabPFN on (X_train, y_train) and predict on X_test.
+    """Fit TabPFN v2.5 on (X_train, y_train) and predict on X_test.
 
     Parameters
     ----------
@@ -34,25 +57,46 @@ def tabpfn_predict(
     -------
     y_pred           : shape (n_test,)
     std              : shape (n_test,)  — only when return_std=True
-    """
-    from tabpfn import TabPFNRegressor
 
-    model = TabPFNRegressor(
-        n_estimators=n_estimators,
-        random_state=random_state,
-        ignore_pretraining_limits=True,
-    )
+    Notes
+    -----
+    X_test is scored in a single batched predict() call (or in chunks of
+    _CHUNK if n_test > _CHUNK) to avoid redundant context recomputation.
+    """
+    model = _build_model(n_estimators, random_state)
     model.fit(X_train, y_train)
 
-    if not return_std:
-        return model.predict(X_test)
+    n_test = len(X_test)
 
-    output = model.predict(X_test, output_type="main")
-    y_pred = output["mean"]
-    quantiles = np.array(output["quantiles"])   # (n_quantiles, n_test)
-    q10, q90 = quantiles[0], quantiles[-1]
-    std = (q90 - q10) / (2.0 * _Z_80)          # GP-equivalent σ
-    return y_pred, std
+    if not return_std:
+        if n_test <= _CHUNK:
+            return model.predict(X_test)
+        # chunk for large test sets
+        parts = [
+            model.predict(X_test[i:i + _CHUNK])
+            for i in range(0, n_test, _CHUNK)
+        ]
+        return np.concatenate(parts)
+
+    # --- with std ---
+    if n_test <= _CHUNK:
+        output = model.predict(X_test, output_type="main")
+        y_pred = output["mean"]
+        quantiles = np.array(output["quantiles"])   # (n_quantiles, n_test)
+        q10, q90 = quantiles[0], quantiles[-1]
+        std = (q90 - q10) / (2.0 * _Z_80)
+        return y_pred, std
+
+    # chunk for large test sets
+    y_parts, std_parts = [], []
+    for i in range(0, n_test, _CHUNK):
+        chunk = X_test[i:i + _CHUNK]
+        output = model.predict(chunk, output_type="main")
+        y_parts.append(output["mean"])
+        quantiles = np.array(output["quantiles"])
+        q10, q90 = quantiles[0], quantiles[-1]
+        std_parts.append((q90 - q10) / (2.0 * _Z_80))
+    return np.concatenate(y_parts), np.concatenate(std_parts)
 
 
 def lcb(mean: np.ndarray, std: np.ndarray, beta: float = 1.0) -> np.ndarray:
