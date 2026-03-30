@@ -23,6 +23,8 @@ from ddmtolab.Algorithms.MTSO.BO_LCB_BCKT import BO_LCB_BCKT
 from ddmtolab.Algorithms.STSO.BO_TFM import BO_TFM
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform import MTBO_TFM_Uniform
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite import MTBO_TFM_Elite
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_OH import MTBO_TFM_Uniform_OH
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_OH import MTBO_TFM_Elite_OH
 from ddmtolab.Methods.batch_experiment import BatchExperiment
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
@@ -38,7 +40,8 @@ N_ESTIMATORS = 4
 MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 
 ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
-              'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite']
+              'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite',
+              'MTBO-TFM-Uni-OH', 'MTBO-TFM-Elite-OH']
 
 DATA_PATH = './Data_Batch'
 RESULTS_PATH = './Results_Batch'
@@ -79,6 +82,14 @@ batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni',
     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
 batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite',
+    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH',
+    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH',
     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 

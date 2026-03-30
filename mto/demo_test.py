@@ -19,6 +19,8 @@ from ddmtolab.Algorithms.MTSO.BO_LCB_BCKT import BO_LCB_BCKT
 from ddmtolab.Algorithms.STSO.BO_TFM import BO_TFM
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform import MTBO_TFM_Uniform
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite import MTBO_TFM_Elite
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_OH import MTBO_TFM_Uniform_OH
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_OH import MTBO_TFM_Elite_OH
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
 # =============================================================================
@@ -32,7 +34,8 @@ BETA = 1.0
 N_ESTIMATORS = 4
 
 ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
-              'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite']
+              'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite',
+              'MTBO-TFM-Uni-OH', 'MTBO-TFM-Elite-OH']
 
 benchmark = CEC17MTSO_10D()
 PROBLEMS = {
@@ -94,6 +97,14 @@ for prob_name, prob_fn in PROBLEMS.items():
         MTBO_TFM_Elite(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
                        n_estimators=N_ESTIMATORS,
                        save_path=data_path('MTBO-TFM-Elite'), name=run_name('MTBO-TFM-Elite')).optimize()
+
+        MTBO_TFM_Uniform_OH(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+                            n_estimators=N_ESTIMATORS,
+                            save_path=data_path('MTBO-TFM-Uni-OH'), name=run_name('MTBO-TFM-Uni-OH')).optimize()
+
+        MTBO_TFM_Elite_OH(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+                          n_estimators=N_ESTIMATORS,
+                          save_path=data_path('MTBO-TFM-Elite-OH'), name=run_name('MTBO-TFM-Elite-OH')).optimize()
 
 # =============================================================================
 # Results Analysis (per problem)
