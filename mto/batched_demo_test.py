@@ -36,12 +36,17 @@ N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
 BETA = 1.0
-N_ESTIMATORS = 4
+N_ESTIMATORS = 8
+N_CANDIDATES = 1000
+CMAES_POPSIZE = 20
+CMAES_MAXITER = 50
 MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 
 ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite',
-              'MTBO-TFM-Uni-OH', 'MTBO-TFM-Elite-OH']
+              'MTBO-TFM-Uni-OH', 'MTBO-TFM-Elite-OH',
+              'BO-TFM-CMA', 'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA',
+              'MTBO-TFM-Uni-OH-CMA', 'MTBO-TFM-Elite-OH-CMA']
 
 DATA_PATH = './Data_Batch'
 RESULTS_PATH = './Results_Batch'
@@ -75,23 +80,49 @@ batch_exp.add_algorithm(BO_LCB_BCKT, 'BO-LCB-BCKT',
 
 batch_exp.add_algorithm(BO_TFM, 'BO-TFM',
     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
 batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni',
     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
 batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite',
     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
 batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH',
     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
 batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH',
     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-    n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+
+# --- CMA-ES acquisition variants ---
+batch_exp.add_algorithm(BO_TFM, 'BO-TFM-CMA',
+    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+
+batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni-CMA',
+    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+
+batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite-CMA',
+    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+
+batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH-CMA',
+    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+
+batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH-CMA',
+    n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
 # =============================================================================
 # Run (parallel across workers)

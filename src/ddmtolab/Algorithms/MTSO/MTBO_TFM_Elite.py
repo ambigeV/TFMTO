@@ -27,7 +27,7 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
     vstack_groups, build_staircase_history, build_save_results,
 )
 from ddmtolab.Methods.Algo_Methods.tfm_utils import (
-    tabpfn_predict, lcb, append_task_id, pad_to_dim,
+    tabpfn_predict, lcb, append_task_id, pad_to_dim, optimize_acq_cmaes,
 )
 
 warnings.filterwarnings("ignore")
@@ -73,6 +73,9 @@ class MTBO_TFM_Elite:
         n_candidates: int = 500,
         n_estimators: int = 8,
         elite_ratio: float = 0.1,
+        acq_optimizer: str = 'random',
+        cmaes_popsize: int = 20,
+        cmaes_maxiter: int = 50,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'MTBO-TFM-Elite',
@@ -85,6 +88,9 @@ class MTBO_TFM_Elite:
         self.n_candidates = n_candidates
         self.n_estimators = n_estimators
         self.elite_ratio = elite_ratio
+        self.acq_optimizer = acq_optimizer
+        self.cmaes_popsize = cmaes_popsize
+        self.cmaes_maxiter = cmaes_maxiter
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -150,21 +156,31 @@ class MTBO_TFM_Elite:
                     i, decs, objs, dims, max_dim
                 )
 
-                # ---------- random candidate pool for task i ----------
-                candidates = np.random.rand(self.n_candidates, dims[i])
-                candidates_padded = pad_to_dim(candidates, max_dim)
-                X_test = append_task_id(candidates_padded, i)
+                # ---------- acquisition optimisation for task i ----------
+                if self.acq_optimizer == 'cmaes':
+                    def _score(cands, _Xtr=X_train, _ytr=y_train, _i=i):
+                        cands_padded = pad_to_dim(cands, max_dim)
+                        X_test = append_task_id(cands_padded, _i)
+                        m, s = tabpfn_predict(_Xtr, _ytr, X_test, return_std=True,
+                                              n_estimators=self.n_estimators)
+                        return lcb(m, s, self.beta)
+                    candidate_np = optimize_acq_cmaes(
+                        _score, dims[i], self.cmaes_popsize, self.cmaes_maxiter
+                    )
+                else:
+                    candidates = np.random.rand(self.n_candidates, dims[i])
+                    candidates_padded = pad_to_dim(candidates, max_dim)
+                    X_test = append_task_id(candidates_padded, i)
 
-                mean, std = tabpfn_predict(
-                    X_train, y_train, X_test,
-                    return_std=True,
-                    n_estimators=self.n_estimators,
-                )
+                    mean, std = tabpfn_predict(
+                        X_train, y_train, X_test,
+                        return_std=True,
+                        n_estimators=self.n_estimators,
+                    )
 
-                # ---------- LCB selection ----------
-                acq = lcb(mean, std, self.beta)
-                best_idx = int(np.argmin(acq))
-                candidate_np = candidates[best_idx:best_idx + 1]   # (1, d_i)
+                    acq = lcb(mean, std, self.beta)
+                    best_idx = int(np.argmin(acq))
+                    candidate_np = candidates[best_idx:best_idx + 1]
 
                 # ---------- real evaluation ----------
                 obj, _ = evaluation_single(problem, candidate_np, i)

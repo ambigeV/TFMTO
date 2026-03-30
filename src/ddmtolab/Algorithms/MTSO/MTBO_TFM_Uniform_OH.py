@@ -1,17 +1,13 @@
 """
-MTBO-TFM-Uni: Multi-Task BO with a single shared TabPFN surrogate.
+MTBO-TFM-Uni-OH: Multi-Task BO with shared TabPFN and one-hot task encoding.
 
-All tasks are pooled into one training set.  Each task is distinguished by
-appending its integer task ID (0, 1, 2, …) as an extra feature column.
-Tasks with fewer dimensions are zero-padded to max_dim before the ID column.
+Identical to MTBO_TFM_Uniform except the task identifier is encoded as a
+one-hot binary vector (n_tasks columns) instead of a scalar integer.
+This removes the false ordinal relationship between task IDs that the scalar
+encoding implies (e.g. task 0 and task 1 are NOT inherently "closer" than
+task 0 and task 3).
 
-Feature layout:  [x_0, ..., x_{max_dim-1}, task_id]
-
-For tasks with different objectives scales, each task's y is min-max
-normalised to [0, 1] before pooling so that the shared surrogate is not
-dominated by tasks with larger absolute values.
-
-LCB (minimisation) = mean - beta * std,  default beta = 1.0
+Feature layout:  [x_0, ..., x_{max_dim-1}, oh_0, ..., oh_{n_tasks-1}]
 """
 import time
 import warnings
@@ -24,39 +20,38 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
     vstack_groups, build_staircase_history, build_save_results,
 )
 from ddmtolab.Methods.Algo_Methods.tfm_utils import (
-    tabpfn_predict, lcb, append_task_id, pad_to_dim, optimize_acq_cmaes,
+    tabpfn_predict, lcb, append_task_id_onehot, pad_to_dim, optimize_acq_cmaes,
 )
 
 warnings.filterwarnings("ignore")
 
 
 def _normalize_y(y: np.ndarray) -> np.ndarray:
-    """Min-max normalise to [0, 1]; returns y unchanged if range is zero."""
     lo, hi = y.min(), y.max()
     rng = hi - lo
     return (y - lo) / rng if rng > 1e-12 else np.zeros_like(y)
 
 
-class MTBO_TFM_Uniform:
+class MTBO_TFM_Uniform_OH:
     """
-    Multi-Task Bayesian Optimisation with a uniform shared TabPFN surrogate.
+    Multi-Task BO with a uniform shared TabPFN surrogate and one-hot task encoding.
 
-    All tasks' data are combined into a single training set (with task ID as
-    an extra feature).  A fresh TabPFN is fitted every iteration using the
-    full pooled dataset.
+    All tasks' data are pooled into a single training set. Each task is
+    identified by a one-hot binary vector appended to the decision variables,
+    avoiding the misleading ordinal relationship of a scalar task ID.
 
     Each BO iteration:
       1. Normalise each task's objectives independently to [0, 1].
-      2. Pool all tasks into one (X_all, y_all) with task-ID feature appended.
-      3. Fit a single TabPFN on the pooled data.
+      2. Pool all tasks into (X_all, y_all) with one-hot task columns appended.
+      3. Fit a single TabPFN v2.5 on the pooled data.
       4. For each active task i, draw n_candidates random points, append
-         task_id=i, score with LCB, evaluate the argmin on the true objective.
+         one-hot for task i, score with LCB, evaluate argmin on true objective.
     """
 
     algorithm_information = {
         'n_tasks': '[2, K]',
         'n_objectives': 1,
-        'surrogate': 'TabPFN (uniform multi-task)',
+        'surrogate': 'TabPFN v2.5 (uniform multi-task, one-hot encoding)',
         'acquisition': 'LCB',
     }
 
@@ -73,7 +68,7 @@ class MTBO_TFM_Uniform:
         cmaes_maxiter: int = 50,
         save_data: bool = True,
         save_path: str = './Data',
-        name: str = 'MTBO-TFM-Uni',
+        name: str = 'MTBO-TFM-Uni-OH',
         disable_tqdm: bool = True,
     ):
         self.problem = problem
@@ -90,18 +85,15 @@ class MTBO_TFM_Uniform:
         self.name = name
         self.disable_tqdm = disable_tqdm
 
-    # ------------------------------------------------------------------
-    def _build_pooled_dataset(self, decs, objs, dims, max_dim):
-        """Combine all tasks into (X_all, y_all) with task-ID feature."""
+    def _build_pooled_dataset(self, decs, objs, dims, max_dim, nt):
         X_parts, y_parts = [], []
         for j, (X_j, y_j) in enumerate(zip(decs, objs)):
             X_padded = pad_to_dim(X_j, max_dim)
-            X_with_id = append_task_id(X_padded, j)
-            X_parts.append(X_with_id)
+            X_with_oh = append_task_id_onehot(X_padded, j, nt)
+            X_parts.append(X_with_oh)
             y_parts.append(_normalize_y(y_j.ravel()))
         return np.vstack(X_parts), np.concatenate(y_parts)
 
-    # ------------------------------------------------------------------
     def optimize(self):
         start_time = time.time()
         problem = self.problem
@@ -127,15 +119,13 @@ class MTBO_TFM_Uniform:
             if not active_tasks:
                 break
 
-            # ---------- build shared surrogate once per round ----------
-            X_all, y_all = self._build_pooled_dataset(decs, objs, dims, max_dim)
+            X_all, y_all = self._build_pooled_dataset(decs, objs, dims, max_dim, nt)
 
             for i in active_tasks:
-                # ---------- acquisition optimisation for task i ----------
                 if self.acq_optimizer == 'cmaes':
                     def _score(cands, _Xa=X_all, _ya=y_all, _i=i):
                         cands_padded = pad_to_dim(cands, max_dim)
-                        X_test = append_task_id(cands_padded, _i)
+                        X_test = append_task_id_onehot(cands_padded, _i, nt)
                         m, s = tabpfn_predict(_Xa, _ya, X_test, return_std=True,
                                               n_estimators=self.n_estimators)
                         return lcb(m, s, self.beta)
@@ -145,7 +135,7 @@ class MTBO_TFM_Uniform:
                 else:
                     candidates = np.random.rand(self.n_candidates, dims[i])
                     candidates_padded = pad_to_dim(candidates, max_dim)
-                    X_test = append_task_id(candidates_padded, i)
+                    X_test = append_task_id_onehot(candidates_padded, i, nt)
 
                     mean, std = tabpfn_predict(
                         X_all, y_all, X_test,
@@ -157,7 +147,6 @@ class MTBO_TFM_Uniform:
                     best_idx = int(np.argmin(acq))
                     candidate_np = candidates[best_idx:best_idx + 1]
 
-                # ---------- real evaluation ----------
                 obj, _ = evaluation_single(problem, candidate_np, i)
                 decs[i], objs[i] = vstack_groups(
                     (decs[i], candidate_np), (objs[i], obj)

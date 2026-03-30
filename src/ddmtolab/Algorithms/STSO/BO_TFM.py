@@ -17,7 +17,7 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
     par_list, initialization, evaluation, evaluation_single,
     vstack_groups, build_staircase_history, build_save_results,
 )
-from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict, lcb
+from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict, lcb, optimize_acq_cmaes
 
 warnings.filterwarnings("ignore")
 
@@ -48,6 +48,9 @@ class BO_TFM:
         beta: float = 1.0,
         n_candidates: int = 500,
         n_estimators: int = 8,
+        acq_optimizer: str = 'random',
+        cmaes_popsize: int = 20,
+        cmaes_maxiter: int = 50,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'BO-TFM',
@@ -59,6 +62,9 @@ class BO_TFM:
         self.beta = beta
         self.n_candidates = n_candidates
         self.n_estimators = n_estimators
+        self.acq_optimizer = acq_optimizer
+        self.cmaes_popsize = cmaes_popsize
+        self.cmaes_maxiter = cmaes_maxiter
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -93,19 +99,23 @@ class BO_TFM:
                 X_train = decs[i]                       # (n, d)
                 y_train = objs[i].ravel()               # (n,)
 
-                # ---------- random candidate pool ----------
-                candidates = np.random.rand(self.n_candidates, dims[i])  # (500, d)
-
-                mean, std = tabpfn_predict(
-                    X_train, y_train, candidates,
-                    return_std=True,
-                    n_estimators=self.n_estimators,
-                )
-
-                # ---------- LCB selection ----------
-                acq = lcb(mean, std, self.beta)
-                best_idx = int(np.argmin(acq))
-                candidate_np = candidates[best_idx:best_idx + 1]   # (1, d)
+                # ---------- acquisition optimisation ----------
+                if self.acq_optimizer == 'cmaes':
+                    def _score(cands, _Xtr=X_train, _ytr=y_train):
+                        m, s = tabpfn_predict(_Xtr, _ytr, cands, return_std=True,
+                                              n_estimators=self.n_estimators)
+                        return lcb(m, s, self.beta)
+                    candidate_np = optimize_acq_cmaes(
+                        _score, dims[i], self.cmaes_popsize, self.cmaes_maxiter
+                    )
+                else:
+                    candidates = np.random.rand(self.n_candidates, dims[i])
+                    mean, std = tabpfn_predict(
+                        X_train, y_train, candidates,
+                        return_std=True, n_estimators=self.n_estimators,
+                    )
+                    acq = lcb(mean, std, self.beta)
+                    candidate_np = candidates[int(np.argmin(acq)):int(np.argmin(acq)) + 1]
 
                 # ---------- real evaluation ----------
                 obj, _ = evaluation_single(problem, candidate_np, i)
