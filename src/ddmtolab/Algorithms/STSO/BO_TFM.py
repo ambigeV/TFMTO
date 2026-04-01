@@ -21,6 +21,7 @@ import functools
 
 import numpy as np
 import torch
+from scipy.stats.qmc import LatinHypercube
 from tqdm import tqdm
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
@@ -155,7 +156,7 @@ class BO_TFM:
                     )
 
                 else:   # 'random'
-                    candidates = np.random.rand(self.n_candidates, dims[i])
+                    candidates = LatinHypercube(d=dims[i]).random(n=self.n_candidates)
                     mean, std = tabpfn_predict(
                         X_train, y_train, candidates,
                         return_std=True, n_estimators=self.n_estimators,

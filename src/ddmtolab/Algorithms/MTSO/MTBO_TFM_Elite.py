@@ -27,6 +27,7 @@ import functools
 
 import numpy as np
 import torch
+from scipy.stats.qmc import LatinHypercube
 from tqdm import tqdm
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
@@ -212,7 +213,7 @@ class MTBO_TFM_Elite:
                     )
 
                 else:   # 'random'
-                    candidates = np.random.rand(self.n_candidates, dims[i])
+                    candidates = LatinHypercube(d=dims[i]).random(n=self.n_candidates)
                     candidates_padded = pad_to_dim(candidates, max_dim)
                     X_test = append_task_id(candidates_padded, i)
                     mean, std = tabpfn_predict(
