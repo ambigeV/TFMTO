@@ -214,6 +214,12 @@ class BO_TFM_Distill:
                 )
                 nfes_per_task[i] += 1
 
+                pbar.set_postfix_str(
+                    f"task={i} best={objs[i].min():.4f} "
+                    f"new={float(obj):.4f} acq={acq_val:.4f} "
+                    f"tfn={t_tabpfn:.1f}s mlp={t_mlp:.1f}s lb={t_lbfgs:.1f}s"
+                )
+
                 # --- W&B logging ---
                 if self.wandb_run is not None:
                     self.wandb_run.log({

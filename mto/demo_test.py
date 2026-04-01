@@ -106,6 +106,7 @@ for prob_name, prob_fn in PROBLEMS.items():
                          n_estimators=N_ESTIMATORS,
                          transfer='uniform', encoding='scalar',
                          mlp_loss='nll', distill_model='mlp', warm_start=True,
+                         disable_tqdm=False,
                          save_path=data_path('MTBO-TFM-Uni-Distill'),
                          name=run_name('MTBO-TFM-Uni-Distill')).optimize()
 
@@ -113,6 +114,7 @@ for prob_name, prob_fn in PROBLEMS.items():
                          n_estimators=N_ESTIMATORS,
                          transfer='elite', encoding='scalar',
                          mlp_loss='nll', distill_model='mlp', warm_start=True,
+                         disable_tqdm=False,
                          save_path=data_path('MTBO-TFM-Elite-Distill'),
                          name=run_name('MTBO-TFM-Elite-Distill')).optimize()
 
