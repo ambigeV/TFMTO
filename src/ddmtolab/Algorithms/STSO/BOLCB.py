@@ -60,8 +60,9 @@ class BOLCB:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n_initial=None, max_nfes=None, beta=1.0, save_data=True,
-                 save_path='./Data', name='BO-LCB', disable_tqdm=True):
+    def __init__(self, problem, n_initial=None, max_nfes=None, beta=1.0,
+                 adam_restarts=5, adam_steps=200, adam_lr=1e-2,
+                 save_data=True, save_path='./Data', name='BO-LCB', disable_tqdm=True):
         """
         Initialize BO-LCB algorithm.
 
@@ -90,6 +91,9 @@ class BOLCB:
         self.n_initial = n_initial if n_initial is not None else 50
         self.max_nfes = max_nfes if max_nfes is not None else 100
         self.beta = beta
+        self.adam_restarts = adam_restarts
+        self.adam_steps    = adam_steps
+        self.adam_lr       = adam_lr
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -130,11 +134,14 @@ class BOLCB:
                 break
 
             for i in active_tasks:
-                # Fit GP surrogate and select next candidate via LCB acquisition
+                # Fit GP surrogate and select next candidate via LCB acquisition (Adam)
                 candidate_np, _ = bo_next_point_lcb(
                     dims[i], decs[i], objs[i],
                     data_type=data_type,
-                    kappa=self.beta
+                    kappa=self.beta,
+                    adam_restarts=self.adam_restarts,
+                    adam_steps=self.adam_steps,
+                    adam_lr=self.adam_lr,
                 )
 
                 # Evaluate the candidate solution

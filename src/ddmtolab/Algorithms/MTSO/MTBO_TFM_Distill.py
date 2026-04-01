@@ -6,21 +6,19 @@ Per BO step for task i
 1. Build training set (pooled uniform or elite-transfer, scalar or one-hot
    task encoding) — identical to the corresponding MTBO-TFM-* variants.
 2. Fit TabPFN on that training set  (ONE fit call).
-3. Sample N_distill random points encoded for task i; query TabPFN ONCE
-   to get (mean, std) predictions  (ONE predict call).
+3. Generate distillation dataset: N_distill LHS samples (encoded for task i)
+   + observed training points for task i; query TabPFN ONCE to get (mean, std)
+   predictions  (ONE predict call).
 4. Fit a small dual-head MLP (DistillMLP) on those (X_enc, mean, std) pairs.
 5. Minimise LCB = mean(x) - beta * std(x) over [0,1]^dims[i] via
-   multi-start L-BFGS through the differentiable MLP.
+   multi-start L-BFGS-B through the differentiable MLP.
 6. Evaluate the best candidate on the true objective.
 
 Speed comparison per BO step
 -----------------------------
   Random   : 1 TabPFN fit  +  1 predict(N_candidates)
   CMA-ES   : 1 TabPFN fit  +  popsize × maxiter predict calls  (sequential)
-  Distill  : 1 TabPFN fit  +  1 predict(N_distill)  +  MLP train  +  L-BFGS
-
-With default settings the distill variant is ~10–30× faster than CMA-ES while
-producing candidates comparable to or better than a large random pool.
+  Distill  : 1 TabPFN fit  +  1 predict(N_distill + N_train)  +  MLP train  +  L-BFGS-B
 
 Parameters
 ----------
@@ -28,6 +26,11 @@ transfer  : 'uniform'  — pool ALL data from every task
             'elite'    — pool ALL from task i + top elite_ratio from others
 encoding  : 'scalar'   — append integer task ID
             'onehot'   — append one-hot binary vector (removes false ordinal)
+
+GPU support
+-----------
+When CUDA is available, TabPFN inference, MLP training, and L-BFGS-B
+optimisation all run on GPU automatically.
 
 Name convention: MTBO-TFM-{Uni|Elite}-{OH-}Distill
   e.g. transfer='uniform', encoding='scalar'  →  'MTBO-TFM-Uni-Distill'
@@ -40,7 +43,7 @@ import functools
 
 import numpy as np
 import torch
-from scipy.stats import spearmanr
+from scipy.stats import qmc
 from tqdm import tqdm
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
@@ -53,7 +56,6 @@ from ddmtolab.Methods.Algo_Methods.tfm_utils import (
 from ddmtolab.Methods.Algo_Methods.tfm_distill_utils import (
     fit_distill_mlp, lbfgs_optimize_lcb,
     encode_torch_scalar, encode_torch_onehot,
-    MCDropoutDistillMLP,
 )
 
 warnings.filterwarnings("ignore")
@@ -81,7 +83,7 @@ class MTBO_TFM_Distill:
         'n_tasks': '[2, K]',
         'n_objectives': 1,
         'surrogate': 'TabPFN → DistillMLP (dual-head)',
-        'acquisition': 'LCB (L-BFGS via MLP gradients)',
+        'acquisition': 'LCB (L-BFGS-B via MLP gradients)',
     }
 
     def __init__(
@@ -90,7 +92,7 @@ class MTBO_TFM_Distill:
         n_initial: int = None,
         max_nfes: int = None,
         beta: float = 1.0,
-        n_distill: int = 1000,
+        n_distill: int = 500,
         n_estimators: int = 8,
         transfer: str = 'uniform',
         elite_ratio: float = 0.1,
@@ -103,11 +105,8 @@ class MTBO_TFM_Distill:
         mlp_loss: str = 'mse',
         distill_model: str = 'mlp',
         dropout_p: float = 0.1,
-        mc_samples: int = 20,
-        mc_lbfgs: bool = False,
         warm_start: bool = False,
         lbfgs_restarts: int = 5,
-        lbfgs_maxiter: int = 100,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = None,
@@ -136,17 +135,13 @@ class MTBO_TFM_Distill:
         self.mlp_loss            = mlp_loss
         self.distill_model       = distill_model
         self.dropout_p           = dropout_p
-        self.mc_samples          = mc_samples
-        self.mc_lbfgs            = mc_lbfgs
         self.warm_start          = warm_start
-        self.lbfgs_restarts      = lbfgs_restarts
-        self.lbfgs_maxiter  = lbfgs_maxiter
+        self.lbfgs_restarts = lbfgs_restarts
         self.save_data     = save_data
         self.save_path     = save_path
         self.disable_tqdm  = disable_tqdm
         self.wandb_run     = wandb_run
 
-        # Auto-generate name if not provided
         if name is None:
             enc_tag = '-OH' if encoding == 'onehot' else ''
             tr_tag  = 'Uni' if transfer == 'uniform' else 'Elite'
@@ -159,13 +154,11 @@ class MTBO_TFM_Distill:
     # ------------------------------------------------------------------
 
     def _encode_np(self, X: np.ndarray, task_id: int, n_tasks: int) -> np.ndarray:
-        """Append task encoding (numpy) used for TabPFN distillation query."""
         if self.encoding == 'scalar':
             return append_task_id(X, task_id)
         return append_task_id_onehot(X, task_id, n_tasks)
 
     def _build_uniform_dataset(self, decs, objs, max_dim, n_tasks):
-        """Pool all tasks into a single (X_all, y_all)."""
         X_parts, y_parts = [], []
         for j in range(n_tasks):
             X_j = pad_to_dim(decs[j], max_dim)
@@ -176,7 +169,6 @@ class MTBO_TFM_Distill:
         return np.vstack(X_parts), np.concatenate(y_parts)
 
     def _build_elite_dataset(self, task_i, decs, objs, max_dim, n_tasks):
-        """All from task i  +  top elite_ratio from each other task."""
         X_parts, y_parts = [], []
         for j in range(n_tasks):
             y_norm = _normalize_y(objs[j].ravel())
@@ -202,6 +194,9 @@ class MTBO_TFM_Distill:
         dims       = problem.dims
         max_dim    = max(dims)
 
+        device     = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device_str = str(device)
+
         n_initial_per_task = par_list(self.n_initial, nt)
         max_nfes_per_task  = par_list(self.max_nfes,  nt)
 
@@ -209,9 +204,6 @@ class MTBO_TFM_Distill:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        # Per-task MLP cache for warm-starting.
-        # Key: task index i.  Value: the fitted model from the previous BO step.
-        # Reset each optimize() call so independent runs don't bleed into each other.
         _mlp_cache: dict = {}
 
         pbar = tqdm(
@@ -226,36 +218,29 @@ class MTBO_TFM_Distill:
             if not active_tasks:
                 break
 
-            # ---------- For uniform transfer: build shared dataset once ----------
             if self.transfer == 'uniform':
                 X_shared, y_shared = self._build_uniform_dataset(decs, objs, max_dim, nt)
 
             for i in active_tasks:
-                # --- select training set ---
                 if self.transfer == 'uniform':
                     X_train, y_train = X_shared, y_shared
                 else:
                     X_train, y_train = self._build_elite_dataset(i, decs, objs, max_dim, nt)
 
-                # --- distillation: sample train + holdout in a single TabPFN call ---
-                # Last n_holdout points are held out for fidelity measurement;
-                # TabPFN is queried on all of them at once so there is no extra cost.
-                n_holdout  = min(200, self.n_distill // 5)
-                X_raw_all  = np.random.rand(self.n_distill + n_holdout, dims[i])
-                X_enc_all  = self._encode_np(pad_to_dim(X_raw_all, max_dim), i, nt)
+                # --- distillation: LHS samples + observed training points ---
+                X_lhs = qmc.LatinHypercube(d=dims[i]).random(n=self.n_distill)
+                X_lhs_enc     = self._encode_np(pad_to_dim(X_lhs, max_dim), i, nt)
+                X_train_i_enc = self._encode_np(pad_to_dim(decs[i], max_dim), i, nt)
+                X_distill     = np.vstack([X_lhs_enc, X_train_i_enc])
 
                 t0 = time.time()
-                mean_all, std_all = tabpfn_predict(
-                    X_train, y_train, X_enc_all,
+                mean_d, std_d = tabpfn_predict(
+                    X_train, y_train, X_distill,
                     return_std=True,
                     n_estimators=self.n_estimators,
+                    device=device_str,
                 )
                 t_tabpfn = time.time() - t0
-
-                X_dist_enc = X_enc_all[:self.n_distill]
-                mean_d, std_d = mean_all[:self.n_distill], std_all[:self.n_distill]
-                X_ho_enc   = X_enc_all[self.n_distill:]
-                mean_ho, std_ho = mean_all[self.n_distill:], std_all[self.n_distill:]
 
                 # --- fit MLP (cold-start or warm-start from cache) ---
                 init_model = _mlp_cache.get(i) if self.warm_start else None
@@ -264,7 +249,7 @@ class MTBO_TFM_Distill:
 
                 t0 = time.time()
                 mlp = fit_distill_mlp(
-                    X_dist_enc, mean_d, std_d,
+                    X_distill, mean_d, std_d,
                     hidden=self.mlp_hidden,
                     depth=self.mlp_depth,
                     n_epochs=epochs,
@@ -273,32 +258,14 @@ class MTBO_TFM_Distill:
                     model_type=self.distill_model,
                     dropout_p=self.dropout_p,
                     init_model=init_model,
+                    device=device,
                 )
                 t_mlp = time.time() - t0
 
                 if self.warm_start:
-                    _mlp_cache[i] = mlp   # store for next iteration
+                    _mlp_cache[i] = mlp
 
-                # --- fidelity check on holdout ---
-                # mc_dropout: use mc_predict (combined aleatoric+epistemic uncertainty)
-                # mlp:        use deterministic forward
-                X_ho_t = torch.tensor(X_ho_enc, dtype=torch.float32)
-                if isinstance(mlp, MCDropoutDistillMLP):
-                    mean_mlp, std_mlp = mlp.mc_predict(X_ho_t, n_samples=self.mc_samples)
-                else:
-                    with torch.no_grad():
-                        mean_mlp, std_mlp = mlp(X_ho_t)
-                mean_mlp = mean_mlp.detach().numpy()
-                std_mlp  = std_mlp.detach().numpy()
-
-                lcb_ho   = mean_ho  - self.beta * std_ho
-                lcb_mlp  = mean_mlp - self.beta * std_mlp
-                lcb_rmse      = float(np.sqrt(np.mean((lcb_mlp  - lcb_ho ) ** 2)))
-                mean_rmse     = float(np.sqrt(np.mean((mean_mlp  - mean_ho) ** 2)))
-                std_rmse      = float(np.sqrt(np.mean((std_mlp   - std_ho ) ** 2)))
-                lcb_rank_corr = float(spearmanr(lcb_mlp, lcb_ho).statistic)
-
-                # --- build PyTorch encode fn for L-BFGS (gradient graph intact) ---
+                # --- build PyTorch encode fn for L-BFGS-B (gradient graph intact) ---
                 if self.encoding == 'scalar':
                     encode_fn = functools.partial(
                         encode_torch_scalar, max_dim=max_dim, task_id=i
@@ -308,22 +275,25 @@ class MTBO_TFM_Distill:
                         encode_torch_onehot, max_dim=max_dim, task_id=i, n_tasks=nt
                     )
 
-                # --- minimise LCB via L-BFGS through MLP ---
+                # --- select top-k LHS points by LCB as L-BFGS-B starts ---
+                lcb_lhs = mean_d[:self.n_distill] - self.beta * std_d[:self.n_distill]
+                top_k = min(self.lbfgs_restarts, len(lcb_lhs))
+                best_idx = np.argsort(lcb_lhs)[:top_k]
+                x0_points = X_lhs[best_idx]
+
                 t0 = time.time()
                 candidate_np = lbfgs_optimize_lcb(
                     mlp, dims[i], encode_fn,
                     beta=self.beta,
-                    n_restarts=self.lbfgs_restarts,
-                    max_iter=self.lbfgs_maxiter,
-                    mc_lbfgs=self.mc_lbfgs,
-                    mc_samples_eval=self.mc_samples,
+                    x0_points=x0_points,
+                    device=device,
                 )
                 t_lbfgs = time.time() - t0
 
                 # --- MLP's LCB at the selected candidate ---
                 with torch.no_grad():
                     cand_enc_np = self._encode_np(pad_to_dim(candidate_np, max_dim), i, nt)
-                    cand_t = torch.tensor(cand_enc_np, dtype=torch.float32)
+                    cand_t = torch.tensor(cand_enc_np, dtype=torch.float32, device=device)
                     m_sel, s_sel = mlp(cand_t)
                     acq_val = float((m_sel - self.beta * s_sel).item())
 
@@ -341,17 +311,9 @@ class MTBO_TFM_Distill:
                         'task':           i,
                         'step':           nfes_per_task[i],
                         'global_step':    sum(nfes_per_task),
-                        # convergence
                         'best_obj':       float(objs[i].min()),
                         'new_obj':        float(obj),
-                        # acquisition quality (MLP landscape)
                         'acq_val':        acq_val,
-                        # distillation fidelity
-                        'lcb_rank_corr':  lcb_rank_corr,
-                        'lcb_rmse':       lcb_rmse,
-                        'mean_rmse':      mean_rmse,
-                        'std_rmse':       std_rmse,
-                        # timing (seconds)
                         't_tabpfn':       t_tabpfn,
                         't_mlp':          t_mlp,
                         't_lbfgs':        t_lbfgs,

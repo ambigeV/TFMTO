@@ -51,8 +51,9 @@ class BO:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n_initial=None, max_nfes=None, mode='ei', save_data=True,
-                 save_path='./Data', name='BO', disable_tqdm=True):
+    def __init__(self, problem, n_initial=None, max_nfes=None, mode='ei',
+                 adam_restarts=5, adam_steps=200, adam_lr=1e-2,
+                 save_data=True, save_path='./Data', name='BO', disable_tqdm=True):
         """
         Initialize Bayesian Optimization algorithm.
 
@@ -82,6 +83,9 @@ class BO:
         self.mode = mode.lower()
         if self.mode not in ['ei', 'lcb']:
             raise ValueError(f"mode must be 'ei' or 'lcb', got '{mode}'")
+        self.adam_restarts = adam_restarts
+        self.adam_steps    = adam_steps
+        self.adam_lr       = adam_lr
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -125,9 +129,17 @@ class BO:
             for i in active_tasks:
                 # Fit GP surrogate and select next candidate via acquisition function
                 if self.mode == 'ei':
-                    candidate_np = bo_next_point(dims[i], decs[i], objs[i], data_type=data_type)
+                    candidate_np = bo_next_point(
+                        dims[i], decs[i], objs[i], data_type=data_type,
+                        adam_restarts=self.adam_restarts,
+                        adam_steps=self.adam_steps, adam_lr=self.adam_lr,
+                    )
                 else:  # mode == 'lcb'
-                    candidate_np, _ = bo_next_point_lcb(dims[i], decs[i], objs[i], data_type=data_type)
+                    candidate_np, _ = bo_next_point_lcb(
+                        dims[i], decs[i], objs[i], data_type=data_type,
+                        adam_restarts=self.adam_restarts,
+                        adam_steps=self.adam_steps, adam_lr=self.adam_lr,
+                    )
 
                 # Evaluate the candidate solution
                 obj, _ = evaluation_single(problem, candidate_np, i)

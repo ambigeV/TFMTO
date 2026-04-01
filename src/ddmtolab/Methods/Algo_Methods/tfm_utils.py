@@ -19,7 +19,7 @@ _Z_80 = scipy_norm.ppf(0.90)   # 1.2816
 _CHUNK = 500                    # max test points per predict() call
 
 
-def _build_model(n_estimators: int, random_state: int):
+def _build_model(n_estimators: int, random_state: int, device: str = 'cpu'):
     """Instantiate a TabPFN v2.5 regressor with the given settings."""
     from tabpfn import TabPFNRegressor
     from tabpfn.constants import ModelVersion
@@ -29,6 +29,7 @@ def _build_model(n_estimators: int, random_state: int):
         n_estimators=n_estimators,
         random_state=random_state,
         ignore_pretraining_limits=True,
+        device=device,
     )
     return model
 
@@ -41,6 +42,7 @@ def tabpfn_predict(
     return_std: bool = False,
     n_estimators: int = 8,
     random_state: int = 42,
+    device: str = None,
 ) -> 'np.ndarray | tuple[np.ndarray, np.ndarray]':
     """Fit TabPFN v2.5 on (X_train, y_train) and predict on X_test.
 
@@ -52,6 +54,7 @@ def tabpfn_predict(
                        computed as (q90 - q10) / (2 * 1.2816)
     n_estimators     : TabPFN ensemble size
     random_state     : RNG seed
+    device           : 'cuda' or 'cpu'.  None = 'cuda' if available else 'cpu'.
 
     Returns
     -------
@@ -63,7 +66,10 @@ def tabpfn_predict(
     X_test is scored in a single batched predict() call (or in chunks of
     _CHUNK if n_test > _CHUNK) to avoid redundant context recomputation.
     """
-    model = _build_model(n_estimators, random_state)
+    import torch as _torch
+    if device is None:
+        device = 'cuda' if _torch.cuda.is_available() else 'cpu'
+    model = _build_model(n_estimators, random_state, device=device)
     model.fit(X_train, y_train)
 
     n_test = len(X_test)

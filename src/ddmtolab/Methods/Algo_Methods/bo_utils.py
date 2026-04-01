@@ -11,6 +11,62 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 from botorch.acquisition import UpperConfidenceBound
 
 
+# ---------------------------------------------------------------------------
+# Adam-based acquisition optimiser (replaces L-BFGS from optimize_acqf)
+# ---------------------------------------------------------------------------
+
+def _optimize_acqf_adam(
+    acq_fn,
+    opt_dim: int,
+    n_restarts: int = 5,
+    n_steps: int = 200,
+    lr: float = 1e-2,
+    data_type: torch.dtype = torch.float,
+) -> torch.Tensor:
+    """
+    Maximise acq_fn over [0,1]^opt_dim using multi-start Adam with sigmoid
+    reparameterisation  (x = sigmoid(theta), theta ∈ R^opt_dim).
+
+    All BoTorch analytic acquisition functions (LogEI, UCB, …) are
+    differentiable w.r.t. their input, so Adam works out of the box.
+
+    Parameters
+    ----------
+    acq_fn   : BoTorch acquisition function  (maximisation convention)
+    opt_dim  : dimensionality of the decision variable
+    n_restarts, n_steps, lr : Adam hyper-params
+    data_type: torch dtype matching the GP model
+
+    Returns
+    -------
+    best_x : Tensor, shape (1, opt_dim), in [0, 1]
+    """
+    best_x   = None
+    best_val = -float('inf')
+
+    for _ in range(n_restarts):
+        x0    = torch.empty(opt_dim, dtype=data_type).uniform_(0.1, 0.9)
+        theta = torch.logit(x0).detach().requires_grad_(True)
+        opt   = torch.optim.Adam([theta], lr=lr)
+
+        for _ in range(n_steps):
+            opt.zero_grad()
+            x   = torch.sigmoid(theta).unsqueeze(0).unsqueeze(0)  # (1, 1, d)
+            val = acq_fn(x)
+            (-val).backward()   # maximise
+            opt.step()
+
+        with torch.no_grad():
+            x_fin = torch.sigmoid(theta).unsqueeze(0).unsqueeze(0)
+            val_fin = acq_fn(x_fin).item()
+
+        if val_fin > best_val:
+            best_val = val_fin
+            best_x   = torch.sigmoid(theta).detach().unsqueeze(0).clone()  # (1, d)
+
+    return torch.clamp(best_x, 0.0, 1.0)
+
+
 
 def gp_build(
     decs: np.ndarray,
@@ -167,7 +223,10 @@ def bo_next_point(
     dim_i: int,
     decs_i: np.ndarray,
     objs_i: np.ndarray,
-    data_type: torch.dtype = torch.float
+    data_type: torch.dtype = torch.float,
+    adam_restarts: int = 5,
+    adam_steps: int = 200,
+    adam_lr: float = 1e-2,
 ) -> np.ndarray:
     """
     Get the next sampling point using Bayesian Optimization
@@ -209,20 +268,16 @@ def bo_next_point(
     mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
     fit_gpytorch_mll(mll)
 
-    # Optimize Log Expected Improvement acquisition function
+    # Optimise Log Expected Improvement via Adam
     best_f = train_Y.max()
-    logEI = LogExpectedImprovement(model=gp, best_f=best_f)
-    candidate, _ = optimize_acqf(
-        logEI,
-        bounds=bounds,
-        q=1,
-        num_restarts=5,
-        raw_samples=20
+    logEI  = LogExpectedImprovement(model=gp, best_f=best_f)
+    candidate = _optimize_acqf_adam(
+        logEI, dim_i,
+        n_restarts=adam_restarts, n_steps=adam_steps, lr=adam_lr,
+        data_type=data_type,
     )
 
-    # Convert to numpy array and return
     candidate_np = candidate.detach().cpu().numpy()
-
     return candidate_np
 
 
@@ -231,7 +286,10 @@ def bo_next_point_lcb(
     decs_i: np.ndarray,
     objs_i: np.ndarray,
     data_type: torch.dtype = torch.float,
-    kappa: float = 2.0
+    kappa: float = 2.0,
+    adam_restarts: int = 5,
+    adam_steps: int = 200,
+    adam_lr: float = 1e-2,
 ) -> tuple:
     """
     Get the next sampling point using Bayesian Optimization with LCB acquisition
@@ -274,19 +332,15 @@ def bo_next_point_lcb(
     mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
     fit_gpytorch_mll(mll)
 
-    # Optimize Upper Confidence Bound (UCB) acquisition function
-    UCB = UpperConfidenceBound(model=gp, beta=kappa**2)  # beta = kappa^2
-    candidate, _ = optimize_acqf(
-        UCB,
-        bounds=bounds,
-        q=1,
-        num_restarts=5,
-        raw_samples=20
+    # Optimise UCB acquisition via Adam
+    UCB = UpperConfidenceBound(model=gp, beta=kappa ** 2)
+    candidate = _optimize_acqf_adam(
+        UCB, dim_i,
+        n_restarts=adam_restarts, n_steps=adam_steps, lr=adam_lr,
+        data_type=data_type,
     )
 
-    # Convert to numpy array and return
     candidate_np = candidate.detach().cpu().numpy()
-
     return candidate_np, gp
 
 
@@ -480,7 +534,10 @@ def mtbo_next_point(
     objs: list[np.ndarray],
     dims: list[int],
     nt: int,
-    data_type: torch.dtype = torch.float
+    data_type: torch.dtype = torch.float,
+    adam_restarts: int = 5,
+    adam_steps: int = 200,
+    adam_lr: float = 1e-2,
 ) -> np.ndarray:
     """
     Get the next sampling point using Multi-Task Bayesian Optimization.
@@ -518,23 +575,46 @@ def mtbo_next_point(
     best_f = torch.tensor(-objs[task_id], dtype=data_type).squeeze().max()
 
     # Build Log Expected Improvement acquisition function
-    posterior_transform = ScalarizedPosteriorTransform(weights=torch.tensor([1.0], dtype=data_type))
+    posterior_transform = ScalarizedPosteriorTransform(
+        weights=torch.tensor([1.0], dtype=data_type)
+    )
     logEI = LogExpectedImprovement(
         model=mtgp,
         best_f=best_f,
-        posterior_transform=posterior_transform
+        posterior_transform=posterior_transform,
     )
 
-    # Optimize acquisition function and extract decision variables
-    candidate, _ = optimize_acqf(
-        logEI,
-        bounds=bounds,
-        q=1,
-        num_restarts=5,
-        raw_samples=20
-    )
-    candidate_np = candidate[:, :dims[task_id]].detach().cpu().numpy()
+    # Optimise only the decision dimensions; task index is appended as a
+    # constant so its gradient is always zero and does not affect Adam.
+    task_val = torch.linspace(0, 1, nt)[task_id].item()
+    task_col = torch.tensor([[task_val]], dtype=data_type)  # (1, 1)
 
+    best_x_dec = None
+    best_val   = -float('inf')
+
+    for _ in range(adam_restarts):
+        x0    = torch.empty(max_dim, dtype=data_type).uniform_(0.1, 0.9)
+        theta = torch.logit(x0).detach().requires_grad_(True)
+        opt   = torch.optim.Adam([theta], lr=adam_lr)
+
+        for _ in range(adam_steps):
+            opt.zero_grad()
+            x_dec  = torch.sigmoid(theta).unsqueeze(0)              # (1, d)
+            x_full = torch.cat([x_dec, task_col], dim=1).unsqueeze(0)  # (1, 1, d+1)
+            val    = logEI(x_full)
+            (-val).backward()
+            opt.step()
+
+        with torch.no_grad():
+            x_dec  = torch.sigmoid(theta).unsqueeze(0)
+            x_full = torch.cat([x_dec, task_col], dim=1).unsqueeze(0)
+            val_fin = logEI(x_full).item()
+
+        if val_fin > best_val:
+            best_val   = val_fin
+            best_x_dec = torch.sigmoid(theta).detach().clone()
+
+    candidate_np = best_x_dec[:dims[task_id]].cpu().numpy().reshape(1, -1)
     return candidate_np
 
 

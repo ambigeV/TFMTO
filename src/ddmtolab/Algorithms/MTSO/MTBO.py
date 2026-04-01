@@ -52,8 +52,9 @@ class MTBO:
     def get_algorithm_information(cls, print_info=True):
         return get_algorithm_information(cls, print_info)
 
-    def __init__(self, problem, n_initial=None, max_nfes=None, save_data=True, save_path='./Data', name='MTBO',
-                 disable_tqdm=True):
+    def __init__(self, problem, n_initial=None, max_nfes=None,
+                 adam_restarts=5, adam_steps=200, adam_lr=1e-2,
+                 save_data=True, save_path='./Data', name='MTBO', disable_tqdm=True):
         """
         Initialize Multi-Task Bayesian Optimization algorithm.
 
@@ -77,6 +78,9 @@ class MTBO:
         self.problem = problem
         self.n_initial = n_initial if n_initial is not None else 50
         self.max_nfes = max_nfes if max_nfes is not None else 100
+        self.adam_restarts = adam_restarts
+        self.adam_steps    = adam_steps
+        self.adam_lr       = adam_lr
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -118,9 +122,14 @@ class MTBO:
             mtgp = mtgp_build(decs, objs_normalized, dims, data_type=data_type)
 
             for i in active_tasks:
-                # Select next sample point via acquisition function optimization
-                candidate_np = mtbo_next_point(mtgp=mtgp, task_id=i, objs=objs_normalized, dims=dims, nt=nt,
-                                               data_type=data_type)
+                # Select next sample point via Adam-based acquisition optimisation
+                candidate_np = mtbo_next_point(
+                    mtgp=mtgp, task_id=i, objs=objs_normalized, dims=dims, nt=nt,
+                    data_type=data_type,
+                    adam_restarts=self.adam_restarts,
+                    adam_steps=self.adam_steps,
+                    adam_lr=self.adam_lr,
+                )
 
                 obj, _ = evaluation_single(problem, candidate_np, i)
 

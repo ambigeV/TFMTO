@@ -12,11 +12,18 @@ normalised to [0, 1] before pooling so that the shared surrogate is not
 dominated by tasks with larger absolute values.
 
 LCB (minimisation) = mean - beta * std,  default beta = 1.0
+
+GPU support
+-----------
+TabPFN inference runs on GPU when CUDA is available.  For acq_optimizer='adam',
+the distillation MLP and Adam inner loop also run on GPU.
 """
 import time
 import warnings
+import functools
 
 import numpy as np
+import torch
 from tqdm import tqdm
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
@@ -25,6 +32,9 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
 )
 from ddmtolab.Methods.Algo_Methods.tfm_utils import (
     tabpfn_predict, lcb, append_task_id, pad_to_dim, optimize_acq_cmaes,
+)
+from ddmtolab.Methods.Algo_Methods.tfm_distill_utils import (
+    adam_optimize_acq_tabpfn, encode_torch_scalar,
 )
 
 warnings.filterwarnings("ignore")
@@ -49,8 +59,7 @@ class MTBO_TFM_Uniform:
       1. Normalise each task's objectives independently to [0, 1].
       2. Pool all tasks into one (X_all, y_all) with task-ID feature appended.
       3. Fit a single TabPFN on the pooled data.
-      4. For each active task i, draw n_candidates random points, append
-         task_id=i, score with LCB, evaluate the argmin on the true objective.
+      4. For each active task i, optimise LCB with the selected acq_optimizer.
     """
 
     algorithm_information = {
@@ -71,6 +80,13 @@ class MTBO_TFM_Uniform:
         acq_optimizer: str = 'random',
         cmaes_popsize: int = 20,
         cmaes_maxiter: int = 50,
+        # Adam optimizer params
+        adam_n_distill: int = 200,
+        adam_hidden: int = 32,
+        adam_epochs: int = 100,
+        adam_restarts: int = 3,
+        adam_steps: int = 200,
+        adam_lr: float = 1e-2,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'MTBO-TFM-Uni',
@@ -85,6 +101,12 @@ class MTBO_TFM_Uniform:
         self.acq_optimizer = acq_optimizer
         self.cmaes_popsize = cmaes_popsize
         self.cmaes_maxiter = cmaes_maxiter
+        self.adam_n_distill  = adam_n_distill
+        self.adam_hidden     = adam_hidden
+        self.adam_epochs     = adam_epochs
+        self.adam_restarts   = adam_restarts
+        self.adam_steps      = adam_steps
+        self.adam_lr         = adam_lr
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -111,6 +133,9 @@ class MTBO_TFM_Uniform:
         n_initial_per_task = par_list(self.n_initial, nt)
         max_nfes_per_task = par_list(self.max_nfes, nt)
 
+        device     = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device_str = str(device)
+
         decs = initialization(problem, self.n_initial, method='lhs')
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
@@ -131,33 +156,53 @@ class MTBO_TFM_Uniform:
             X_all, y_all = self._build_pooled_dataset(decs, objs, dims, max_dim)
 
             for i in active_tasks:
-                # ---------- acquisition optimisation for task i ----------
                 if self.acq_optimizer == 'cmaes':
                     def _score(cands, _Xa=X_all, _ya=y_all, _i=i):
                         cands_padded = pad_to_dim(cands, max_dim)
                         X_test = append_task_id(cands_padded, _i)
                         m, s = tabpfn_predict(_Xa, _ya, X_test, return_std=True,
-                                              n_estimators=self.n_estimators)
+                                              n_estimators=self.n_estimators,
+                                              device=device_str)
                         return lcb(m, s, self.beta)
                     candidate_np = optimize_acq_cmaes(
                         _score, dims[i], self.cmaes_popsize, self.cmaes_maxiter
                     )
-                else:
+
+                elif self.acq_optimizer == 'adam':
+                    encode_np   = lambda X, _i=i: append_task_id(pad_to_dim(X, max_dim), _i)
+                    encode_t    = functools.partial(
+                        encode_torch_scalar, max_dim=max_dim, task_id=i
+                    )
+                    candidate_np = adam_optimize_acq_tabpfn(
+                        X_all, y_all,
+                        opt_dim=dims[i],
+                        encode_np_fn=encode_np,
+                        encode_torch_fn=encode_t,
+                        beta=self.beta,
+                        n_estimators=self.n_estimators,
+                        n_distill=self.adam_n_distill,
+                        mlp_hidden=self.adam_hidden,
+                        mlp_epochs=self.adam_epochs,
+                        adam_restarts=self.adam_restarts,
+                        adam_steps=self.adam_steps,
+                        adam_lr=self.adam_lr,
+                        device=device,
+                    )
+
+                else:   # 'random'
                     candidates = np.random.rand(self.n_candidates, dims[i])
                     candidates_padded = pad_to_dim(candidates, max_dim)
                     X_test = append_task_id(candidates_padded, i)
-
                     mean, std = tabpfn_predict(
                         X_all, y_all, X_test,
                         return_std=True,
                         n_estimators=self.n_estimators,
+                        device=device_str,
                     )
-
                     acq = lcb(mean, std, self.beta)
                     best_idx = int(np.argmin(acq))
                     candidate_np = candidates[best_idx:best_idx + 1]
 
-                # ---------- real evaluation ----------
                 obj, _ = evaluation_single(problem, candidate_np, i)
                 decs[i], objs[i] = vstack_groups(
                     (decs[i], candidate_np), (objs[i], obj)

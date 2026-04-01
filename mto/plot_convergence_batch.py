@@ -28,8 +28,8 @@ from pathlib import Path
 # Configuration — edit here
 # =============================================================================
 
-DATA_ROOT  = './Data_Batch'
-SAVE_ROOT  = './Results_Batch'
+DATA_ROOT  = './Data/distill_demo'
+SAVE_ROOT  = './Results_Batch_Demo'
 STD_SCALE  = 0.5
 FIG_FORMAT = 'png'
 DPI        = 150

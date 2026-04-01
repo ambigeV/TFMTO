@@ -3,9 +3,9 @@ First-run validation for the TFM-Distill variants.
 
 Runs one problem (P1), one run, four algorithms:
   1. BO-TFM-1000        — random candidates baseline (existing)
-  2. BO-TFM-Distill     — independent distill + L-BFGS, cold start
+  2. BO-TFM-Distill     — independent distill + L-BFGS-B, cold start
   3. BO-TFM-Distill-WS  — same but warm-started (fewer MLP epochs per step)
-  4. MTBO-TFM-Uni-Distill — multi-task uniform distill + L-BFGS, cold start
+  4. MTBO-TFM-Uni-Distill — multi-task uniform distill + L-BFGS-B, cold start
 
 Purpose: verify the distill pipeline runs end-to-end without crashing and
 produces convergence curves that are plausible before committing to a full
@@ -24,14 +24,14 @@ from ddmtolab.Algorithms.MTSO.MTBO_TFM_Distill import MTBO_TFM_Distill
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
 # =============================================================================
-# Config — keep small for a quick sanity check
+# Config — minimal for smoke test
 # =============================================================================
 
 PROB_NAME    = 'P1'
-N_INITIAL    = 20
-MAX_NFES     = 100
+N_INITIAL    = 10   # was 20
+MAX_NFES     = 20   # was 100  — just enough BO steps to exercise the loop
 BETA         = 1.0
-N_ESTIMATORS = 8
+N_ESTIMATORS = 4    # was 8    — fewer TabPFN estimators, faster inference
 
 benchmark = CEC17MTSO_10D()
 problem   = benchmark.P1()
@@ -48,7 +48,7 @@ def data_path(algo_name):
 print("1/4  BO-TFM-1000  (random baseline)")
 BO_TFM(
     problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    n_candidates=1000, n_estimators=N_ESTIMATORS,
+    n_candidates=200, n_estimators=N_ESTIMATORS,   # was 1000
     disable_tqdm=False,
     save_path=data_path('BO-TFM-1000'),
     name=f'BO-TFM-1000_{PROB_NAME}_1',
@@ -61,10 +61,10 @@ print("\n2/4  BO-TFM-Distill  (cold start, mse loss)")
 BO_TFM_Distill(
     problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
     beta=BETA, n_estimators=N_ESTIMATORS,
-    n_distill=1000, mlp_epochs=300,
+    n_distill=500, mlp_epochs=100,
     mlp_loss='mse', distill_model='mlp',
     warm_start=False,
-    lbfgs_restarts=5, lbfgs_maxiter=100,
+    lbfgs_restarts=3,
     disable_tqdm=False,
     save_path=data_path('BO-TFM-Distill'),
     name=f'BO-TFM-Distill_{PROB_NAME}_1',
@@ -72,14 +72,14 @@ BO_TFM_Distill(
 
 problem = benchmark.P1()
 
-print("\n3/4  BO-TFM-Distill-WS  (warm start, 50 finetune epochs)")
+print("\n3/4  BO-TFM-Distill-WS  (warm start, 20 finetune epochs)")
 BO_TFM_Distill(
     problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
     beta=BETA, n_estimators=N_ESTIMATORS,
-    n_distill=1000, mlp_epochs=300, mlp_finetune_epochs=50,
+    n_distill=500, mlp_epochs=100, mlp_finetune_epochs=20,
     mlp_loss='mse', distill_model='mlp',
     warm_start=True,
-    lbfgs_restarts=5, lbfgs_maxiter=100,
+    lbfgs_restarts=3,
     disable_tqdm=False,
     save_path=data_path('BO-TFM-Distill-WS'),
     name=f'BO-TFM-Distill-WS_{PROB_NAME}_1',
@@ -92,10 +92,10 @@ MTBO_TFM_Distill(
     problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
     beta=BETA, n_estimators=N_ESTIMATORS,
     transfer='uniform', encoding='scalar',
-    n_distill=1000, mlp_epochs=300,
+    n_distill=500, mlp_epochs=100,
     mlp_loss='mse', distill_model='mlp',
     warm_start=False,
-    lbfgs_restarts=5, lbfgs_maxiter=100,
+    lbfgs_restarts=3,
     disable_tqdm=False,
     save_path=data_path('MTBO-TFM-Uni-Distill'),
     name=f'MTBO-TFM-Uni-Distill_{PROB_NAME}_1',

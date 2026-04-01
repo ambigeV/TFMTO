@@ -6,25 +6,27 @@ Each task is modelled independently (no knowledge transfer), mirroring BO_TFM.
 Per BO step for task i
 -----------------------
 1. Fit TabPFN on task i's observed data  (ONE fit call).
-2. Sample N_distill random points from [0,1]^d; query TabPFN ONCE
-   to get (mean, std)  (ONE predict call).
+2. Generate distillation dataset: N_distill LHS samples + observed training
+   points; query TabPFN ONCE to get (mean, std)  (ONE predict call).
 3. Fit a small dual-head MLP (DistillMLP) on those predictions.
 4. Minimise LCB = mean(x) - beta * std(x) over [0,1]^d via multi-start
-   L-BFGS through the differentiable MLP.
+   L-BFGS-B through the differentiable MLP.
 5. Evaluate the best candidate on the true objective.
 
 Loss options
 ------------
 mlp_loss='mse'  (default)
-    L = MSE(mean_pred, mean_tfpfn) + MSE(std_pred, std_tfpfn)
-    Independent supervision for mean and std; fast and stable.
+    L = MSE(mean_pred, mean_tfpfn) + MSE(log_std_pred, log(std_tfpfn))
+    Scale-invariant supervision in log space for std.
 
 mlp_loss='nll'
     L = -log N(mean_tfpfn | mean_pred, std_pred²)
-      = 0.5 * (log(std²) + (mean_tfpfn - mean_pred)² / std²)
-    Probabilistic objective: std is pushed to be calibrated rather than
-    just close in L2; typically improves LCB quality when the TabPFN
-    uncertainty landscape is heteroscedastic.
+    Probabilistic objective; calibrates std jointly with mean.
+
+GPU support
+-----------
+When CUDA is available, TabPFN inference, MLP training, and L-BFGS-B
+optimisation all run on GPU automatically.
 """
 
 import time
@@ -32,7 +34,7 @@ import warnings
 
 import numpy as np
 import torch
-from scipy.stats import spearmanr
+from scipy.stats import qmc
 from tqdm import tqdm
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
@@ -41,7 +43,7 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
 )
 from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict
 from ddmtolab.Methods.Algo_Methods.tfm_distill_utils import (
-    fit_distill_mlp, lbfgs_optimize_lcb, MCDropoutDistillMLP,
+    fit_distill_mlp, lbfgs_optimize_lcb,
 )
 
 warnings.filterwarnings("ignore")
@@ -53,9 +55,9 @@ class BO_TFM_Distill:
 
     Each BO iteration:
       1. Fit TabPFN on the task's observed data.
-      2. Query TabPFN on N_distill random points → (mean, std).
+      2. Generate LHS samples + include training points; query TabPFN for (mean, std).
       3. Fit a dual-head MLP on those predictions (MSE or NLL loss).
-      4. Minimise LCB via multi-start L-BFGS through the MLP.
+      4. Minimise LCB via multi-start L-BFGS-B through the MLP.
       5. Evaluate the argmin on the true objective.
     """
 
@@ -63,7 +65,7 @@ class BO_TFM_Distill:
         'n_tasks': '[1, K]',
         'n_objectives': 1,
         'surrogate': 'TabPFN → DistillMLP (dual-head, independent)',
-        'acquisition': 'LCB (L-BFGS via MLP gradients)',
+        'acquisition': 'LCB (L-BFGS-B via MLP gradients)',
     }
 
     def __init__(
@@ -72,7 +74,7 @@ class BO_TFM_Distill:
         n_initial: int = None,
         max_nfes: int = None,
         beta: float = 1.0,
-        n_distill: int = 1000,
+        n_distill: int = 500,
         n_estimators: int = 8,
         mlp_hidden: int = 64,
         mlp_depth: int = 2,
@@ -82,11 +84,8 @@ class BO_TFM_Distill:
         mlp_loss: str = 'mse',
         distill_model: str = 'mlp',
         dropout_p: float = 0.1,
-        mc_samples: int = 20,
-        mc_lbfgs: bool = False,
         warm_start: bool = False,
         lbfgs_restarts: int = 5,
-        lbfgs_maxiter: int = 100,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'BO-TFM-Distill',
@@ -106,12 +105,9 @@ class BO_TFM_Distill:
         self.mlp_loss            = mlp_loss
         self.distill_model       = distill_model
         self.dropout_p           = dropout_p
-        self.mc_samples          = mc_samples
-        self.mc_lbfgs            = mc_lbfgs
         self.warm_start          = warm_start
         self.mlp_finetune_epochs = mlp_finetune_epochs
         self.lbfgs_restarts      = lbfgs_restarts
-        self.lbfgs_maxiter  = lbfgs_maxiter
         self.save_data      = save_data
         self.save_path      = save_path
         self.name           = name
@@ -124,6 +120,9 @@ class BO_TFM_Distill:
         nt         = problem.n_tasks
         dims       = problem.dims
 
+        device     = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device_str = str(device)
+
         n_initial_per_task = par_list(self.n_initial, nt)
         max_nfes_per_task  = par_list(self.max_nfes,  nt)
 
@@ -131,7 +130,7 @@ class BO_TFM_Distill:
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
 
-        _mlp_cache: dict = {}   # task_id → previous fitted MLP for warm-starting
+        _mlp_cache: dict = {}
 
         pbar = tqdm(
             total=sum(max_nfes_per_task),
@@ -149,21 +148,18 @@ class BO_TFM_Distill:
                 X_train = decs[i]           # (n, dims[i])
                 y_train = objs[i].ravel()   # (n,)
 
-                # --- distillation: sample train + holdout in a single TabPFN call ---
-                n_holdout = min(200, self.n_distill // 5)
-                X_all     = np.random.rand(self.n_distill + n_holdout, dims[i])
+                # --- distillation: LHS samples + observed training points ---
+                X_lhs = qmc.LatinHypercube(d=dims[i]).random(n=self.n_distill)
+                X_distill = np.vstack([X_lhs, X_train])
 
                 t0 = time.time()
-                mean_all, std_all = tabpfn_predict(
-                    X_train, y_train, X_all,
+                mean_d, std_d = tabpfn_predict(
+                    X_train, y_train, X_distill,
                     return_std=True,
                     n_estimators=self.n_estimators,
+                    device=device_str,
                 )
                 t_tabpfn = time.time() - t0
-
-                X_dist, X_ho       = X_all[:self.n_distill],    X_all[self.n_distill:]
-                mean_d, std_d      = mean_all[:self.n_distill],  std_all[:self.n_distill]
-                mean_ho, std_ho    = mean_all[self.n_distill:],  std_all[self.n_distill:]
 
                 # --- fit MLP (cold-start or warm-start from cache) ---
                 init_model = _mlp_cache.get(i) if self.warm_start else None
@@ -172,7 +168,7 @@ class BO_TFM_Distill:
 
                 t0 = time.time()
                 mlp = fit_distill_mlp(
-                    X_dist, mean_d, std_d,
+                    X_distill, mean_d, std_d,
                     hidden=self.mlp_hidden,
                     depth=self.mlp_depth,
                     n_epochs=epochs,
@@ -181,46 +177,33 @@ class BO_TFM_Distill:
                     model_type=self.distill_model,
                     dropout_p=self.dropout_p,
                     init_model=init_model,
+                    device=device,
                 )
                 t_mlp = time.time() - t0
 
                 if self.warm_start:
                     _mlp_cache[i] = mlp
 
-                # --- fidelity check ---
-                X_ho_t = torch.tensor(X_ho, dtype=torch.float32)
-                if isinstance(mlp, MCDropoutDistillMLP):
-                    mean_mlp, std_mlp = mlp.mc_predict(X_ho_t, n_samples=self.mc_samples)
-                else:
-                    with torch.no_grad():
-                        mean_mlp, std_mlp = mlp(X_ho_t)
-                mean_mlp = mean_mlp.detach().numpy()
-                std_mlp  = std_mlp.detach().numpy()
+                # --- select top-k LHS points by LCB as L-BFGS-B starts ---
+                lcb_lhs = mean_d[:self.n_distill] - self.beta * std_d[:self.n_distill]
+                top_k = min(self.lbfgs_restarts, len(lcb_lhs))
+                best_idx = np.argsort(lcb_lhs)[:top_k]
+                x0_points = X_lhs[best_idx]
 
-                lcb_ho        = mean_ho  - self.beta * std_ho
-                lcb_mlp       = mean_mlp - self.beta * std_mlp
-                lcb_rmse      = float(np.sqrt(np.mean((lcb_mlp  - lcb_ho ) ** 2)))
-                mean_rmse     = float(np.sqrt(np.mean((mean_mlp  - mean_ho) ** 2)))
-                std_rmse      = float(np.sqrt(np.mean((std_mlp   - std_ho ) ** 2)))
-                lcb_rank_corr = float(spearmanr(lcb_mlp, lcb_ho).statistic)
-
-                # --- L-BFGS ---
                 t0 = time.time()
                 candidate_np = lbfgs_optimize_lcb(
                     mlp,
                     opt_dim=dims[i],
                     encode_torch_fn=lambda x: x,
                     beta=self.beta,
-                    n_restarts=self.lbfgs_restarts,
-                    max_iter=self.lbfgs_maxiter,
-                    mc_lbfgs=self.mc_lbfgs,
-                    mc_samples_eval=self.mc_samples,
+                    x0_points=x0_points,
+                    device=device,
                 )
                 t_lbfgs = time.time() - t0
 
                 # --- MLP's LCB at selected candidate ---
                 with torch.no_grad():
-                    cand_t = torch.tensor(candidate_np, dtype=torch.float32)
+                    cand_t = torch.tensor(candidate_np, dtype=torch.float32, device=device)
                     m_sel, s_sel = mlp(cand_t)
                     acq_val = float((m_sel - self.beta * s_sel).item())
 
@@ -238,17 +221,9 @@ class BO_TFM_Distill:
                         'task':           i,
                         'step':           nfes_per_task[i],
                         'global_step':    sum(nfes_per_task),
-                        # convergence
                         'best_obj':       float(objs[i].min()),
                         'new_obj':        float(obj),
-                        # acquisition quality
                         'acq_val':        acq_val,
-                        # distillation fidelity
-                        'lcb_rank_corr':  lcb_rank_corr,
-                        'lcb_rmse':       lcb_rmse,
-                        'mean_rmse':      mean_rmse,
-                        'std_rmse':       std_rmse,
-                        # timing
                         't_tabpfn':       t_tabpfn,
                         't_mlp':          t_mlp,
                         't_lbfgs':        t_lbfgs,

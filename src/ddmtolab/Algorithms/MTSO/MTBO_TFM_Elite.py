@@ -15,11 +15,18 @@ Feature layout:  [x_0, ..., x_{max_dim-1}, task_id]
 Each task's objectives are min-max normalised independently before training.
 
 LCB (minimisation) = mean - beta * std,  default beta = 1.0
+
+GPU support
+-----------
+TabPFN inference runs on GPU when CUDA is available.  For acq_optimizer='adam',
+the distillation MLP and Adam inner loop also run on GPU.
 """
 import time
 import warnings
+import functools
 
 import numpy as np
+import torch
 from tqdm import tqdm
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
@@ -28,6 +35,9 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
 )
 from ddmtolab.Methods.Algo_Methods.tfm_utils import (
     tabpfn_predict, lcb, append_task_id, pad_to_dim, optimize_acq_cmaes,
+)
+from ddmtolab.Methods.Algo_Methods.tfm_distill_utils import (
+    adam_optimize_acq_tabpfn, encode_torch_scalar,
 )
 
 warnings.filterwarnings("ignore")
@@ -53,7 +63,7 @@ class MTBO_TFM_Elite:
     Each BO iteration:
       1. For each active task i, build the elite-transfer training set.
       2. Fit TabPFN on that set.
-      3. Draw n_candidates random points, append task_id=i, score with LCB.
+      3. Optimise LCB with the selected acq_optimizer.
       4. Evaluate argmin on the true objective.
     """
 
@@ -76,6 +86,13 @@ class MTBO_TFM_Elite:
         acq_optimizer: str = 'random',
         cmaes_popsize: int = 20,
         cmaes_maxiter: int = 50,
+        # Adam optimizer params
+        adam_n_distill: int = 200,
+        adam_hidden: int = 32,
+        adam_epochs: int = 100,
+        adam_restarts: int = 3,
+        adam_steps: int = 200,
+        adam_lr: float = 1e-2,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'MTBO-TFM-Elite',
@@ -91,6 +108,12 @@ class MTBO_TFM_Elite:
         self.acq_optimizer = acq_optimizer
         self.cmaes_popsize = cmaes_popsize
         self.cmaes_maxiter = cmaes_maxiter
+        self.adam_n_distill  = adam_n_distill
+        self.adam_hidden     = adam_hidden
+        self.adam_epochs     = adam_epochs
+        self.adam_restarts   = adam_restarts
+        self.adam_steps      = adam_steps
+        self.adam_lr         = adam_lr
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -102,7 +125,6 @@ class MTBO_TFM_Elite:
         Build training set for task i:
           - all data from task i
           - top elite_ratio from each other task j
-        Returns (X_train, y_train).
         """
         X_parts, y_parts = [], []
 
@@ -111,11 +133,9 @@ class MTBO_TFM_Elite:
             X_padded = pad_to_dim(X_j, max_dim)
 
             if j == task_i:
-                # include all samples from current task
                 X_parts.append(append_task_id(X_padded, j))
                 y_parts.append(y_norm)
             else:
-                # include only the top elite_ratio (lowest normalised obj)
                 n_j = len(y_norm)
                 n_elite = max(1, int(np.ceil(self.elite_ratio * n_j)))
                 elite_idx = np.argsort(y_norm)[:n_elite]
@@ -134,6 +154,9 @@ class MTBO_TFM_Elite:
         n_initial_per_task = par_list(self.n_initial, nt)
         max_nfes_per_task = par_list(self.max_nfes, nt)
 
+        device     = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device_str = str(device)
+
         decs = initialization(problem, self.n_initial, method='lhs')
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
@@ -151,38 +174,57 @@ class MTBO_TFM_Elite:
                 break
 
             for i in active_tasks:
-                # ---------- task-specific elite training set ----------
                 X_train, y_train = self._build_elite_dataset(
                     i, decs, objs, dims, max_dim
                 )
 
-                # ---------- acquisition optimisation for task i ----------
                 if self.acq_optimizer == 'cmaes':
                     def _score(cands, _Xtr=X_train, _ytr=y_train, _i=i):
                         cands_padded = pad_to_dim(cands, max_dim)
                         X_test = append_task_id(cands_padded, _i)
                         m, s = tabpfn_predict(_Xtr, _ytr, X_test, return_std=True,
-                                              n_estimators=self.n_estimators)
+                                              n_estimators=self.n_estimators,
+                                              device=device_str)
                         return lcb(m, s, self.beta)
                     candidate_np = optimize_acq_cmaes(
                         _score, dims[i], self.cmaes_popsize, self.cmaes_maxiter
                     )
-                else:
+
+                elif self.acq_optimizer == 'adam':
+                    encode_np = lambda X, _i=i: append_task_id(pad_to_dim(X, max_dim), _i)
+                    encode_t  = functools.partial(
+                        encode_torch_scalar, max_dim=max_dim, task_id=i
+                    )
+                    candidate_np = adam_optimize_acq_tabpfn(
+                        X_train, y_train,
+                        opt_dim=dims[i],
+                        encode_np_fn=encode_np,
+                        encode_torch_fn=encode_t,
+                        beta=self.beta,
+                        n_estimators=self.n_estimators,
+                        n_distill=self.adam_n_distill,
+                        mlp_hidden=self.adam_hidden,
+                        mlp_epochs=self.adam_epochs,
+                        adam_restarts=self.adam_restarts,
+                        adam_steps=self.adam_steps,
+                        adam_lr=self.adam_lr,
+                        device=device,
+                    )
+
+                else:   # 'random'
                     candidates = np.random.rand(self.n_candidates, dims[i])
                     candidates_padded = pad_to_dim(candidates, max_dim)
                     X_test = append_task_id(candidates_padded, i)
-
                     mean, std = tabpfn_predict(
                         X_train, y_train, X_test,
                         return_std=True,
                         n_estimators=self.n_estimators,
+                        device=device_str,
                     )
-
                     acq = lcb(mean, std, self.beta)
                     best_idx = int(np.argmin(acq))
                     candidate_np = candidates[best_idx:best_idx + 1]
 
-                # ---------- real evaluation ----------
                 obj, _ = evaluation_single(problem, candidate_np, i)
                 decs[i], objs[i] = vstack_groups(
                     (decs[i], candidate_np), (objs[i], obj)

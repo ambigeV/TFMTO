@@ -1,20 +1,20 @@
 """
 Batched Demo: Expensive Multi-Task Single-Objective Optimization
 
-Runs all 8 algorithms on all 9 CEC17-MTSO-10D benchmark problems for 5
+Runs all algorithms on all 9 CEC17-MTSO-50D benchmark problems for 5
 independent runs using BatchExperiment for parallel execution.
 
 Data layout (auto-managed by BatchExperiment):
-    ./Data/{algo_name}/{algo_name}_{problem_name}_{run_id}.pkl
+    ./Data_CEC17MTSO_50D/{algo_name}/{algo_name}_{problem_name}_{run_id}.pkl
 
-Results (mean ± 0.5*std convergence curves) are saved to ./Results/.
+Results (mean ± 0.5*std convergence curves) are saved to ./Results_CEC17MTSO_50D/.
 """
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from ddmtolab.Problems.MTSO.cec17_mtso_10d import CEC17MTSO_10D
+from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
 from ddmtolab.Algorithms.STSO.GA import GA
 from ddmtolab.Algorithms.STSO.BO import BO
 from ddmtolab.Algorithms.STSO.BOLCB import BOLCB
@@ -23,8 +23,7 @@ from ddmtolab.Algorithms.MTSO.BO_LCB_BCKT import BO_LCB_BCKT
 from ddmtolab.Algorithms.STSO.BO_TFM import BO_TFM
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform import MTBO_TFM_Uniform
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite import MTBO_TFM_Elite
-from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_OH import MTBO_TFM_Uniform_OH
-from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_OH import MTBO_TFM_Elite_OH
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Distill import MTBO_TFM_Distill
 from ddmtolab.Methods.batch_experiment import BatchExperiment
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
@@ -44,12 +43,10 @@ MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 
 ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite',
-              'MTBO-TFM-Uni-OH', 'MTBO-TFM-Elite-OH',
-              'BO-TFM-CMA', 'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA',
-              'MTBO-TFM-Uni-OH-CMA', 'MTBO-TFM-Elite-OH-CMA']
+              'MTBO-TFM-Uni-Distill', 'MTBO-TFM-Elite-Distill']
 
-DATA_PATH = './Data_Batch'
-RESULTS_PATH = './Results_Batch'
+DATA_PATH = './Data_CEC17MTSO_50D'
+RESULTS_PATH = './Results_CEC17MTSO_50D'
 
 # =============================================================================
 # Entry point — required on macOS/Windows (spawn-based multiprocessing)
@@ -62,7 +59,7 @@ if __name__ == '__main__':
     batch_exp = BatchExperiment(base_path=DATA_PATH, clear_folder=False)
 
     # --- Problems ---
-    benchmark = CEC17MTSO_10D()
+    benchmark = CEC17MTSO()
     for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
         batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
 
@@ -94,39 +91,46 @@ if __name__ == '__main__':
         n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
         n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
-    batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH',
+    # --- Distill variants (warm-started, plain MLP, NLL loss) ---
+    batch_exp.add_algorithm(MTBO_TFM_Distill, 'MTBO-TFM-Uni-Distill',
         n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+        n_estimators=N_ESTIMATORS,
+        transfer='uniform', encoding='scalar',
+        mlp_loss='nll', distill_model='mlp',
+        warm_start=True, disable_tqdm=True)
 
-    batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH',
+    batch_exp.add_algorithm(MTBO_TFM_Distill, 'MTBO-TFM-Elite-Distill',
         n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+        n_estimators=N_ESTIMATORS,
+        transfer='elite', encoding='scalar',
+        mlp_loss='nll', distill_model='mlp',
+        warm_start=True, disable_tqdm=True)
 
-    # --- CMA-ES acquisition variants ---
-    batch_exp.add_algorithm(BO_TFM, 'BO-TFM-CMA',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
-
-    batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni-CMA',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
-
-    batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite-CMA',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
-
-    batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH-CMA',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
-
-    batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH-CMA',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    # # --- CMA-ES acquisition variants ---
+    # batch_exp.add_algorithm(BO_TFM, 'BO-TFM-CMA',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    #     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    #     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    #
+    # batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni-CMA',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    #     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    #     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    #
+    # batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite-CMA',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    #     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    #     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    #
+    # batch_exp.add_algorithm(MTBO_TFM_Uniform_OH, 'MTBO-TFM-Uni-OH-CMA',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    #     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    #     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+    #
+    # batch_exp.add_algorithm(MTBO_TFM_Elite_OH, 'MTBO-TFM-Elite-OH-CMA',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+    #     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+    #     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
     # -------------------------------------------------------------------------
     # Run (parallel across workers)

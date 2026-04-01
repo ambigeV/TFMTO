@@ -7,17 +7,36 @@ Workflow per BO step
 2. Sample N_distill points, query TabPFN once  → (mean, std).
 3. Fit a small dual-head MLP (DistillMLP) on those (X_enc, mean, std) pairs.
 4. Minimise LCB = mean(x) - beta * std(x) over [0,1]^d via multi-start
-   L-BFGS through the differentiable MLP.
+   Adam through the differentiable MLP.
 
-Compared to CMA-ES (50 TabPFN calls per BO step), this approach calls
-TabPFN exactly once for distillation and then uses fast MLP gradient
-evaluations for the inner optimisation.
+GPU support
+-----------
+Pass device='cuda' (or torch.device('cuda')) to fit_distill_mlp and
+adam_optimize_lcb to move the MLP and all tensors to GPU.  If device=None,
+both functions auto-detect: GPU if torch.cuda.is_available(), else CPU.
+tabpfn_predict honours its own device param to run TabPFN inference on GPU.
 """
+
+import copy
+import functools
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _resolve_device(device) -> torch.device:
+    """Return a torch.device, defaulting to CUDA if available."""
+    if device is None:
+        return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if isinstance(device, torch.device):
+        return device
+    return torch.device(device)
 
 
 # ---------------------------------------------------------------------------
@@ -45,7 +64,7 @@ class DistillMLP(nn.Module):
       - Gradient of LCB w.r.t. x scales as exp(log_std)·∂log_std/∂x,
         i.e. proportional to the local uncertainty — high-std regions
         produce larger acquisition gradients, which is the right inductive
-        bias for exploration-driven L-BFGS.
+        bias for exploration-driven Adam optimisation.
     """
 
     def __init__(self, input_dim: int, hidden: int = 64, depth: int = 2):
@@ -94,7 +113,7 @@ class MCDropoutDistillMLP(nn.Module):
     ----------------------------
     forward(x)  [eval mode, dropout OFF]:
         Deterministic output from the std head only.
-        Used by L-BFGS — smooth, differentiable, no gradient noise.
+        Used by Adam — smooth, differentiable, no gradient noise.
 
     mc_predict(x, n_samples=20)  [dropout FORCED ON]:
         Runs T stochastic forward passes and combines aleatoric uncertainty
@@ -103,19 +122,6 @@ class MCDropoutDistillMLP(nn.Module):
 
             total_var(x) = E_mask[σ²(x)]  +  Var_mask[μ(x)]
                            └── aleatoric ──┘  └─ epistemic ─┘
-
-        This is richer than the plain DistillMLP: regions poorly covered by
-        distillation points get higher epistemic variance, which widens the
-        LCB and promotes exploration there.
-
-    Design note — why keep the std head alongside dropout
-    -----------------------------------------------------
-    Pure MC-Dropout (mean head only) discards the aleatoric structure that
-    TabPFN explicitly predicts.  Keeping the std head lets the model
-    distinguish between:
-      • inherent objective noise  (std head ↑, epistemic ≈ 0)
-      • under-explored regions    (std head moderate, epistemic ↑)
-    Both matter for a well-calibrated LCB.
     """
 
     def __init__(
@@ -137,10 +143,7 @@ class MCDropoutDistillMLP(nn.Module):
         self.dropout_p = dropout_p
 
     def forward(self, x: torch.Tensor):
-        """
-        Deterministic forward (dropout OFF in eval mode).
-        Returns (mean, std_aleatoric). Used for L-BFGS.
-        """
+        """Deterministic forward (dropout OFF in eval mode). Used for Adam."""
         h       = self.trunk(x)
         mean    = self.head_mean(h).squeeze(-1)
         log_std = self.head_std(h).squeeze(-1).clamp(-10, 6)
@@ -153,11 +156,6 @@ class MCDropoutDistillMLP(nn.Module):
     ):
         """
         MC-Dropout inference with T stochastic forward passes.
-
-        Parameters
-        ----------
-        x        : Tensor (N, d_enc)
-        n_samples: T — number of MC samples
 
         Returns
         -------
@@ -206,6 +204,7 @@ def fit_distill_mlp(
     model_type: str = 'mlp',
     dropout_p: float = 0.1,
     init_model=None,
+    device=None,
 ):
     """
     Fit a distilled MLP surrogate to approximate TabPFN's (mean, std) output.
@@ -224,39 +223,34 @@ def fit_distill_mlp(
     model_type   : 'mlp'        — plain heteroscedastic DistillMLP      [default]
                    'mc_dropout' — MCDropoutDistillMLP
     dropout_p    : dropout probability (only used when model_type='mc_dropout')
-    init_model   : optional pre-trained DistillMLP / MCDropoutDistillMLP.
-                   When provided, weights are deep-copied and fine-tuned rather
-                   than training from a fresh random initialisation.
-                   Use with a reduced n_epochs (e.g. 50) for warm-starting:
-                   the previous model already fits the old TabPFN landscape;
-                   a handful of gradient steps adapts it to the one new point
-                   that was added this iteration.
+    init_model   : optional pre-trained model to warm-start from
+    device       : torch.device or str ('cuda'/'cpu').  None = auto-detect.
 
     Returns
     -------
-    mlp : fitted model in eval mode
+    mlp : fitted model in eval mode, on the resolved device
     """
-    import copy
-
     if loss not in ('mse', 'nll'):
         raise ValueError(f"loss must be 'mse' or 'nll', got '{loss}'")
     if model_type not in ('mlp', 'mc_dropout'):
         raise ValueError(f"model_type must be 'mlp' or 'mc_dropout', got '{model_type}'")
 
-    X_t   = torch.tensor(X_enc,        dtype=torch.float32)
-    mu_t  = torch.tensor(mean_targets, dtype=torch.float32)
-    sig_t = torch.tensor(std_targets,  dtype=torch.float32)
+    device = _resolve_device(device)
+
+    X_t   = torch.tensor(X_enc,        dtype=torch.float32, device=device)
+    mu_t  = torch.tensor(mean_targets, dtype=torch.float32, device=device)
+    sig_t = torch.tensor(std_targets,  dtype=torch.float32, device=device)
 
     if init_model is not None:
-        # Warm-start: deep-copy the previous model so the cache is not mutated
-        # in-place by subsequent training steps.
-        mlp = copy.deepcopy(init_model)
+        # Warm-start: deep-copy the previous model, move to device
+        mlp = copy.deepcopy(init_model).to(device)
     else:
         input_dim = X_enc.shape[1]
         if model_type == 'mc_dropout':
-            mlp = MCDropoutDistillMLP(input_dim, hidden=hidden, depth=depth, dropout_p=dropout_p)
+            mlp = MCDropoutDistillMLP(input_dim, hidden=hidden, depth=depth,
+                                      dropout_p=dropout_p).to(device)
         else:
-            mlp = DistillMLP(input_dim, hidden=hidden, depth=depth)
+            mlp = DistillMLP(input_dim, hidden=hidden, depth=depth).to(device)
 
     opt = torch.optim.Adam(mlp.parameters(), lr=lr)
 
@@ -273,8 +267,6 @@ def fit_distill_mlp(
         std_p     = torch.exp(log_std_p)
 
         if loss == 'nll':
-            # Gaussian NLL: jointly calibrates mean and std.
-            # F.gaussian_nll_loss expects var = std².
             loss_val = F.gaussian_nll_loss(mean_p, mu_t, std_p ** 2, eps=1e-6)
         else:
             # MSE in log space for std: scale-invariant supervision.
@@ -287,7 +279,88 @@ def fit_distill_mlp(
 
 
 # ---------------------------------------------------------------------------
-# Gradient-based acquisition optimisation
+# Adam-based acquisition optimisation
+# ---------------------------------------------------------------------------
+
+def adam_optimize_lcb(
+    mlp,
+    opt_dim: int,
+    encode_torch_fn,
+    beta: float = 1.0,
+    n_restarts: int = 5,
+    n_steps: int = 200,
+    lr: float = 1e-2,
+    device=None,
+) -> np.ndarray:
+    """
+    Minimise LCB(x) = mean(x) - beta * std(x) over [0,1]^opt_dim
+    using multi-start Adam with sigmoid reparameterisation.
+
+    Reparameterisation:  x = sigmoid(theta),  theta ∈ R^opt_dim
+
+    Adam is stochastic-friendly: unlike L-BFGS it does not require a
+    consistent line-search objective, so it works naturally with both
+    deterministic DistillMLP and MCDropoutDistillMLP (dropout in eval mode).
+    Each restart uses a fresh random initialisation for ensemble-like
+    diversity across the decision space.
+
+    Parameters
+    ----------
+    mlp             : fitted DistillMLP or MCDropoutDistillMLP (in eval mode)
+    opt_dim         : dimensionality of the raw decision variables (dims[i])
+    encode_torch_fn : callable (Tensor[n, opt_dim]) -> Tensor[n, d_enc]
+    beta            : LCB exploration weight
+    n_restarts      : independent random initialisations
+    n_steps         : Adam gradient steps per restart
+    lr              : Adam learning rate
+    device          : torch.device or str.  None = infer from mlp parameters.
+
+    Returns
+    -------
+    best_x : np.ndarray, shape (1, opt_dim), clipped to [0, 1]
+    """
+    if device is None:
+        try:
+            device = next(mlp.parameters()).device
+        except StopIteration:
+            device = _resolve_device(None)
+
+    mlp.eval()
+
+    best_x   = None
+    best_val = np.inf
+
+    for _ in range(n_restarts):
+        x0    = torch.empty(opt_dim, device=device).uniform_(0.1, 0.9)
+        theta = torch.logit(x0).detach().requires_grad_(True)
+
+        optimizer = torch.optim.Adam([theta], lr=lr)
+
+        for _ in range(n_steps):
+            optimizer.zero_grad()
+            x     = torch.sigmoid(theta).unsqueeze(0)
+            x_enc = encode_torch_fn(x)
+            mean, std = mlp(x_enc)
+            acq   = mean - beta * std
+            acq.backward()
+            optimizer.step()
+
+        # --- evaluate candidate ---
+        with torch.no_grad():
+            x_fin     = torch.sigmoid(theta).unsqueeze(0)
+            x_enc_fin = encode_torch_fn(x_fin)
+            mean_ev, std_ev = mlp(x_enc_fin)
+            val = (mean_ev - beta * std_ev).item()
+
+        if val < best_val:
+            best_val = val
+            best_x   = torch.sigmoid(theta).detach().cpu().numpy().reshape(1, -1).copy()
+
+    return np.clip(best_x, 0.0, 1.0)
+
+
+# ---------------------------------------------------------------------------
+# L-BFGS-B acquisition optimisation
 # ---------------------------------------------------------------------------
 
 def lbfgs_optimize_lcb(
@@ -295,115 +368,171 @@ def lbfgs_optimize_lcb(
     opt_dim: int,
     encode_torch_fn,
     beta: float = 1.0,
+    x0_points: np.ndarray = None,
     n_restarts: int = 5,
-    max_iter: int = 100,
-    mc_lbfgs: bool = False,
-    mc_samples_eval: int = 20,
+    device=None,
 ) -> np.ndarray:
     """
     Minimise LCB(x) = mean(x) - beta * std(x) over [0,1]^opt_dim
-    using multi-start L-BFGS with sigmoid reparameterisation.
+    using multi-start L-BFGS-B with box constraints.
 
-    Reparameterisation:  x = sigmoid(theta),  theta ∈ R^opt_dim
+    Starting points are selected externally (e.g. top-k LHS points ranked
+    by LCB) and passed via ``x0_points``.  If not provided, falls back to
+    ``n_restarts`` uniform-random initialisations.
 
     Parameters
     ----------
-    mlp             : fitted DistillMLP or MCDropoutDistillMLP
+    mlp             : fitted DistillMLP or MCDropoutDistillMLP (in eval mode)
     opt_dim         : dimensionality of the raw decision variables (dims[i])
     encode_torch_fn : callable (Tensor[n, opt_dim]) -> Tensor[n, d_enc]
     beta            : LCB exploration weight
-    n_restarts      : independent random initialisations
-    max_iter        : L-BFGS iterations per restart
-    mc_lbfgs        : bool, default False
-        False (default) — eval mode, dropout OFF.
-            Plain heteroscedastic std head drives the acquisition.
-            Works for both DistillMLP and MCDropoutDistillMLP.
-
-        True — fixed-mask L-BFGS (only meaningful for MCDropoutDistillMLP).
-            Before each restart the PyTorch RNG state is captured and restored
-            at the start of every closure call, so every evaluation within a
-            restart uses the IDENTICAL dropout mask.  This makes the objective
-            deterministic for the line search while each restart samples a
-            DIFFERENT mask, giving ensemble-like diversity across restarts.
-
-            Winner selection uses mc_predict (full MC mean) rather than the
-            single-mask LCB, so the returned x* is the one with the best
-            combined (aleatoric + epistemic) acquisition value.
-
-            Why this works
-            --------------
-            Standard L-BFGS breaks with stochastic dropout because the Wolfe
-            line search evaluates f(x + α·d) multiple times and requires
-            consistent values.  Pinning the RNG state makes f deterministic
-            within a restart: the closure always computes the same function,
-            strong Wolfe is satisfied, and the gradient through the fixed
-            sparse network is valid.  Across restarts, each mask corresponds
-            to a different sampled sub-network from the weight-uncertainty
-            posterior — n_restarts restarts now serve double duty as both
-            multi-start diversity AND Monte Carlo integration over masks.
-    mc_samples_eval : MC samples used for winner evaluation when mc_lbfgs=True
+    x0_points       : (K, opt_dim) starting points for L-BFGS-B restarts.
+                      When provided, ``n_restarts`` is ignored.
+    n_restarts      : fallback number of random initialisations when
+                      ``x0_points`` is None.
+    device          : torch.device or str.  None = infer from mlp parameters.
 
     Returns
     -------
     best_x : np.ndarray, shape (1, opt_dim), clipped to [0, 1]
     """
-    use_fixed_mask = mc_lbfgs and isinstance(mlp, MCDropoutDistillMLP)
+    from scipy.optimize import minimize as sp_minimize
 
-    if use_fixed_mask:
-        mlp.train()   # dropout ON — mask is controlled via RNG state pinning
-    else:
-        mlp.eval()    # dropout OFF — deterministic forward for standard L-BFGS
+    if device is None:
+        try:
+            device = next(mlp.parameters()).device
+        except StopIteration:
+            device = _resolve_device(None)
+
+    mlp.eval()
+
+    bounds = [(0.0, 1.0)] * opt_dim
+
+    def _obj_and_grad(x_flat):
+        x_t = torch.tensor(
+            x_flat.reshape(1, -1), dtype=torch.float32, device=device,
+        )
+        x_t.requires_grad_(True)
+        x_enc = encode_torch_fn(x_t)
+        mean, std = mlp(x_enc)
+        acq = (mean - beta * std).sum()
+        acq.backward()
+        val  = acq.item()
+        grad = x_t.grad.detach().cpu().numpy().ravel().astype(np.float64)
+        return val, grad
+
+    if x0_points is None:
+        x0_points = np.random.rand(n_restarts, opt_dim)
 
     best_x   = None
     best_val = np.inf
 
-    for _ in range(n_restarts):
-        x0    = torch.empty(opt_dim).uniform_(0.1, 0.9)
-        theta = torch.logit(x0).detach().requires_grad_(True)
-
-        if use_fixed_mask:
-            # Capture RNG state once per restart — every closure call will
-            # restore it, guaranteeing the same dropout mask throughout.
-            restart_rng = torch.get_rng_state()
-
-        optimizer = torch.optim.LBFGS(
-            [theta],
-            max_iter=max_iter,
-            line_search_fn='strong_wolfe',
+    for k in range(len(x0_points)):
+        x0 = x0_points[k].astype(np.float64)
+        result = sp_minimize(
+            _obj_and_grad, x0,
+            method='L-BFGS-B',
+            jac=True,
+            bounds=bounds,
         )
-
-        def closure():
-            if use_fixed_mask:
-                torch.set_rng_state(restart_rng)   # pin mask for this restart
-            optimizer.zero_grad()
-            x     = torch.sigmoid(theta).unsqueeze(0)
-            x_enc = encode_torch_fn(x)
-            mean, std = mlp(x_enc)
-            acq   = mean - beta * std
-            acq.backward()
-            return acq
-
-        optimizer.step(closure)
-
-        # --- evaluate the candidate ---
-        with torch.no_grad():
-            x_fin = torch.sigmoid(theta).unsqueeze(0)
-            x_enc = encode_torch_fn(x_fin)
-            if use_fixed_mask:
-                # score with full MC (not the single-mask value used during optim)
-                mean_ev, std_ev = mlp.mc_predict(x_fin, n_samples=mc_samples_eval)
-            else:
-                mean_ev, std_ev = mlp(x_enc)
-            val = (mean_ev - beta * std_ev).item()
-
-        if val < best_val:
-            best_val = val
-            best_x   = torch.sigmoid(theta).detach().numpy().reshape(1, -1).copy()
-
-    if use_fixed_mask:
-        mlp.eval()   # restore eval mode after optimisation
+        if result.fun < best_val:
+            best_val = result.fun
+            best_x   = result.x.reshape(1, -1)
 
     return np.clip(best_x, 0.0, 1.0)
+
+
+# ---------------------------------------------------------------------------
+# Combined distill + Adam helper (for non-distill TFM methods)
+# ---------------------------------------------------------------------------
+
+def adam_optimize_acq_tabpfn(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    opt_dim: int,
+    encode_np_fn,
+    encode_torch_fn,
+    *,
+    beta: float = 1.0,
+    n_estimators: int = 8,
+    n_distill: int = 200,
+    mlp_hidden: int = 32,
+    mlp_epochs: int = 100,
+    adam_restarts: int = 3,
+    adam_steps: int = 200,
+    adam_lr: float = 1e-2,
+    device=None,
+) -> np.ndarray:
+    """
+    Adam-based acquisition optimisation for non-distill TFM variants.
+
+    Workflow
+    --------
+    1. Sample n_distill random points from [0,1]^opt_dim; encode with
+       encode_np_fn (handles padding + task-ID appending).
+    2. Call TabPFN once on (X_train, y_train, X_enc) → (mean, std).
+    3. Fit a lightweight DistillMLP on those predictions.
+    4. Minimise LCB via Adam through the differentiable MLP.
+
+    This replaces random-pool and CMA-ES acquisition with a single TabPFN
+    call + MLP training + gradient-based inner loop — same speed class as
+    the random baseline but with gradient information.
+
+    Parameters
+    ----------
+    X_train, y_train : training data already assembled (with task encoding)
+    opt_dim          : raw decision variable dimension (before encoding)
+    encode_np_fn     : X_raw (n, opt_dim) → X_enc (n, d_enc)  [numpy]
+    encode_torch_fn  : Tensor(n, opt_dim) → Tensor(n, d_enc)  [torch, for Adam]
+    beta             : LCB weight
+    n_estimators     : TabPFN ensemble size
+    n_distill        : number of distillation points
+    mlp_hidden       : MLP hidden width
+    mlp_epochs       : MLP training epochs
+    adam_restarts    : Adam restarts
+    adam_steps       : Adam steps per restart
+    adam_lr          : Adam learning rate
+    device           : torch.device or str.  None = auto-detect.
+
+    Returns
+    -------
+    best_x : np.ndarray, shape (1, opt_dim)
+    """
+    from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict
+
+    device = _resolve_device(device)
+    device_str = str(device).split(':')[0]   # 'cuda' or 'cpu' for TabPFN
+
+    # 1. Distillation query
+    X_raw = np.random.rand(n_distill, opt_dim)
+    X_enc = encode_np_fn(X_raw)
+    mean_d, std_d = tabpfn_predict(
+        X_train, y_train, X_enc,
+        return_std=True,
+        n_estimators=n_estimators,
+        device=device_str,
+    )
+
+    # 2. Fit lightweight MLP
+    mlp = fit_distill_mlp(
+        X_enc, mean_d, std_d,
+        hidden=mlp_hidden,
+        depth=2,
+        n_epochs=mlp_epochs,
+        lr=3e-3,
+        loss='mse',
+        device=device,
+    )
+
+    # 3. Adam optimisation
+    return adam_optimize_lcb(
+        mlp, opt_dim, encode_torch_fn,
+        beta=beta,
+        n_restarts=adam_restarts,
+        n_steps=adam_steps,
+        lr=adam_lr,
+        device=device,
+    )
 
 
 # ---------------------------------------------------------------------------
