@@ -183,7 +183,7 @@ class MTBO_TFM_Elite:
                         cands_padded = pad_to_dim(cands, max_dim)
                         X_test = append_task_id(cands_padded, _i)
                         m, s = tabpfn_predict(_Xtr, _ytr, X_test, return_std=True,
-                                              n_estimators=self.n_estimators,
+                                              n_estimators=1,
                                               device=device_str)
                         return lcb(m, s, self.beta)
                     candidate_np = optimize_acq_cmaes(

@@ -17,6 +17,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+import wandb
 from ddmtolab.Problems.MTSO.cec17_mtso_10d import CEC17MTSO_10D
 from ddmtolab.Algorithms.STSO.BO_TFM import BO_TFM
 from ddmtolab.Algorithms.STSO.BO_TFM_Distill import BO_TFM_Distill
@@ -35,6 +36,18 @@ N_ESTIMATORS = 4    # was 8    — fewer TabPFN estimators, faster inference
 
 benchmark = CEC17MTSO_10D()
 problem   = benchmark.P1()
+
+wb_run = wandb.init(
+    project='TFMTO-distill-demo',
+    name=f'distill_smoke_{PROB_NAME}',
+    config={
+        'problem':      PROB_NAME,
+        'n_initial':    N_INITIAL,
+        'max_nfes':     MAX_NFES,
+        'beta':         BETA,
+        'n_estimators': N_ESTIMATORS,
+    },
+)
 
 def data_path(algo_name):
     path = f'./Data/distill_demo/{algo_name}'
@@ -66,6 +79,7 @@ BO_TFM_Distill(
     warm_start=False,
     lbfgs_restarts=3,
     disable_tqdm=False,
+    wandb_run=wb_run,
     save_path=data_path('BO-TFM-Distill'),
     name=f'BO-TFM-Distill_{PROB_NAME}_1',
 ).optimize()
@@ -81,6 +95,7 @@ BO_TFM_Distill(
     warm_start=True,
     lbfgs_restarts=3,
     disable_tqdm=False,
+    wandb_run=wb_run,
     save_path=data_path('BO-TFM-Distill-WS'),
     name=f'BO-TFM-Distill-WS_{PROB_NAME}_1',
 ).optimize()
@@ -97,6 +112,7 @@ MTBO_TFM_Distill(
     warm_start=False,
     lbfgs_restarts=3,
     disable_tqdm=False,
+    wandb_run=wb_run,
     save_path=data_path('MTBO-TFM-Uni-Distill'),
     name=f'MTBO-TFM-Uni-Distill_{PROB_NAME}_1',
 ).optimize()
@@ -122,4 +138,5 @@ DataAnalyzer(
     clear_results  = True,
 ).run()
 
+wb_run.finish()
 print("\nDone. Check mto/Results/distill_demo/")

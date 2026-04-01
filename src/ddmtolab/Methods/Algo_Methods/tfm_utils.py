@@ -7,16 +7,16 @@ The predictive std is derived from the 80% CI (10th–90th percentile) under a
 Gaussian assumption:  std = (q90 - q10) / (2 * z_{0.90})  where z_{0.90} ≈ 1.2816.
 
 Batch prediction advice:
-  - Always pass the full candidate pool in a single predict() call.
-  - Each predict() recomputes the training context, so N separate calls
-    is ~N× slower than one batched call.
-  - If n_test > 1000, split into chunks of 1000 and concatenate results.
+  - Optimal chunk size equals n_train: minimises total attention ops
+    (n_train + c)^2 * (n_test / c), solved at c* = n_train.
+  - tabpfn_predict() sets chunk = max(len(X_train), 20) automatically.
+  - Never use a fixed large chunk (e.g. 500) — it is suboptimal for
+    small training sets and wastes compute throughout the BO run.
 """
 import numpy as np
 from scipy.stats import norm as scipy_norm
 
 _Z_80 = scipy_norm.ppf(0.90)   # 1.2816
-_CHUNK = 500                    # max test points per predict() call
 
 
 def _build_model(n_estimators: int, random_state: int, device: str = 'cpu'):
@@ -63,8 +63,8 @@ def tabpfn_predict(
 
     Notes
     -----
-    X_test is scored in a single batched predict() call (or in chunks of
-    _CHUNK if n_test > _CHUNK) to avoid redundant context recomputation.
+    X_test is chunked at chunk_size = max(len(X_train), 20) — the optimal
+    split that minimises total attention ops (n_train + c)^2 * (n_test / c).
     """
     import torch as _torch
     if device is None:
@@ -72,20 +72,20 @@ def tabpfn_predict(
     model = _build_model(n_estimators, random_state, device=device)
     model.fit(X_train, y_train)
 
-    n_test = len(X_test)
+    n_test  = len(X_test)
+    chunk   = max(len(X_train), 20)   # optimal: c* = n_train
 
     if not return_std:
-        if n_test <= _CHUNK:
+        if n_test <= chunk:
             return model.predict(X_test)
-        # chunk for large test sets
         parts = [
-            model.predict(X_test[i:i + _CHUNK])
-            for i in range(0, n_test, _CHUNK)
+            model.predict(X_test[i:i + chunk])
+            for i in range(0, n_test, chunk)
         ]
         return np.concatenate(parts)
 
     # --- with std ---
-    if n_test <= _CHUNK:
+    if n_test <= chunk:
         output = model.predict(X_test, output_type="main")
         y_pred = output["mean"]
         quantiles = np.array(output["quantiles"])   # (n_quantiles, n_test)
@@ -93,14 +93,13 @@ def tabpfn_predict(
         std = (q90 - q10) / (2.0 * _Z_80)
         return y_pred, std
 
-    # chunk for large test sets
     y_parts, std_parts = [], []
-    for i in range(0, n_test, _CHUNK):
-        chunk = X_test[i:i + _CHUNK]
-        output = model.predict(chunk, output_type="main")
+    for i in range(0, n_test, chunk):
+        block  = X_test[i:i + chunk]
+        output = model.predict(block, output_type="main")
         y_parts.append(output["mean"])
         quantiles = np.array(output["quantiles"])
-        q10, q90 = quantiles[0], quantiles[-1]
+        q10, q90  = quantiles[0], quantiles[-1]
         std_parts.append((q90 - q10) / (2.0 * _Z_80))
     return np.concatenate(y_parts), np.concatenate(std_parts)
 

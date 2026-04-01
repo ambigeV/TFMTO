@@ -30,15 +30,16 @@ N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
 BETA = 1.0
-N_ESTIMATORS = 8
-N_CANDIDATES = 1000
-CMAES_POPSIZE = 20
+N_ESTIMATORS = 4
+N_CANDIDATES = 2000
+CMAES_POPSIZE = 40
 CMAES_MAXITER = 50
 
 ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'BO-TFM-{}'.format(N_CANDIDATES), 'MTBO-TFM-Uni-{}'.format(N_CANDIDATES),
               'MTBO-TFM-Elite-{}'.format(N_CANDIDATES),
-              'MTBO-TFM-Uni-Distill', 'MTBO-TFM-Elite-Distill']
+              'MTBO-TFM-Uni-Distill', 'MTBO-TFM-Elite-Distill',
+              'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA']
 
 benchmark = CEC17MTSO()
 PROBLEMS = {
@@ -118,31 +119,16 @@ for prob_name, prob_fn in PROBLEMS.items():
                          save_path=data_path('MTBO-TFM-Elite-Distill'),
                          name=run_name('MTBO-TFM-Elite-Distill')).optimize()
 
-        # # ---------- CMA-ES acquisition variants ----------
-        # BO_TFM(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        #        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        #        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
-        #        save_path=data_path('BO-TFM-CMA'), name=run_name('BO-TFM-CMA')).optimize()
-        #
-        # MTBO_TFM_Uniform(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        #                  n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        #                  cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
-        #                  save_path=data_path('MTBO-TFM-Uni-CMA'), name=run_name('MTBO-TFM-Uni-CMA')).optimize()
-        #
-        # MTBO_TFM_Elite(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        #                n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        #                cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
-        #                save_path=data_path('MTBO-TFM-Elite-CMA'), name=run_name('MTBO-TFM-Elite-CMA')).optimize()
-        #
-        # MTBO_TFM_Uniform_OH(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        #                     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        #                     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
-        #                     save_path=data_path('MTBO-TFM-Uni-OH-CMA'), name=run_name('MTBO-TFM-Uni-OH-CMA')).optimize()
-        #
-        # MTBO_TFM_Elite_OH(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
-        #                   n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-        #                   cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
-        #                   save_path=data_path('MTBO-TFM-Elite-OH-CMA'), name=run_name('MTBO-TFM-Elite-OH-CMA')).optimize()
+        # ---------- CMA-ES acquisition variants (Uni/Elite only, n_est=1 inside) ----------
+        MTBO_TFM_Uniform(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+                         n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+                         cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
+                         save_path=data_path('MTBO-TFM-Uni-CMA'), name=run_name('MTBO-TFM-Uni-CMA')).optimize()
+
+        MTBO_TFM_Elite(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+                       n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
+                       cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
+                       save_path=data_path('MTBO-TFM-Elite-CMA'), name=run_name('MTBO-TFM-Elite-CMA')).optimize()
 
 # =============================================================================
 # Results Analysis (per problem)

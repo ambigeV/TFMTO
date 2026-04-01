@@ -43,7 +43,7 @@ import functools
 
 import numpy as np
 import torch
-from scipy.stats import qmc
+from scipy.stats import qmc, spearmanr
 from tqdm import tqdm
 
 from ddmtolab.Methods.Algo_Methods.algo_utils import (
@@ -227,20 +227,33 @@ class MTBO_TFM_Distill:
                 else:
                     X_train, y_train = self._build_elite_dataset(i, decs, objs, max_dim, nt)
 
-                # --- distillation: LHS samples + observed training points ---
-                X_lhs = qmc.LatinHypercube(d=dims[i]).random(n=self.n_distill)
+                # --- distillation: LHS samples + holdout + training points ---
+                n_holdout = min(100, self.n_distill // 5)
+                X_lhs_all = qmc.LatinHypercube(d=dims[i]).random(
+                    n=self.n_distill + n_holdout
+                )
+                X_lhs     = X_lhs_all[:self.n_distill]
+                X_holdout = X_lhs_all[self.n_distill:]
+
                 X_lhs_enc     = self._encode_np(pad_to_dim(X_lhs, max_dim), i, nt)
+                X_holdout_enc = self._encode_np(pad_to_dim(X_holdout, max_dim), i, nt)
                 X_train_i_enc = self._encode_np(pad_to_dim(decs[i], max_dim), i, nt)
-                X_distill     = np.vstack([X_lhs_enc, X_train_i_enc])
+
+                X_distill = np.vstack([X_lhs_enc, X_train_i_enc])
+                X_query   = np.vstack([X_distill, X_holdout_enc])
 
                 t0 = time.time()
-                mean_d, std_d = tabpfn_predict(
-                    X_train, y_train, X_distill,
+                mean_all, std_all = tabpfn_predict(
+                    X_train, y_train, X_query,
                     return_std=True,
                     n_estimators=self.n_estimators,
                     device=device_str,
                 )
                 t_tabpfn = time.time() - t0
+
+                n_dist = len(X_distill)
+                mean_d,  std_d  = mean_all[:n_dist], std_all[:n_dist]
+                mean_ho, std_ho = mean_all[n_dist:], std_all[n_dist:]
 
                 # --- fit MLP (cold-start or warm-start from cache) ---
                 init_model = _mlp_cache.get(i) if self.warm_start else None
@@ -264,6 +277,22 @@ class MTBO_TFM_Distill:
 
                 if self.warm_start:
                     _mlp_cache[i] = mlp
+
+                # --- fidelity check on holdout ---
+                X_ho_t = torch.tensor(
+                    X_holdout_enc, dtype=torch.float32, device=device
+                )
+                with torch.no_grad():
+                    mean_mlp, std_mlp = mlp(X_ho_t)
+                mean_mlp = mean_mlp.cpu().numpy()
+                std_mlp  = std_mlp.cpu().numpy()
+
+                lcb_ho        = mean_ho  - self.beta * std_ho
+                lcb_mlp       = mean_mlp - self.beta * std_mlp
+                lcb_rmse      = float(np.sqrt(np.mean((lcb_mlp  - lcb_ho ) ** 2)))
+                mean_rmse     = float(np.sqrt(np.mean((mean_mlp - mean_ho) ** 2)))
+                std_rmse      = float(np.sqrt(np.mean((std_mlp  - std_ho ) ** 2)))
+                lcb_rank_corr = float(spearmanr(lcb_mlp, lcb_ho).statistic)
 
                 # --- build PyTorch encode fn for L-BFGS-B (gradient graph intact) ---
                 if self.encoding == 'scalar':
@@ -307,6 +336,7 @@ class MTBO_TFM_Distill:
                 pbar.set_postfix_str(
                     f"task={i} best={objs[i].min():.4f} "
                     f"new={float(obj):.4f} acq={acq_val:.4f} "
+                    f"\u03c1={lcb_rank_corr:.3f} "
                     f"tfn={t_tabpfn:.1f}s mlp={t_mlp:.1f}s lb={t_lbfgs:.1f}s"
                 )
 
@@ -320,6 +350,10 @@ class MTBO_TFM_Distill:
                         'best_obj':       float(objs[i].min()),
                         'new_obj':        float(obj),
                         'acq_val':        acq_val,
+                        'lcb_rank_corr':  lcb_rank_corr,
+                        'lcb_rmse':       lcb_rmse,
+                        'mean_rmse':      mean_rmse,
+                        'std_rmse':       std_rmse,
                         't_tabpfn':       t_tabpfn,
                         't_mlp':          t_mlp,
                         't_lbfgs':        t_lbfgs,
