@@ -34,8 +34,9 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
-BETA = 1.0
-N_ESTIMATORS = 4
+BETA = 1.0          # for GP baselines (BOLCB, BO-LCB-BCKT)
+TFM_BETA = 3.0      # for all TabPFN-based algorithms
+N_ESTIMATORS = 1
 N_CANDIDATES = 2000
 CMAES_POPSIZE = 40
 CMAES_MAXITER = 50
@@ -81,40 +82,40 @@ if __name__ == '__main__':
         n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
     batch_exp.add_algorithm(BO_TFM, 'BO-TFM',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
 
     # --- Distill variants (warm-started, plain MLP, NLL loss) ---
     batch_exp.add_algorithm(MTBO_TFM_Distill, 'MTBO-TFM-Uni-Distill',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS,
         transfer='uniform', encoding='scalar',
         mlp_loss='nll', distill_model='mlp',
         warm_start=True, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO_TFM_Distill, 'MTBO-TFM-Elite-Distill',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS,
         transfer='elite', encoding='scalar',
         mlp_loss='nll', distill_model='mlp',
         warm_start=True, disable_tqdm=True)
 
-    # --- CMA-ES acquisition variants (Uni/Elite only, n_est=1 inside) ---
+    # --- CMA-ES acquisition variants ---
     batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni-CMA',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
         cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite-CMA',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
         cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
 

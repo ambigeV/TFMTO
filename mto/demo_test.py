@@ -29,8 +29,9 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
-BETA = 1.0
-N_ESTIMATORS = 4
+BETA = 1.0          # for GP baselines (BOLCB, BO-LCB-BCKT)
+TFM_BETA = 3.0      # for all TabPFN-based algorithms
+N_ESTIMATORS = 1
 N_CANDIDATES = 2000
 CMAES_POPSIZE = 40
 CMAES_MAXITER = 50
@@ -90,20 +91,20 @@ for prob_name, prob_fn in PROBLEMS.items():
         BO_LCB_BCKT(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
                     save_path=data_path('BO-LCB-BCKT'), name=run_name('BO-LCB-BCKT')).optimize()
 
-        BO_TFM(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        BO_TFM(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
                n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES,
                save_path=data_path('BO-TFM-{}'.format(N_CANDIDATES)), name=run_name('BO-TFM-{}'.format(N_CANDIDATES))).optimize()
 
-        MTBO_TFM_Uniform(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        MTBO_TFM_Uniform(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
                          n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES,
                          save_path=data_path('MTBO-TFM-Uni-{}'.format(N_CANDIDATES)), name=run_name('MTBO-TFM-Uni-{}'.format(N_CANDIDATES))).optimize()
 
-        MTBO_TFM_Elite(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        MTBO_TFM_Elite(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
                        n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES,
                        save_path=data_path('MTBO-TFM-Elite-{}'.format(N_CANDIDATES)), name=run_name('MTBO-TFM-Elite-{}'.format(N_CANDIDATES))).optimize()
 
         # ---------- Distill variants (warm-started, plain MLP, NLL loss) ----------
-        MTBO_TFM_Distill(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        MTBO_TFM_Distill(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
                          n_estimators=N_ESTIMATORS,
                          transfer='uniform', encoding='scalar',
                          mlp_loss='nll', distill_model='mlp', warm_start=True,
@@ -111,7 +112,7 @@ for prob_name, prob_fn in PROBLEMS.items():
                          save_path=data_path('MTBO-TFM-Uni-Distill'),
                          name=run_name('MTBO-TFM-Uni-Distill')).optimize()
 
-        MTBO_TFM_Distill(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        MTBO_TFM_Distill(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
                          n_estimators=N_ESTIMATORS,
                          transfer='elite', encoding='scalar',
                          mlp_loss='nll', distill_model='mlp', warm_start=True,
@@ -120,12 +121,12 @@ for prob_name, prob_fn in PROBLEMS.items():
                          name=run_name('MTBO-TFM-Elite-Distill')).optimize()
 
         # ---------- CMA-ES acquisition variants (Uni/Elite only, n_est=1 inside) ----------
-        MTBO_TFM_Uniform(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        MTBO_TFM_Uniform(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
                          n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
                          cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
                          save_path=data_path('MTBO-TFM-Uni-CMA'), name=run_name('MTBO-TFM-Uni-CMA')).optimize()
 
-        MTBO_TFM_Elite(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA,
+        MTBO_TFM_Elite(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
                        n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
                        cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER,
                        save_path=data_path('MTBO-TFM-Elite-CMA'), name=run_name('MTBO-TFM-Elite-CMA')).optimize()
