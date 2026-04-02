@@ -124,12 +124,19 @@ def load_algo_data(data_root: Path, algo_name: str, prob_name: str):
     max_nfes_per_task = None
 
     for pkl_path in pkl_files:
-        data      = load_pkl(pkl_path)
+        try:
+            data = load_pkl(pkl_path)
+        except (EOFError, pickle.UnpicklingError, Exception) as e:
+            print(f'  [WARN] Skipping corrupt/incomplete file: {pkl_path.name} ({type(e).__name__}: {e})')
+            continue
         all_objs  = data['all_objs']
         run_curves = [best_so_far(all_objs[t]) for t in range(len(all_objs))]
         all_runs.append(run_curves)
         if max_nfes_per_task is None:
             max_nfes_per_task = list(data['max_nfes'])
+
+    if not all_runs:
+        return None, None, 0
 
     n_tasks = len(all_runs[0])
     curves_per_task = [
