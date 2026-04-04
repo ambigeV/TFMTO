@@ -22,6 +22,8 @@ from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite import MTBO_TFM_Elite
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Distill import MTBO_TFM_Distill
 from ddmtolab.Algorithms.STSO.BO_TFM_GPEmbed import BO_TFM_GPEmbed
 from ddmtolab.Algorithms.STSO.BO_TFM_ResGP import BO_TFM_ResGP
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Asym import MTBO_TFM_Covar_Asym
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls import MTBO_TFM_Covar_Cls
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
 # =============================================================================
@@ -43,7 +45,8 @@ ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'MTBO-TFM-Elite-{}'.format(N_CANDIDATES),
               'MTBO-TFM-Uni-Distill', 'MTBO-TFM-Elite-Distill',
               'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA',
-              'BO-TFM-GPEmbed', 'BO-TFM-ResGP']
+              'BO-TFM-GPEmbed', 'BO-TFM-ResGP',
+              'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls']
 
 benchmark = CEC17MTSO()
 PROBLEMS = {
@@ -143,6 +146,18 @@ for prob_name, prob_fn in PROBLEMS.items():
                      n_estimators=N_ESTIMATORS,
                      save_path=data_path('BO-TFM-ResGP'), name=run_name('BO-TFM-ResGP'),
                      disable_tqdm=False).optimize()
+
+        MTBO_TFM_Covar_Asym(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
+                             n_estimators=N_ESTIMATORS,
+                             save_path=data_path('MTBO-TFM-Covar-Asym'),
+                             name=run_name('MTBO-TFM-Covar-Asym'),
+                             disable_tqdm=False).optimize()
+
+        MTBO_TFM_Covar_Cls(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
+                            n_estimators=N_ESTIMATORS,
+                            save_path=data_path('MTBO-TFM-Covar-Cls'),
+                            name=run_name('MTBO-TFM-Covar-Cls'),
+                            disable_tqdm=False).optimize()
 
 # =============================================================================
 # Results Analysis (per problem)

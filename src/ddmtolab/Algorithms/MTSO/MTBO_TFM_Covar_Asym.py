@@ -67,8 +67,9 @@ def _build_mtgp_data(
 
 
 def _inject_fixed_corr_kernel(model: MultiTaskGP, R_np: np.ndarray) -> None:
-    R_t = torch.tensor(R_np, dtype=torch.float32)
-    fixed_kernel = FixedCorrelationTaskKernel(R_t)
+    model_dtype = next(model.parameters()).dtype
+    R_t = torch.tensor(R_np, dtype=model_dtype)
+    fixed_kernel = FixedCorrelationTaskKernel(R_t).to(model_dtype)
 
     replaced = False
     for idx, kernel in enumerate(model.covar_module.kernels):

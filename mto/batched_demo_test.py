@@ -26,6 +26,8 @@ from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite import MTBO_TFM_Elite
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Distill import MTBO_TFM_Distill
 from ddmtolab.Algorithms.STSO.BO_TFM_GPEmbed import BO_TFM_GPEmbed
 from ddmtolab.Algorithms.STSO.BO_TFM_ResGP import BO_TFM_ResGP
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Asym import MTBO_TFM_Covar_Asym
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls import MTBO_TFM_Covar_Cls
 from ddmtolab.Methods.batch_experiment import BatchExperiment
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
@@ -48,7 +50,8 @@ ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite',
               'MTBO-TFM-Uni-Distill', 'MTBO-TFM-Elite-Distill',
               'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA',
-              'BO-TFM-GPEmbed', 'BO-TFM-ResGP']
+              'BO-TFM-GPEmbed', 'BO-TFM-ResGP',
+              'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls']
 
 DATA_PATH = './Data_CEC17MTSO_50D'
 RESULTS_PATH = './Results_CEC17MTSO_50D'
@@ -128,6 +131,14 @@ if __name__ == '__main__':
 
     batch_exp.add_algorithm(BO_TFM_ResGP, 'BO-TFM-ResGP',
         n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
+        n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+    batch_exp.add_algorithm(MTBO_TFM_Covar_Asym, 'MTBO-TFM-Covar-Asym',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+    batch_exp.add_algorithm(MTBO_TFM_Covar_Cls, 'MTBO-TFM-Covar-Cls',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
         n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
     # -------------------------------------------------------------------------

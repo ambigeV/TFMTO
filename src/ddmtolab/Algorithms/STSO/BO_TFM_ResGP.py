@@ -76,6 +76,8 @@ lbfgs_restarts    L-BFGS-B restart count (= top-k candidates used as x0)
 name              algorithm name key (default 'BO-TFM-ResGP')
 """
 
+import csv
+import os
 import time
 import warnings
 
@@ -126,7 +128,7 @@ class BO_TFM_ResGP:
         n_initial: int = None,
         max_nfes: int = None,
         beta: float = 3.0,
-        n_candidates: int = 500,
+        n_candidates: int = 1000,
         n_estimators: int = 1,
         gp_n_iter: int = 100,
         cache_max_iters: int = 10,
@@ -136,7 +138,7 @@ class BO_TFM_ResGP:
         mlp_epochs: int = 300,
         mlp_finetune_epochs: int = 50,
         mlp_lr: float = 3e-3,
-        warm_start: bool = True,
+        warm_start: bool = False,
         lbfgs_restarts: int = 5,
         save_data: bool = True,
         save_path: str = './Data',
@@ -181,6 +183,17 @@ class BO_TFM_ResGP:
         decs = initialization(problem, self.n_initial, method='lhs')
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
+
+        # Distillation accuracy log
+        os.makedirs(self.save_path, exist_ok=True)
+        log_path = os.path.join(self.save_path, f'{self.name}_distill_log.csv')
+        log_file = open(log_path, 'w', newline='')
+        log_writer = csv.writer(log_file)
+        log_writer.writerow([
+            'iteration', 'task_id',
+            'mlp_train_mse',   # MSE of PredMLP(X_train) vs μ_TFM(X_train)
+            'gp_snr',          # outputscale / (outputscale + noise) on residual GP
+        ])
 
         # Per-task state
         caches:    list = [
@@ -263,6 +276,26 @@ class BO_TFM_ResGP:
                     mlp_state[i] = mlp
 
                 # ----------------------------------------------------------
+                # Distillation accuracy log
+                # ----------------------------------------------------------
+                with torch.no_grad():
+                    X_train_t = torch.tensor(
+                        X_train, dtype=torch.float32, device=device
+                    )
+                    mu_mlp_train = mlp(X_train_t).cpu().numpy()    # (n_train,)
+                mlp_train_mse = float(np.mean((mu_mlp_train - mu_train) ** 2))
+                gp_snr = float(
+                    gp_params['outputscale'] /
+                    (gp_params['outputscale'] + gp_params['noise'] + 1e-12)
+                )
+                log_writer.writerow([
+                    bo_iter[i], i,
+                    f'{mlp_train_mse:.6f}',
+                    f'{gp_snr:.4f}',
+                ])
+                log_file.flush()
+
+                # ----------------------------------------------------------
                 # Step 7: score current candidates to pick L-BFGS-B starts
                 # ----------------------------------------------------------
                 n_cur     = min(self.n_candidates, len(X_cache))
@@ -309,6 +342,7 @@ class BO_TFM_ResGP:
                 pbar.update(1)
 
         pbar.close()
+        log_file.close()
         runtime = time.time() - start_time
 
         all_decs, all_objs = build_staircase_history(decs, objs, k=1)

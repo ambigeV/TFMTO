@@ -62,6 +62,8 @@ lbfgs_restarts    L-BFGS-B restart count (also = top-k cache points used as x0)
 name              algorithm name key   (default 'BO-TFM-GPEmbed')
 """
 
+import csv
+import os
 import time
 import warnings
 
@@ -113,9 +115,9 @@ class BO_TFM_GPEmbed:
         n_initial: int = None,
         max_nfes: int = None,
         beta: float = 3.0,
-        n_candidates: int = 500,
+        n_candidates: int = 1000,
         n_estimators: int = 1,
-        embed_pca_dim: int = 32,
+        embed_pca_dim: int = 8,
         gp_n_iter: int = 100,
         cache_max_iters: int = 10,
         cache_lambda: float = 0.5,
@@ -124,7 +126,7 @@ class BO_TFM_GPEmbed:
         mlp_epochs: int = 300,
         mlp_finetune_epochs: int = 50,
         mlp_lr: float = 3e-3,
-        warm_start: bool = True,
+        warm_start: bool = False,
         lbfgs_restarts: int = 5,
         save_data: bool = True,
         save_path: str = './Data',
@@ -170,6 +172,18 @@ class BO_TFM_GPEmbed:
         decs = initialization(problem, self.n_initial, method='lhs')
         objs, _ = evaluation(problem, decs)
         nfes_per_task = n_initial_per_task.copy()
+
+        # Distillation accuracy log
+        os.makedirs(self.save_path, exist_ok=True)
+        log_path = os.path.join(self.save_path, f'{self.name}_distill_log.csv')
+        log_file = open(log_path, 'w', newline='')
+        log_writer = csv.writer(log_file)
+        log_writer.writerow([
+            'iteration', 'task_id',
+            'mlp_train_mse',       # MSE of MLP embeddings vs true TabPFN embeddings on X_train
+            'gp_snr',              # outputscale / (outputscale + noise) — GP signal quality
+            'pca_var_explained',   # fraction of total embedding variance captured by top-D_pca PCs
+        ])
 
         # Per-task state
         caches:    list = [
@@ -232,6 +246,13 @@ class BO_TFM_GPEmbed:
                 )
                 pca_mean, pca_comp = fit_pca(phi_all_for_pca, D_pca)
 
+                # Track fraction of variance explained by top-D_pca PCs
+                phi_centered = phi_all_for_pca - phi_all_for_pca.mean(axis=0)
+                total_var = float(np.sum(phi_centered ** 2))
+                proj = phi_centered @ pca_comp.T
+                explained_var = float(np.sum(proj ** 2))
+                pca_var_explained = explained_var / total_var if total_var > 1e-12 else 0.0
+
                 phi_cache_pca = apply_pca(phi_cache_full, pca_mean, pca_comp)  # (N_cache, D_pca)
                 phi_train_pca = apply_pca(phi_train_full, pca_mean, pca_comp)  # (n_train, D_pca)
 
@@ -259,6 +280,29 @@ class BO_TFM_GPEmbed:
                 )
                 if self.warm_start:
                     mlp_state[i] = mlp
+
+                # ----------------------------------------------------------
+                # Distillation accuracy log
+                # ----------------------------------------------------------
+                with torch.no_grad():
+                    X_train_t = torch.tensor(
+                        X_train, dtype=torch.float32, device=device
+                    )
+                    phi_mlp_train = mlp(X_train_t).cpu().numpy()   # (n_train, D_pca)
+                mlp_train_mse = float(
+                    np.mean((phi_mlp_train - phi_train_pca) ** 2)
+                )
+                gp_snr = float(
+                    gp_params['outputscale'] /
+                    (gp_params['outputscale'] + gp_params['noise'] + 1e-12)
+                )
+                log_writer.writerow([
+                    bo_iter[i], i,
+                    f'{mlp_train_mse:.6f}',
+                    f'{gp_snr:.4f}',
+                    f'{pca_var_explained:.4f}',
+                ])
+                log_file.flush()
 
                 # ----------------------------------------------------------
                 # Step 7: score cached candidates to pick L-BFGS-B warm starts
@@ -306,6 +350,7 @@ class BO_TFM_GPEmbed:
                 pbar.update(1)
 
         pbar.close()
+        log_file.close()
         runtime = time.time() - start_time
 
         all_decs, all_objs = build_staircase_history(decs, objs, k=1)

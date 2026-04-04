@@ -1,12 +1,47 @@
 """
-MTBO-TFM-Covar-Cls: MTBO with TFN classifier-based inter-task covariance.
+MTBO-TFM-Covar-Cls: MTBO with TabPFN binary-classifier asymmetric task covariance.
 
 Workflow per BO iteration:
-1) Convert each task objective into ordinal classes via rank-quantile binning.
-2) Build directed transfer matrix S using TabPFN classification cross-entropy:
-       S[i, j] = exp(-CE(i -> j) / tau)
-3) Map S to symmetric PSD correlation R (gram/avg mapping).
-4) Inject R into MultiTaskGP task kernel and continue standard MTBO steps.
+1) Convert each task objective into binary quality labels via median split:
+       label = 1  (top 50% of task's y values — "good region")
+       label = 0  (bottom 50%               — "bad region")
+   Labels are defined per-task so each task's own notion of "good" is used.
+
+2) Build directed transfer matrix S using TabPFN binary classification:
+   For each ordered pair (t1 -> t2):
+       - Fit TabPFN binary classifier on (X_t1, binary_label_t1).
+       - Query classifier on X_t2 -> P(good | X_t2).
+       - Binary CE of t2's actual labels under these probabilities:
+             CE(t1->t2) = -mean [ y_t2 * log P(1|x) + (1-y_t2) * log P(0|x) ]
+       - S[t1, t2] = exp(-CE(t1->t2) / tau)  in (0, 1]  (CE >= 0 always)
+
+3) For each TARGET task i, build a SEPARATE MultiTaskGP whose task covariance
+   uses the DIRECTED score into task i:
+
+       B_i[j, i] = B_i[i, j] = sigma_i * sigma_j * S[j -> i]   for j != i
+       B_i[k, k] = sigma_k^2
+
+   This is symmetric (valid GP) but differs across target tasks:
+       B_0 uses S[1->0]  (how well does task 1 predict task 0's good regions?)
+       B_1 uses S[0->1]  (how well does task 0 predict task 1's good regions?)
+
+   Directionality is preserved — no symmetrisation step needed.
+   S[j->i] in (0,1] guarantees B_i is PSD by construction.
+
+4) Fit each MultiTaskGP_i independently and optimise LogEI for task i.
+   Cost: T MLL fits per BO step (vs 1 for symmetric variants). For T=2: 2x.
+
+Why asymmetric?
+---------------
+The symmetric approach (avg/gram) averages S[t1->t2] and S[t2->t1], losing
+directional information. For BO on task i, only the direction "j helps i"
+(S[j->i]) is relevant — what j tells about i's good regions. The reverse
+direction S[i->j] is irrelevant when searching for task i.
+
+Example: task 1 strongly informs task 0 but not vice versa.
+  Symmetric R[0,1] = 0.5*(S[0,1]+S[1,0]) = moderate correlation for BOTH tasks.
+  Asymmetric: B_0 uses high S[1->0] (correct for task 0 search).
+              B_1 uses low  S[0->1] (correct for task 1 search — task 0 unhelpful).
 """
 
 import time
@@ -27,7 +62,7 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
 from ddmtolab.Methods.Algo_Methods.bo_utils import mtbo_next_point
 from ddmtolab.Methods.Algo_Methods.tfm_task_covar_utils import (
     compute_task_similarity_matrix_directed_classification,
-    directed_similarity_to_correlation,
+    make_psd,
     FixedCorrelationTaskKernel,
 )
 
@@ -64,9 +99,56 @@ def _build_mtgp_data(
     return train_X, train_Y
 
 
+def _build_directed_corr_for_target(
+    S_np: np.ndarray,
+    target: int,
+    eps: float = 1e-4,
+) -> np.ndarray:
+    """
+    Build a symmetric PSD correlation matrix for a specific TARGET task,
+    using the directed scores into that target.
+
+    For T tasks, R_target[j, target] = R_target[target, j] = S[j -> target]
+    for j != target. Diagonal is 1. Source-source pairs (j,k both != target)
+    are set to the geometric mean of their mutual directed scores to maintain
+    PSD, then projected via make_psd as a safety check.
+
+    Parameters
+    ----------
+    S_np   : (T, T) directed similarity matrix, S[i,j] = similarity i->j
+    target : index of the target task
+    eps    : minimum eigenvalue for PSD projection
+
+    Returns
+    -------
+    R : (T, T) symmetric PSD correlation matrix tuned to target task
+    """
+    T = S_np.shape[0]
+    R = np.eye(T, dtype=np.float64)
+
+    for j in range(T):
+        if j == target:
+            continue
+        # Directed score: how well does source j predict target task
+        R[j, target] = S_np[j, target]
+        R[target, j] = S_np[j, target]
+
+    # For T>2: source-source pairs not involving target.
+    # Use geometric mean of mutual directed scores as a neutral estimate.
+    for j in range(T):
+        for k in range(j + 1, T):
+            if j == target or k == target:
+                continue
+            R[j, k] = np.sqrt(S_np[j, k] * S_np[k, j])
+            R[k, j] = R[j, k]
+
+    return make_psd(R, eps=eps)
+
+
 def _inject_fixed_corr_kernel(model: MultiTaskGP, R_np: np.ndarray) -> None:
-    R_t = torch.tensor(R_np, dtype=torch.float32)
-    fixed_kernel = FixedCorrelationTaskKernel(R_t)
+    model_dtype = next(model.parameters()).dtype
+    R_t = torch.tensor(R_np, dtype=model_dtype)
+    fixed_kernel = FixedCorrelationTaskKernel(R_t).to(model_dtype)
 
     replaced = False
     for idx, kernel in enumerate(model.covar_module.kernels):
@@ -84,15 +166,17 @@ def _inject_fixed_corr_kernel(model: MultiTaskGP, R_np: np.ndarray) -> None:
 
 class MTBO_TFM_Covar_Cls:
     """
-    MTBO variant that derives task transfer from TFN classifier probabilities.
+    MTBO with per-target asymmetric TabPFN binary-classifier task covariance.
+
+    See module docstring for full algorithm description.
     """
 
     algorithm_information = {
-        'n_tasks':            '[2, K]',
-        'n_objectives':       1,
-        'surrogate':          'MultiTaskGP — ARD Matern-5/2 × FixedCorrelationTaskKernel',
-        'task_covar':         'Directed TFN CE -> S, then S->R via gram/avg',
-        'acquisition':        'LogEI (Adam, same as MTBO)',
+        'n_tasks':      '[2, K]',
+        'n_objectives': 1,
+        'surrogate':    'Per-target MultiTaskGP — ARD Matern-5/2 × FixedCorrelationTaskKernel',
+        'task_covar':   'Directed binary CE S[j->i] injected per target task i',
+        'acquisition':  'LogEI (Adam, same as MTBO)',
     }
 
     def __init__(
@@ -100,10 +184,9 @@ class MTBO_TFM_Covar_Cls:
         problem,
         n_initial: int = None,
         max_nfes: int = None,
-        n_classes: int = 3,
+        n_classes: int = 2,
         tau: float = 1.0,
         n_estimators: int = 1,
-        directed_to_corr: str = 'gram',
         adam_restarts: int = 5,
         adam_steps: int = 200,
         adam_lr: float = 1e-2,
@@ -114,11 +197,10 @@ class MTBO_TFM_Covar_Cls:
     ):
         self.problem          = problem
         self.n_initial        = n_initial if n_initial is not None else 50
-        self.max_nfes         = max_nfes if max_nfes is not None else 100
+        self.max_nfes         = max_nfes  if max_nfes  is not None else 100
         self.n_classes        = n_classes
         self.tau              = tau
         self.n_estimators     = n_estimators
-        self.directed_to_corr = directed_to_corr
         self.adam_restarts    = adam_restarts
         self.adam_steps       = adam_steps
         self.adam_lr          = adam_lr
@@ -127,24 +209,22 @@ class MTBO_TFM_Covar_Cls:
         self.name             = name
         self.disable_tqdm     = disable_tqdm
 
-        # Diagnostics:
-        # - s_history: directed classifier-transfer matrix S
-        # - rho_history: mapped GP-valid correlation matrix R
-        self.s_history: list = []
-        self.rho_history: list = []
+        # Diagnostics
+        self.s_history: list   = []   # directed S per step
+        self.rho_history: list = []   # per-target R matrices per step
 
     def optimize(self):
         start_time = time.time()
-        problem = self.problem
-        nt = problem.n_tasks
-        dims = problem.dims
+        problem    = self.problem
+        nt         = problem.n_tasks
+        dims       = problem.dims
 
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device     = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         device_str = str(device)
-        data_type = torch.double
+        data_type  = torch.double
 
         n_initial_per_task = par_list(self.n_initial, nt)
-        max_nfes_per_task = par_list(self.max_nfes, nt)
+        max_nfes_per_task  = par_list(self.max_nfes,  nt)
 
         decs = initialization(problem, self.n_initial, method='lhs')
         objs, _ = evaluation(problem, decs)
@@ -163,8 +243,9 @@ class MTBO_TFM_Covar_Cls:
                 break
 
             objs_norm, _, _ = normalize(objs, axis=0, method='minmax')
-            objs_neg_norm = [-o for o in objs_norm]
+            objs_neg_norm   = [-o for o in objs_norm]
 
+            # Binary median split (n_classes=2): directed S[j->i] in (0,1]
             S_np = compute_task_similarity_matrix_directed_classification(
                 decs, objs_norm,
                 n_classes=self.n_classes,
@@ -172,26 +253,28 @@ class MTBO_TFM_Covar_Cls:
                 device=device_str,
                 tau=self.tau,
             )
-            R_np = directed_similarity_to_correlation(
-                S_np,
-                method=self.directed_to_corr,
-            )
             self.s_history.append(S_np.copy())
-            self.rho_history.append(R_np.copy())
 
+            step_rho = {}
             train_X, train_Y = _build_mtgp_data(decs, objs_neg_norm, dims, data_type)
-            mtgp = MultiTaskGP(
-                train_X=train_X,
-                train_Y=train_Y,
-                task_feature=-1,
-            ).to(data_type)
-
-            _inject_fixed_corr_kernel(mtgp, R_np)
-
-            mll = ExactMarginalLogLikelihood(mtgp.likelihood, mtgp)
-            fit_gpytorch_mll(mll)
 
             for i in active_tasks:
+                # Per-target correlation: off-diagonal = S[j -> i] (directed into i)
+                R_i = _build_directed_corr_for_target(S_np, target=i)
+                step_rho[i] = R_i
+
+                # Separate GP fitted for this target task
+                mtgp = MultiTaskGP(
+                    train_X=train_X,
+                    train_Y=train_Y,
+                    task_feature=-1,
+                ).to(data_type)
+
+                _inject_fixed_corr_kernel(mtgp, R_i)
+
+                mll = ExactMarginalLogLikelihood(mtgp.likelihood, mtgp)
+                fit_gpytorch_mll(mll)
+
                 candidate_np = mtbo_next_point(
                     mtgp=mtgp,
                     task_id=i,
@@ -211,14 +294,16 @@ class MTBO_TFM_Covar_Cls:
                 if nt >= 2:
                     pbar.set_postfix_str(
                         f'task={i} best={objs[i].min():.4f} new={float(obj):.4f} '
-                        f'S(0,1)={S_np[0,1]:.3f} S(1,0)={S_np[1,0]:.3f} '
-                        f'R(0,1)={R_np[0,1]:.3f}'
+                        f'S(0->1)={S_np[0,1]:.3f} S(1->0)={S_np[1,0]:.3f} '
+                        f'R_i(0,1)={R_i[0,1]:.3f}'
                     )
                 else:
                     pbar.set_postfix_str(
                         f'task={i} best={objs[i].min():.4f} new={float(obj):.4f}'
                     )
                 pbar.update(1)
+
+            self.rho_history.append(step_rho)
 
         pbar.close()
         runtime = time.time() - start_time
