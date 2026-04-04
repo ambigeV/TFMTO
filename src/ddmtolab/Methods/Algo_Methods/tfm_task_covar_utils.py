@@ -20,7 +20,10 @@ R is computed per BO step via cross-predictive NLL:
 Public API
 ----------
   tabpfn_cross_pred_nll           per-sample Gaussian NLL of t2 under t1's context
+  tabpfn_cross_pred_ce            per-sample CE of t2 classes under t1's context
   compute_task_similarity_matrix  full T×T correlation matrix from cross-pred NLLs
+  compute_task_similarity_matrix_directed_classification
+                                  full T×T directed similarity from cross-pred CE
   make_psd                        project R to PSD via eigenvalue clipping
   FixedCorrelationTaskKernel      gpytorch.Kernel  B = diag(σ) · R · diag(σ)
 """
@@ -80,6 +83,38 @@ def tabpfn_cross_pred_nll(
     return float(nll.mean())
 
 
+def tabpfn_cross_pred_ce(
+    X_ctx: np.ndarray,
+    y_ctx_cls: np.ndarray,
+    X_qry: np.ndarray,
+    y_qry_cls: np.ndarray,
+    *,
+    n_estimators: int = 1,
+    device: str = 'cpu',
+    eps: float = 1e-8,
+) -> float:
+    """
+    Compute mean cross-entropy of query class labels under a TabPFN classifier
+    trained on context (X_ctx, y_ctx_cls).
+    """
+    from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict_proba
+
+    proba = tabpfn_predict_proba(
+        X_ctx, y_ctx_cls, X_qry,
+        n_estimators=n_estimators,
+        device=device,
+    )
+
+    yq = y_qry_cls.astype(int).ravel()
+    n = yq.shape[0]
+    p = np.full(n, eps, dtype=np.float64)
+    valid = (yq >= 0) & (yq < proba.shape[1])
+    if np.any(valid):
+        rows = np.arange(n)[valid]
+        p[rows] = proba[rows, yq[valid]]
+    return float((-np.log(np.clip(p, eps, 1.0))).mean())
+
+
 # =============================================================================
 # 2.  Task similarity matrix
 # =============================================================================
@@ -89,6 +124,21 @@ def _normalize_y_01(y: np.ndarray) -> np.ndarray:
     lo, hi = y.min(), y.max()
     rng = hi - lo
     return (y - lo) / rng if rng > 1e-12 else np.zeros_like(y)
+
+
+def _rank_quantile_labels(y: np.ndarray, n_classes: int = 3) -> np.ndarray:
+    """
+    Build ordinal class labels by rank-quantile binning.
+
+    This avoids dependence on absolute objective scale and makes labels
+    comparable across tasks.
+    """
+    n = y.shape[0]
+    if n == 0:
+        return np.array([], dtype=np.int64)
+    ranks = np.argsort(np.argsort(y, kind='mergesort'), kind='mergesort')
+    labels = np.floor(ranks * n_classes / n).astype(np.int64)
+    return np.clip(labels, 0, n_classes - 1)
 
 
 def compute_task_similarity_matrix(
@@ -157,7 +207,125 @@ def compute_task_similarity_matrix(
 
 
 # =============================================================================
-# 3.  PSD projection
+# 3.  Directed similarity (asymmetric): regression and classification
+# =============================================================================
+
+def compute_task_similarity_matrix_directed(
+    decs: list,
+    objs: list,
+    *,
+    n_estimators: int = 1,
+    device: str = 'cpu',
+    tau: float = 1.0,
+) -> np.ndarray:
+    """
+    Compute the directed/asymmetric T×T TFN similarity matrix S.
+
+    For each ordered pair (t1, t2):
+        S[t1, t2] = exp(-NLL(t1->t2) / tau),  t1 != t2
+        S[t,  t]  = 1
+
+    Notes
+    -----
+    - S is generally asymmetric because t1->t2 and t2->t1 can differ.
+    - This matrix itself is NOT directly usable as a GP covariance matrix.
+    """
+    T = len(decs)
+    y_norm = [_normalize_y_01(o.ravel()) for o in objs]
+
+    S = np.eye(T, dtype=np.float64)
+    for t1 in range(T):
+        for t2 in range(T):
+            if t1 == t2:
+                continue
+            nll = tabpfn_cross_pred_nll(
+                decs[t1], y_norm[t1],
+                decs[t2], y_norm[t2],
+                n_estimators=n_estimators,
+                device=device,
+            )
+            S[t1, t2] = np.exp(-nll / tau)
+    return S
+
+
+def compute_task_similarity_matrix_directed_classification(
+    decs: list,
+    objs: list,
+    *,
+    n_classes: int = 3,
+    n_estimators: int = 1,
+    device: str = 'cpu',
+    tau: float = 1.0,
+) -> np.ndarray:
+    """
+    Compute directed/asymmetric T×T similarity matrix S using classification CE.
+
+    Steps
+    -----
+    1) Convert each task objective to ordinal class labels via rank-quantile bins.
+    2) For each ordered pair (t1, t2):
+         CE[t1, t2] = cross-entropy of y_t2_cls predicted by classifier fit on t1
+         S[t1, t2]  = exp(-CE[t1, t2] / tau)
+    3) Set diagonal to 1.
+    """
+    T = len(decs)
+    cls = [_rank_quantile_labels(o.ravel(), n_classes=n_classes) for o in objs]
+
+    S = np.eye(T, dtype=np.float64)
+    for t1 in range(T):
+        for t2 in range(T):
+            if t1 == t2:
+                continue
+            ce = tabpfn_cross_pred_ce(
+                decs[t1], cls[t1],
+                decs[t2], cls[t2],
+                n_estimators=n_estimators,
+                device=device,
+            )
+            S[t1, t2] = np.exp(-ce / tau)
+    return S
+
+
+# =============================================================================
+# 4.  Mapping directed S -> GP-valid correlation
+# =============================================================================
+
+def directed_similarity_to_correlation(
+    S: np.ndarray,
+    *,
+    method: str = 'gram',
+    eps: float = 1e-4,
+) -> np.ndarray:
+    """
+    Map a directed TFN matrix S into a symmetric PSD correlation matrix R.
+
+    Parameters
+    ----------
+    S      : (T, T) directed similarity matrix (typically diag=1)
+    method : mapping strategy
+             - 'gram': R_raw = S @ S.T      (default; preserves directionality
+                       implicitly via row embeddings)
+             - 'avg' : R_raw = 0.5 * (S + S.T)
+    eps    : minimum eigenvalue used in final PSD projection
+
+    Returns
+    -------
+    R : (T, T) symmetric PSD correlation matrix with unit diagonal.
+    """
+    if method == 'gram':
+        R_raw = S @ S.T
+    elif method == 'avg':
+        R_raw = 0.5 * (S + S.T)
+    else:
+        raise ValueError(f"Unknown directed->correlation method: {method}")
+
+    d = np.sqrt(np.maximum(np.diag(R_raw), 1e-12))
+    R = R_raw / np.outer(d, d)
+    return make_psd(R, eps=eps)
+
+
+# =============================================================================
+# 5.  PSD projection
 # =============================================================================
 
 def make_psd(R: np.ndarray, eps: float = 1e-4) -> np.ndarray:
@@ -187,7 +355,7 @@ def make_psd(R: np.ndarray, eps: float = 1e-4) -> np.ndarray:
 
 
 # =============================================================================
-# 4.  FixedCorrelationTaskKernel
+# 6.  FixedCorrelationTaskKernel
 # =============================================================================
 
 class FixedCorrelationTaskKernel(gpytorch.kernels.Kernel):

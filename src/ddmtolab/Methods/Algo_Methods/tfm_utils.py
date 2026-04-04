@@ -3,6 +3,10 @@ TabPFN utility functions for surrogate-based Bayesian Optimization.
 
 Model version: TabPFN v2.5 (loaded via ModelVersion.V2_5).
 
+This module supports both:
+  - Regression: TabPFNRegressor via tabpfn_predict()
+  - Classification: TabPFNClassifier via tabpfn_predict_proba()
+
 The predictive std is derived from the 80% CI (10th–90th percentile) under a
 Gaussian assumption:  std = (q90 - q10) / (2 * z_{0.90})  where z_{0.90} ≈ 1.2816.
 
@@ -31,6 +35,21 @@ def _build_model(n_estimators: int, random_state: int, device: str = 'cpu'):
     from tabpfn.constants import ModelVersion
 
     model = TabPFNRegressor.create_default_for_version(ModelVersion.V2_5)
+    model.set_params(
+        n_estimators=n_estimators,
+        random_state=random_state,
+        ignore_pretraining_limits=True,
+        device=device,
+    )
+    return model
+
+
+def _build_classifier_model(n_estimators: int, random_state: int, device: str = 'cpu'):
+    """Instantiate a TabPFN v2.5 classifier with the given settings."""
+    from tabpfn import TabPFNClassifier
+    from tabpfn.constants import ModelVersion
+
+    model = TabPFNClassifier.create_default_for_version(ModelVersion.V2_5)
     model.set_params(
         n_estimators=n_estimators,
         random_state=random_state,
@@ -108,6 +127,48 @@ def tabpfn_predict(
         q10, q90  = quantiles[0], quantiles[-1]
         std_parts.append((q90 - q10) / (2.0 * _Z_80))
     return np.concatenate(y_parts), np.concatenate(std_parts)
+
+
+def tabpfn_predict_proba(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    X_test: np.ndarray,
+    *,
+    n_estimators: int = 8,
+    random_state: int = 42,
+    device: str = None,
+) -> np.ndarray:
+    """Fit TabPFN classifier on (X_train, y_train) and return class probabilities.
+
+    Parameters
+    ----------
+    X_train, y_train : training data with integer labels in [0, n_classes-1]
+    X_test           : test features
+    n_estimators     : TabPFN ensemble size
+    random_state     : RNG seed
+    device           : 'cuda' or 'cpu'. None = auto
+
+    Returns
+    -------
+    proba : np.ndarray, shape (n_test, n_classes)
+    """
+    import torch as _torch
+    if device is None:
+        device = 'cuda' if _torch.cuda.is_available() else 'cpu'
+
+    model = _build_classifier_model(n_estimators, random_state, device=device)
+    model.fit(X_train, y_train.astype(int))
+
+    n_test = len(X_test)
+    chunk = max(len(X_train), 20)
+    if n_test <= chunk:
+        return model.predict_proba(X_test)
+
+    parts = [
+        model.predict_proba(X_test[i:i + chunk])
+        for i in range(0, n_test, chunk)
+    ]
+    return np.vstack(parts)
 
 
 def lcb(mean: np.ndarray, std: np.ndarray, beta: float = 1.0) -> np.ndarray:

@@ -24,6 +24,8 @@ from ddmtolab.Algorithms.STSO.BO_TFM import BO_TFM
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform import MTBO_TFM_Uniform
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite import MTBO_TFM_Elite
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Distill import MTBO_TFM_Distill
+from ddmtolab.Algorithms.STSO.BO_TFM_GPEmbed import BO_TFM_GPEmbed
+from ddmtolab.Algorithms.STSO.BO_TFM_ResGP import BO_TFM_ResGP
 from ddmtolab.Methods.batch_experiment import BatchExperiment
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
@@ -45,7 +47,8 @@ MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'BO-TFM', 'MTBO-TFM-Uni', 'MTBO-TFM-Elite',
               'MTBO-TFM-Uni-Distill', 'MTBO-TFM-Elite-Distill',
-              'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA']
+              'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA',
+              'BO-TFM-GPEmbed', 'BO-TFM-ResGP']
 
 DATA_PATH = './Data_CEC17MTSO_50D'
 RESULTS_PATH = './Results_CEC17MTSO_50D'
@@ -118,6 +121,14 @@ if __name__ == '__main__':
         n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
         n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
         cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
+
+    batch_exp.add_algorithm(BO_TFM_GPEmbed, 'BO-TFM-GPEmbed',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
+        n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+    batch_exp.add_algorithm(BO_TFM_ResGP, 'BO-TFM-ResGP',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
+        n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
     # -------------------------------------------------------------------------
     # Run (parallel across workers)
