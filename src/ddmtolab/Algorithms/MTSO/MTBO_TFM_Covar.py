@@ -129,15 +129,26 @@ def _inject_fixed_corr_kernel(model: MultiTaskGP, R_np: np.ndarray) -> None:
     The replacement is done in-place so the model reference stays valid.
     All other sub-kernels (spatial ARD Matern) are left untouched.
     """
-    R_t = torch.tensor(R_np, dtype=torch.float32)
-    fixed_kernel = FixedCorrelationTaskKernel(R_t)
+    model_param = next(model.parameters())
+    model_dtype = model_param.dtype
+    model_device = model_param.device
+    R_t = torch.tensor(R_np, dtype=model_dtype, device=model_device)
 
     replaced = False
-    for idx, kernel in enumerate(model.covar_module.kernels):
-        if isinstance(kernel, gpytorch.kernels.IndexKernel):
-            model.covar_module.kernels[idx] = fixed_kernel
-            replaced = True
-            break
+    kernel_container = model.covar_module
+    if not hasattr(kernel_container, "kernels") and hasattr(kernel_container, "base_kernel"):
+        kernel_container = kernel_container.base_kernel
+
+    if hasattr(kernel_container, "kernels"):
+        for idx, kernel in enumerate(kernel_container.kernels):
+            if isinstance(kernel, gpytorch.kernels.IndexKernel):
+                fixed_kernel = FixedCorrelationTaskKernel(
+                    R_t,
+                    active_dims=kernel.active_dims,
+                ).to(device=model_device, dtype=model_dtype)
+                kernel_container.kernels[idx] = fixed_kernel
+                replaced = True
+                break
 
     if not replaced:
         raise RuntimeError(

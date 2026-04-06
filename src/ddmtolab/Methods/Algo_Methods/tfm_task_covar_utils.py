@@ -384,16 +384,16 @@ class FixedCorrelationTaskKernel(gpytorch.kernels.Kernel):
     Integer task IDs (0, 1, ..., T-1) are also accepted unchanged.
     """
 
-    def __init__(self, R_fixed: torch.Tensor):
-        super().__init__()
+    def __init__(self, R_fixed: torch.Tensor, active_dims=None):
+        super().__init__(active_dims=active_dims)
         T = R_fixed.shape[0]
         self.T = T
         # Fixed correlation — not a parameter
-        self.register_buffer('R', R_fixed.float())
+        self.register_buffer('R', R_fixed.detach().clone())
         # Learnable per-task log-scale (init 0 → σ = 1)
         self.register_parameter(
             'log_sigma',
-            nn.Parameter(torch.zeros(T)),
+            nn.Parameter(torch.zeros(T, dtype=self.R.dtype, device=self.R.device)),
         )
 
     # ------------------------------------------------------------------
@@ -411,9 +411,25 @@ class FixedCorrelationTaskKernel(gpytorch.kernels.Kernel):
         Convert float task-feature values (linspace convention) to
         integer task indices 0 … T-1.
         """
-        i_float = i.squeeze(-1).float()
-        # linspace(0,1,T): task_int = round(val × (T-1))
-        return torch.round(i_float * (self.T - 1)).long().clamp(0, self.T - 1)
+        i_val = i.squeeze(-1)
+
+        if torch.is_floating_point(i_val):
+            i_float = i_val.float()
+
+            # Accept direct integer-like task ids in [0, T-1].
+            is_int_like = torch.all(
+                (i_float - torch.round(i_float)).abs() < 1e-6
+            )
+            in_task_range = torch.all((i_float >= -1e-6) & (i_float <= (self.T - 1) + 1e-6))
+            if bool(is_int_like and in_task_range):
+                idx = torch.round(i_float).long()
+            else:
+                # linspace(0,1,T): task_int = round(val × (T-1))
+                idx = torch.round(i_float * (self.T - 1)).long()
+        else:
+            idx = i_val.long()
+
+        return idx.clamp(0, self.T - 1)
 
     # ------------------------------------------------------------------
 
@@ -421,6 +437,8 @@ class FixedCorrelationTaskKernel(gpytorch.kernels.Kernel):
         self,
         i1: torch.Tensor,
         i2: torch.Tensor,
+        diag: bool = False,
+        last_dim_is_batch: bool = False,
         **params,
     ) -> torch.Tensor:
         """
@@ -429,9 +447,21 @@ class FixedCorrelationTaskKernel(gpytorch.kernels.Kernel):
         i1 : (..., n1, 1)  task feature values (float or int)
         i2 : (..., n2, 1)  task feature values (float or int)
         """
-        B     = self.covariance_matrix             # (T, T)
+        if last_dim_is_batch:
+            raise RuntimeError("FixedCorrelationTaskKernel does not support last_dim_is_batch=True.")
+        if i1.size(-1) != 1 or i2.size(-1) != 1:
+            raise RuntimeError(
+                f"FixedCorrelationTaskKernel expects task-feature tensors with last dim 1, "
+                f"got i1 shape {tuple(i1.shape)} and i2 shape {tuple(i2.shape)}. "
+                f"This usually means active_dims was not set to the task feature."
+            )
+
+        B = self.covariance_matrix                 # (T, T)
         i1_idx = self._to_int_index(i1)            # (..., n1)
         i2_idx = self._to_int_index(i2)            # (..., n2)
+
+        if diag:
+            return B[i1_idx, i2_idx]
+
         # Advanced indexing: res[..., k, l] = B[i1[k], i2[l]]
-        res = B[i1_idx.unsqueeze(-1), i2_idx.unsqueeze(-2)]   # (..., n1, n2)
-        return res
+        return B[i1_idx.unsqueeze(-1), i2_idx.unsqueeze(-2)]  # (..., n1, n2)
