@@ -24,6 +24,8 @@ from ddmtolab.Algorithms.STSO.BO_TFM_GPEmbed import BO_TFM_GPEmbed
 from ddmtolab.Algorithms.STSO.BO_TFM_ResGP import BO_TFM_ResGP
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Asym import MTBO_TFM_Covar_Asym
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls import MTBO_TFM_Covar_Cls
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_B import MTBO_TFM_Uniform_B
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_B import MTBO_TFM_Elite_B
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
 # =============================================================================
@@ -46,7 +48,8 @@ ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'MTBO-TFM-Uni-Distill', 'MTBO-TFM-Elite-Distill',
               'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA',
               'BO-TFM-GPEmbed', 'BO-TFM-ResGP',
-              'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls']
+              'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls',
+              'MTBO-TFM-Uni-B', 'MTBO-TFM-Elite-B']
 
 benchmark = CEC17MTSO()
 PROBLEMS = {
@@ -158,6 +161,17 @@ for prob_name, prob_fn in PROBLEMS.items():
                             save_path=data_path('MTBO-TFM-Covar-Cls'),
                             name=run_name('MTBO-TFM-Covar-Cls'),
                             disable_tqdm=False).optimize()
+
+        # ---------- Mean-only acquisition variants (no LCB uncertainty term) ----------
+        MTBO_TFM_Uniform_B(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
+                           n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES,
+                           save_path=data_path('MTBO-TFM-Uni-B'),
+                           name=run_name('MTBO-TFM-Uni-B')).optimize()
+
+        MTBO_TFM_Elite_B(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
+                         n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES,
+                         save_path=data_path('MTBO-TFM-Elite-B'),
+                         name=run_name('MTBO-TFM-Elite-B')).optimize()
 
 # =============================================================================
 # Results Analysis (per problem)
