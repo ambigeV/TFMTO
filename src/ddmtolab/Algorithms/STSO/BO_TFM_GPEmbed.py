@@ -120,7 +120,7 @@ class BO_TFM_GPEmbed:
         embed_pca_dim: int = 8,
         gp_n_iter: int = 100,
         cache_max_iters: int = 10,
-        cache_lambda: float = 0.5,
+        cache_lambda: float = 1.0,
         mlp_hidden: int = 128,
         mlp_depth: int = 3,
         mlp_epochs: int = 300,

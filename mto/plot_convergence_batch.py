@@ -45,12 +45,17 @@ ALGO_ORDER = [
     'MTBO-TFM-Uni-OH-CMA', 'MTBO-TFM-Elite-OH-CMA',
 ]
 
-COLORS = [
-    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
-    '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5',
-]
 MARKERS = ['o', 's', '^', 'D', 'v', 'P', 'X', '*', 'h', '<', '>', 'p', 'H', '8', '+']
+
+
+def make_color_list(n: int) -> list:
+    """Return n visually distinct colors using tab20 for ≤20, then hsv for more."""
+    import matplotlib.cm as cm
+    if n <= 20:
+        cmap = cm.get_cmap('tab20', n)
+    else:
+        cmap = cm.get_cmap('hsv', n)
+    return [cmap(i) for i in range(n)]
 
 
 # =============================================================================
@@ -183,10 +188,12 @@ def plot_problem(prob_name: str, data_root: Path, save_root: Path, algos: list):
 
     # --- colour / marker maps (stable across problems) ---
     all_algo_keys = list(algo_data.keys())
+    ordered_algos = ALGO_ORDER + [x for x in all_algo_keys if x not in ALGO_ORDER]
+    colors = make_color_list(len(ordered_algos))
     color_map  = {}
     marker_map = {}
-    for i, a in enumerate(ALGO_ORDER + [x for x in all_algo_keys if x not in ALGO_ORDER]):
-        color_map[a]  = COLORS[i  % len(COLORS)]
+    for i, a in enumerate(ordered_algos):
+        color_map[a]  = colors[i]
         marker_map[a] = MARKERS[i % len(MARKERS)]
 
     # --- figure ---
