@@ -1,14 +1,16 @@
 """
 MTBO-TFM-Covar-Asym: MTBO with directed TFN task transfer scores.
 
-This variant keeps the raw directed TFN matrix S where:
+This variant builds the raw directed TFN matrix S where:
     S[i, j] = exp(-NLL(i -> j) / tau)
 
-Because GP task covariance must be symmetric PSD, S is mapped to a valid
-correlation matrix R before kernel injection:
-    method='gram' (default): R_raw = S @ S^T
-    method='avg'           : R_raw = (S + S^T) / 2
-Then R is diagonal-normalized and PSD-projected.
+For each target task i, a separate symmetric PSD matrix R_i is built:
+    R_i[j, i] = R_i[i, j] = S[j -> i]   for j != i
+Source-source pairs (j, k both != i) use geometric mean:
+    R_i[j, k] = sqrt(S[j -> k] * S[k -> j])
+Then R_i is PSD-projected.
+
+So directionality is preserved in BO decisions via per-target kernels.
 """
 
 import time
@@ -29,8 +31,9 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
 from ddmtolab.Methods.Algo_Methods.bo_utils import mtbo_next_point
 from ddmtolab.Methods.Algo_Methods.tfm_task_covar_utils import (
     compute_task_similarity_matrix_directed,
-    directed_similarity_to_correlation,
+    make_psd,
     FixedCorrelationTaskKernel,
+    RhoRecorder,
 )
 
 warnings.filterwarnings('ignore')
@@ -95,6 +98,39 @@ def _inject_fixed_corr_kernel(model: MultiTaskGP, R_np: np.ndarray) -> None:
         )
 
 
+def _build_directed_corr_for_target(
+    S_np: np.ndarray,
+    target: int,
+    eps: float = 1e-4,
+) -> np.ndarray:
+    """
+    Build a target-specific symmetric PSD correlation matrix from directed S.
+
+    For a target task i:
+      - R[j, i] = R[i, j] = S[j -> i] for j != i
+      - R[k, k] = 1
+      - for source-source pairs (j, k both != i), use geometric mean
+        sqrt(S[j -> k] * S[k -> j]) as a neutral symmetric estimate.
+    """
+    T = S_np.shape[0]
+    R = np.eye(T, dtype=np.float64)
+
+    for j in range(T):
+        if j == target:
+            continue
+        R[j, target] = S_np[j, target]
+        R[target, j] = S_np[j, target]
+
+    for j in range(T):
+        for k in range(j + 1, T):
+            if j == target or k == target:
+                continue
+            R[j, k] = np.sqrt(S_np[j, k] * S_np[k, j])
+            R[k, j] = R[j, k]
+
+    return make_psd(R, eps=eps)
+
+
 class MTBO_TFM_Covar_Asym:
     """
     MTBO with directed TFN transfer matrix diagnostics + GP-valid mapping.
@@ -103,8 +139,8 @@ class MTBO_TFM_Covar_Asym:
     algorithm_information = {
         'n_tasks':            '[2, K]',
         'n_objectives':       1,
-        'surrogate':          'MultiTaskGP — ARD Matern-5/2 × FixedCorrelationTaskKernel',
-        'task_covar':         'Directed TFN NLL -> S, then S->R via gram/avg',
+        'surrogate':          'Per-target MultiTaskGP — ARD Matern-5/2 × FixedCorrelationTaskKernel',
+        'task_covar':         'Directed TFN NLL S[j->i] injected per target task i',
         'acquisition':        'LogEI (Adam, same as MTBO)',
     }
 
@@ -129,6 +165,7 @@ class MTBO_TFM_Covar_Asym:
         self.max_nfes         = max_nfes if max_nfes is not None else 100
         self.tau              = tau
         self.n_estimators     = n_estimators
+        # Kept only for backward compatibility with previous signatures.
         self.directed_to_corr = directed_to_corr
         self.adam_restarts    = adam_restarts
         self.adam_steps       = adam_steps
@@ -138,11 +175,7 @@ class MTBO_TFM_Covar_Asym:
         self.name             = name
         self.disable_tqdm     = disable_tqdm
 
-        # Diagnostics:
-        # - s_history stores directed S per BO step
-        # - rho_history stores mapped symmetric R per BO step
-        self.s_history: list = []
-        self.rho_history: list = []
+        self.rho_recorder = RhoRecorder(asymmetric=True)
 
     def optimize(self):
         start_time = time.time()
@@ -182,26 +215,26 @@ class MTBO_TFM_Covar_Asym:
                 device=device_str,
                 tau=self.tau,
             )
-            R_np = directed_similarity_to_correlation(
-                S_np,
-                method=self.directed_to_corr,
-            )
-            self.s_history.append(S_np.copy())
-            self.rho_history.append(R_np.copy())
 
             train_X, train_Y = _build_mtgp_data(decs, objs_neg_norm, dims, data_type)
-            mtgp = MultiTaskGP(
-                train_X=train_X,
-                train_Y=train_Y,
-                task_feature=-1,
-            ).to(data_type)
-
-            _inject_fixed_corr_kernel(mtgp, R_np)
-
-            mll = ExactMarginalLogLikelihood(mtgp.likelihood, mtgp)
-            fit_gpytorch_mll(mll)
+            step_rho = {}
 
             for i in active_tasks:
+                # Per-target correlation uses directed transfer into task i.
+                R_i = _build_directed_corr_for_target(S_np, target=i)
+                step_rho[i] = R_i
+
+                mtgp = MultiTaskGP(
+                    train_X=train_X,
+                    train_Y=train_Y,
+                    task_feature=-1,
+                ).to(data_type)
+
+                _inject_fixed_corr_kernel(mtgp, R_i)
+
+                mll = ExactMarginalLogLikelihood(mtgp.likelihood, mtgp)
+                fit_gpytorch_mll(mll)
+
                 candidate_np = mtbo_next_point(
                     mtgp=mtgp,
                     task_id=i,
@@ -222,13 +255,14 @@ class MTBO_TFM_Covar_Asym:
                     pbar.set_postfix_str(
                         f'task={i} best={objs[i].min():.4f} new={float(obj):.4f} '
                         f'S(0,1)={S_np[0,1]:.3f} S(1,0)={S_np[1,0]:.3f} '
-                        f'R(0,1)={R_np[0,1]:.3f}'
+                        f'R_i(0,1)={R_i[0,1]:.3f}'
                     )
                 else:
                     pbar.set_postfix_str(
                         f'task={i} best={objs[i].min():.4f} new={float(obj):.4f}'
                     )
                 pbar.update(1)
+            self.rho_recorder.record(S_np, step_rho)
 
         pbar.close()
         runtime = time.time() - start_time
@@ -240,4 +274,6 @@ class MTBO_TFM_Covar_Asym:
             save_path=self.save_path, filename=self.name,
             save_data=self.save_data,
         )
+        if self.save_data:
+            self.rho_recorder.save(self.save_path, self.name)
         return results

@@ -148,7 +148,8 @@ def compute_task_similarity_matrix(
     n_estimators: int = 1,
     device: str = 'cpu',
     tau: float = 1.0,
-) -> np.ndarray:
+    return_raw_s: bool = False,
+):
     """
     Compute the T×T task correlation matrix R from cross-predictive NLLs.
 
@@ -177,6 +178,7 @@ def compute_task_similarity_matrix(
     Returns
     -------
     R : np.ndarray (T, T)  — symmetric, diagonal-1, PSD correlation matrix
+    s : np.ndarray (T, T)  — raw directed similarity scores (only if return_raw_s=True)
     """
     T = len(decs)
     y_norm = [_normalize_y_01(o.ravel()) for o in objs]
@@ -203,7 +205,12 @@ def compute_task_similarity_matrix(
             R[i, j] = rho
             R[j, i] = rho
 
-    return make_psd(R)
+    R_psd = make_psd(R)
+    if return_raw_s:
+        s_full = s.copy()
+        np.fill_diagonal(s_full, 1.0)
+        return R_psd, s_full
+    return R_psd
 
 
 # =============================================================================
@@ -465,3 +472,120 @@ class FixedCorrelationTaskKernel(gpytorch.kernels.Kernel):
 
         # Advanced indexing: res[..., k, l] = B[i1[k], i2[l]]
         return B[i1_idx.unsqueeze(-1), i2_idx.unsqueeze(-2)]  # (..., n1, n2)
+
+
+# =============================================================================
+# 7.  ρ CSV logger  (T=2 only)
+# =============================================================================
+
+def write_rho_csv(
+    save_path: str,
+    name: str,
+    s_history: list,
+    rho_history: list,
+    asymmetric: bool = False,
+) -> None:
+    """
+    Write per-step task-similarity logging CSV for T=2 problems.
+
+    Columns
+    -------
+    step       : BO step index (0-based)
+    s_0to1    : S[0,1] — raw directed similarity task-0 → task-1
+    s_1to0    : S[1,0] — raw directed similarity task-1 → task-0
+    rho_task0 : ρ used in task-0's GP  (R_0[0,1] = S[1→0] for asym; avg for sym)
+    rho_task1 : ρ used in task-1's GP  (R_1[0,1] = S[0→1] for asym; avg for sym)
+
+    Parameters
+    ----------
+    s_history   : list of (T,T) raw directed S arrays
+    rho_history : list of (T,T) R arrays  [symmetric]
+                  OR list of {int: (T,T)} dicts  [asymmetric / per-target]
+    asymmetric  : True for per-target methods (Covar_Asym, Covar_Cls, MAP_Asym)
+    """
+    import csv
+    import os
+
+    if not s_history or s_history[0].shape[0] != 2:
+        return   # only log for T=2
+
+    os.makedirs(save_path, exist_ok=True)
+    csv_path = os.path.join(save_path, f'{name}_rho_log.csv')
+
+    with open(csv_path, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['step', 's_0to1', 's_1to0', 'rho_task0', 'rho_task1'])
+        for step, (S, R_entry) in enumerate(zip(s_history, rho_history)):
+            s01 = float(S[0, 1])
+            s10 = float(S[1, 0])
+            if asymmetric:
+                # rho_history entry is a dict {task_id: R_i}
+                rho_t0 = float(R_entry[0][0, 1]) if 0 in R_entry else float('nan')
+                rho_t1 = float(R_entry[1][0, 1]) if 1 in R_entry else float('nan')
+            else:
+                # rho_history entry is a single symmetric (T,T) array
+                rho_t0 = float(R_entry[0, 1])
+                rho_t1 = float(R_entry[0, 1])
+            writer.writerow([step,
+                             f'{s01:.6f}', f'{s10:.6f}',
+                             f'{rho_t0:.6f}', f'{rho_t1:.6f}'])
+
+
+# =============================================================================
+# 8.  RhoRecorder — per-iteration ρ accumulator
+# =============================================================================
+
+class RhoRecorder:
+    """
+    Accumulates per-step directed similarity S and task-correlation R matrices
+    during BO and saves them to a CSV at the end of the run.
+
+    Usage
+    -----
+    Instantiate once per algorithm run:
+
+        recorder = RhoRecorder(asymmetric=False)  # or True for per-target methods
+
+    Call ``record`` at the end of every BO step:
+
+        recorder.record(S_np, R_entry)
+
+    where
+      - S_np     : (T, T) directed raw similarity array for this step
+      - R_entry  : (T, T) numpy array      — for symmetric methods (Covar, MAP-Sym)
+                   OR {task_id: (T,T) array} — for per-target methods (Covar-Asym/Cls, MAP-Asym)
+
+    At the end of the run:
+
+        recorder.save(save_path, name)   # writes  <save_path>/<name>_rho_log.csv
+
+    Attributes
+    ----------
+    s_history   : list[(T, T)]             raw directed S per step (copies)
+    rho_history : list[(T, T)] or list[dict]  R entry per step (copies)
+    asymmetric  : bool  — mirrors the flag passed at construction
+    """
+
+    def __init__(self, asymmetric: bool = False):
+        self.asymmetric: bool = asymmetric
+        self.s_history:   list = []
+        self.rho_history: list = []
+
+    def record(self, S_np: np.ndarray, R_entry) -> None:
+        """Append one BO-step snapshot.
+
+        Parameters
+        ----------
+        S_np    : (T, T) raw directed similarity matrix for this step
+        R_entry : (T, T) array  [symmetric mode]
+                  OR {task_id: (T, T) array}  [asymmetric mode]
+        """
+        self.s_history.append(S_np.copy())
+        if isinstance(R_entry, dict):
+            self.rho_history.append({k: v.copy() for k, v in R_entry.items()})
+        else:
+            self.rho_history.append(np.array(R_entry))
+
+    def save(self, save_path: str, name: str) -> None:
+        """Write <save_path>/<name>_rho_log.csv (no-op if no data or T != 2)."""
+        write_rho_csv(save_path, name, self.s_history, self.rho_history, self.asymmetric)

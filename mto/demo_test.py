@@ -26,6 +26,8 @@ from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Asym import MTBO_TFM_Covar_Asym
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls import MTBO_TFM_Covar_Cls
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_B import MTBO_TFM_Uniform_B
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_B import MTBO_TFM_Elite_B
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Sym import MTBO_TFM_MAP_Sym
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Asym import MTBO_TFM_MAP_Asym
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
 # =============================================================================
@@ -49,7 +51,8 @@ ALGO_ORDER = ['GA', 'BO', 'BO-LCB', 'MTBO', 'BO-LCB-BCKT',
               'MTBO-TFM-Uni-CMA', 'MTBO-TFM-Elite-CMA',
               'BO-TFM-GPEmbed', 'BO-TFM-ResGP',
               'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls',
-              'MTBO-TFM-Uni-B', 'MTBO-TFM-Elite-B']
+              'MTBO-TFM-Uni-B', 'MTBO-TFM-Elite-B',
+              'MTBO-TFM-MAP-Sym', 'MTBO-TFM-MAP-Asym']
 
 benchmark = CEC17MTSO()
 PROBLEMS = {
@@ -172,6 +175,19 @@ for prob_name, prob_fn in PROBLEMS.items():
                          n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES,
                          save_path=data_path('MTBO-TFM-Elite-B'),
                          name=run_name('MTBO-TFM-Elite-B')).optimize()
+
+        # ---------- MAP-regularised variants (TFM Cls prior → decaying λ → MLL) ----------
+        MTBO_TFM_MAP_Sym(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
+                         n_estimators=N_ESTIMATORS,
+                         save_path=data_path('MTBO-TFM-MAP-Sym'),
+                         name=run_name('MTBO-TFM-MAP-Sym'),
+                         disable_tqdm=False).optimize()
+
+        MTBO_TFM_MAP_Asym(problem, n_initial=N_INITIAL, max_nfes=MAX_NFES,
+                          n_estimators=N_ESTIMATORS,
+                          save_path=data_path('MTBO-TFM-MAP-Asym'),
+                          name=run_name('MTBO-TFM-MAP-Asym'),
+                          disable_tqdm=False).optimize()
 
 # =============================================================================
 # Results Analysis (per problem)

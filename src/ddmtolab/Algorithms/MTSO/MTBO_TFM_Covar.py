@@ -72,6 +72,7 @@ from ddmtolab.Methods.Algo_Methods.bo_utils import mtbo_next_point
 from ddmtolab.Methods.Algo_Methods.tfm_task_covar_utils import (
     compute_task_similarity_matrix,
     FixedCorrelationTaskKernel,
+    write_rho_csv,
 )
 
 warnings.filterwarnings('ignore')
@@ -205,7 +206,8 @@ class MTBO_TFM_Covar:
         self.name          = name
         self.disable_tqdm  = disable_tqdm
 
-        # Diagnostic: stores (T, T) R matrix for each BO step
+        # Diagnostics: raw directed S and symmetrised R per BO step
+        self.s_history:   list = []
         self.rho_history: list = []
 
     # ------------------------------------------------------------------
@@ -252,12 +254,14 @@ class MTBO_TFM_Covar:
             # Step 2: compute task correlation matrix R via TabPFN NLL
             # T(T-1) TabPFN calls — for T=2: exactly 2 calls
             # ----------------------------------------------------------
-            R_np = compute_task_similarity_matrix(
+            R_np, s_np = compute_task_similarity_matrix(
                 decs, objs_norm,
                 n_estimators=self.n_estimators,
                 device=device_str,
                 tau=self.tau,
+                return_raw_s=True,
             )
+            self.s_history.append(s_np.copy())
             self.rho_history.append(R_np.copy())
 
             # ----------------------------------------------------------
@@ -323,4 +327,7 @@ class MTBO_TFM_Covar:
             save_path=self.save_path, filename=self.name,
             save_data=self.save_data,
         )
+        if self.save_data:
+            write_rho_csv(self.save_path, self.name,
+                          self.s_history, self.rho_history, asymmetric=False)
         return results

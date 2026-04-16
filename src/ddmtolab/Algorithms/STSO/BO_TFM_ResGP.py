@@ -65,7 +65,7 @@ n_candidates      LHS candidates queried for TabPFN predictions each iter (defau
 n_estimators      TabPFN ensemble size (default 1)
 gp_n_iter         Adam iterations for GP MLL maximisation (default 100)
 cache_max_iters   rolling window size in BO iterations (default 10)
-cache_lambda      exp-decay rate for cache weights (default 0.5)
+cache_lambda      exp-decay rate for cache weights (default 2.5)
 mlp_hidden        PredMLP hidden width (default 128)
 mlp_depth         PredMLP hidden layers (default 3)
 mlp_epochs        cold-start epochs (default 300)
@@ -132,7 +132,7 @@ class BO_TFM_ResGP:
         n_estimators: int = 1,
         gp_n_iter: int = 100,
         cache_max_iters: int = 10,
-        cache_lambda: float = 1.0,
+        cache_lambda: float = 2.5,
         mlp_hidden: int = 128,
         mlp_depth: int = 3,
         mlp_epochs: int = 300,

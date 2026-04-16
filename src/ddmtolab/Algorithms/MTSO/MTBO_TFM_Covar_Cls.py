@@ -64,6 +64,7 @@ from ddmtolab.Methods.Algo_Methods.tfm_task_covar_utils import (
     compute_task_similarity_matrix_directed_classification,
     make_psd,
     FixedCorrelationTaskKernel,
+    RhoRecorder,
 )
 
 warnings.filterwarnings('ignore')
@@ -219,9 +220,7 @@ class MTBO_TFM_Covar_Cls:
         self.name             = name
         self.disable_tqdm     = disable_tqdm
 
-        # Diagnostics
-        self.s_history: list   = []   # directed S per step
-        self.rho_history: list = []   # per-target R matrices per step
+        self.rho_recorder = RhoRecorder(asymmetric=True)
 
     def optimize(self):
         start_time = time.time()
@@ -263,7 +262,6 @@ class MTBO_TFM_Covar_Cls:
                 device=device_str,
                 tau=self.tau,
             )
-            self.s_history.append(S_np.copy())
 
             step_rho = {}
             train_X, train_Y = _build_mtgp_data(decs, objs_neg_norm, dims, data_type)
@@ -313,7 +311,7 @@ class MTBO_TFM_Covar_Cls:
                     )
                 pbar.update(1)
 
-            self.rho_history.append(step_rho)
+            self.rho_recorder.record(S_np, step_rho)
 
         pbar.close()
         runtime = time.time() - start_time
@@ -325,4 +323,6 @@ class MTBO_TFM_Covar_Cls:
             save_path=self.save_path, filename=self.name,
             save_data=self.save_data,
         )
+        if self.save_data:
+            self.rho_recorder.save(self.save_path, self.name)
         return results
