@@ -11,13 +11,12 @@ Output mirrors plot_convergence.py:
     one subplot per task, all algorithms overlaid, mean ± STD_SCALE*std shading.
 
 Usage:
-    python plot_convergence_batch.py               # all discovered problems
-    python plot_convergence_batch.py P1            # single problem
-    python plot_convergence_batch.py P1 P3 P5      # subset
+    python plot_convergence_batch.py                        # all problems, all methods
+    python plot_convergence_batch.py -m BO MTBO             # filter to specific methods
+    python plot_convergence_batch.py -m BO-TFM MTBO-TFM-Uni MTBO-TFM-Elite
 """
 
-import os
-import sys
+import argparse
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,6 +29,10 @@ from pathlib import Path
 
 DATA_ROOT  = './Data/distill_demo'
 SAVE_ROOT  = './Results_Batch_Demo'
+
+# Problems to plot. Set to None to auto-discover all problems from pkl files,
+# or list specific names e.g. ['P1', 'P3', 'P5'].
+PROBLEMS: list | None = None
 STD_SCALE  = 0.5
 FIG_FORMAT = 'png'
 DPI        = 150
@@ -262,34 +265,54 @@ def plot_problem(prob_name: str, data_root: Path, save_root: Path, algos: list):
 # =============================================================================
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Plot convergence curves from batch data.'
+    )
+    parser.add_argument(
+        '-m', '--methods',
+        nargs='+',
+        metavar='METHOD',
+        default=None,
+        help='Methods/algorithms to include (e.g. -m BO MTBO BO-TFM). '
+             'Defaults to all algorithm folders found on disk.',
+    )
+    args = parser.parse_args()
+
     data_root = Path(DATA_ROOT)
     save_root = Path(SAVE_ROOT)
 
     if not data_root.exists():
         print(f'ERROR: Data_Batch folder not found: {data_root.resolve()}')
-        sys.exit(1)
+        raise SystemExit(1)
 
     # Collect algo folders present on disk (preserve ALGO_ORDER, append extras)
     present_algos = {d.name for d in data_root.iterdir() if d.is_dir()}
-    algos = [a for a in ALGO_ORDER if a in present_algos] + \
-            sorted(present_algos - set(ALGO_ORDER))
+
+    if args.methods is not None:
+        missing = [m for m in args.methods if m not in present_algos]
+        if missing:
+            print(f'[WARN] Requested methods not found on disk: {missing}')
+        algos = [a for a in args.methods if a in present_algos]
+    else:
+        algos = [a for a in ALGO_ORDER if a in present_algos] + \
+                sorted(present_algos - set(ALGO_ORDER))
 
     if not algos:
         print(f'ERROR: No algorithm folders found in {data_root.resolve()}')
-        sys.exit(1)
+        raise SystemExit(1)
 
-    # Problems: from CLI args or auto-discovered from file names
-    if len(sys.argv) > 1:
-        problems = sys.argv[1:]
+    # Problems: from script-level config or auto-discovered from file names
+    if PROBLEMS is not None:
+        problems = PROBLEMS
     else:
         problems = discover_problems(data_root, algos)
         if not problems:
             print('ERROR: Could not discover any problem names from pkl files.')
-            sys.exit(1)
+            raise SystemExit(1)
         print(f'Auto-discovered problems: {problems}')
 
-    print(f'Algorithms found: {algos}')
-    print(f'Problems to plot: {problems}\n')
+    print(f'Algorithms to plot: {algos}')
+    print(f'Problems to plot:   {problems}\n')
 
     for prob in problems:
         plot_problem(prob, data_root, save_root, algos)
