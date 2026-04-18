@@ -44,6 +44,7 @@ import numpy as np
 import torch
 import gpytorch
 from botorch.models import MultiTaskGP
+from botorch.fit import fit_gpytorch_mll
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from tqdm import tqdm
 
@@ -168,14 +169,34 @@ def _map_fit(
     def closure():
         optimizer.zero_grad()
         output = model(*model.train_inputs)
-        loss = -mll(output, model.train_targets)
+        try:
+            loss = -mll(output, model.train_targets, *model.train_inputs)
+        except ValueError:
+            # HadamardGaussianLikelihood noise is not softplus-reparameterised, so
+            # LBFGS can drive raw_noise negative during line search, tripping the
+            # LogNormalPrior support check.  Return a barrier penalty that pushes
+            # noise back into the valid region (>1e-4) with a meaningful gradient.
+            noise_val = model.likelihood.noise_covar.raw_noise
+            penalty = (torch.relu(1e-4 - noise_val) * 1e6).sum()
+            penalty.backward()
+            return penalty
+        except RuntimeError:
+            # Cholesky failure (NotPSDError): covariance is ill-conditioned at
+            # this search point.  Return a large constant so LBFGS backtracks.
+            return torch.tensor(1e10, dtype=B_prior.dtype)
         if lambda_reg > 1e-10:
             B_curr = _get_b_matrix(model)
             loss = loss + lambda_reg * ((B_curr - B_prior) ** 2).sum()
         loss.backward()
         return loss
 
-    optimizer.step(closure)
+    try:
+        optimizer.step(closure)
+    except Exception:
+        # LBFGS could not converge (all trial points numerically invalid).
+        # Fall back to standard MTBO MLL fitting without MAP regularisation.
+        model.train()
+        fit_gpytorch_mll(mll)
     model.eval()
 
 
