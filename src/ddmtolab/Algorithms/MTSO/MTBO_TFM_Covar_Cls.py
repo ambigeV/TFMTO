@@ -13,7 +13,9 @@ Workflow per BO iteration:
        - Query classifier on X_t2 -> P(good | X_t2).
        - Binary CE of t2's actual labels under these probabilities:
              CE(t1->t2) = -mean [ y_t2 * log P(1|x) + (1-y_t2) * log P(0|x) ]
-       - S[t1, t2] = exp(-CE(t1->t2) / tau)  in (0, 1]  (CE >= 0 always)
+       - delta      = clip(log(K) - CE(t1->t2), 0, log(K))
+         S[t1, t2]  = (delta / log(K)) ** (1/tau)    ∈ [0, 1]
+         S = 0 at CE = log(K) (random = independent);  S = 1 at CE = 0 (perfect)
 
 3) For each TARGET task i, build a SEPARATE MultiTaskGP whose task covariance
    uses the DIRECTED score into task i:
@@ -186,7 +188,7 @@ class MTBO_TFM_Covar_Cls:
         'n_tasks':      '[2, K]',
         'n_objectives': 1,
         'surrogate':    'Per-target MultiTaskGP — ARD Matern-5/2 × FixedCorrelationTaskKernel',
-        'task_covar':   'Directed binary CE S[j->i] injected per target task i',
+        'task_covar':   'Directed CE → S=(clip(logK-CE,0,logK)/logK)^(1/τ) → B_i per target i',
         'acquisition':  'LogEI (Adam, same as MTBO)',
     }
 
@@ -254,7 +256,7 @@ class MTBO_TFM_Covar_Cls:
             objs_norm, _, _ = normalize(objs, axis=0, method='minmax')
             objs_neg_norm   = [-o for o in objs_norm]
 
-            # Binary median split (n_classes=2): directed S[j->i] in (0,1]
+            # Directed CE similarity: S=0 at independence, S=1 at perfect transfer
             S_np = compute_task_similarity_matrix_directed_classification(
                 decs, objs_norm,
                 n_classes=self.n_classes,

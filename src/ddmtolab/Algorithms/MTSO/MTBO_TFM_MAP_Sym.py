@@ -4,7 +4,10 @@ MTBO-TFM-MAP-Sym: MAP-regularised MTBO with symmetric Cls-derived B prior.
 Algorithm per BO step
 ---------------------
 1.  Compute directed similarity S via TabPFN binary classification (Cls):
-        S[t1, t2] = exp(-CE(t1 -> t2) / tau)
+        delta      = clip(log(K) - CE(t1 -> t2), 0, log(K))
+        S[t1, t2]  = (delta / log(K)) ** (1/tau)    ∈ [0, 1]
+    S = 0 when CE = log(K) (random classifier = independent tasks, ρ = 0).
+    S = 1 when CE = 0 (perfect classification = full transfer, ρ = 1).
     Symmetrise:  R = make_psd( (S + S^T) / 2 )
 
 2.  Build standard MultiTaskGP (unfitted).
@@ -32,7 +35,8 @@ Parameters
 lambda_0       initial regularisation weight  (default 5.0)
 lambda_decay   exponential decay rate per BO step  (default 0.05)
                at step k:  λ = lambda_0 * exp(-k * lambda_decay)
-tau            temperature for Cls similarity  (default 1.0)
+tau            sharpness of CE→S mapping  (default 1.0)
+               τ=1 gives a linear map; τ<1 pushes scores toward 1; τ>1 toward 0
 n_classes      number of quantile bins for classification  (default 2)
 n_estimators   TabPFN ensemble size  (default 1)
 lbfgs_iter     L-BFGS iterations per BO step  (default 100)
@@ -205,7 +209,7 @@ class MTBO_TFM_MAP_Sym:
         'n_tasks':      '[2, K]',
         'n_objectives': 1,
         'surrogate':    'MultiTaskGP — ARD Matern-5/2 × IndexKernel (MAP)',
-        'task_prior':   'Symmetric Cls CE → R = (S + S^T)/2 → B_prior',
+        'task_prior':   'Symmetric Cls CE → S=(clip(log K-CE,0,logK)/logK)^(1/τ) → R=(S+Sᵀ)/2 → B_prior',
         'acquisition':  'LogEI (Adam, same as MTBO)',
     }
 

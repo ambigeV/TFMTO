@@ -8,14 +8,26 @@ with a TabPFN-derived task correlation matrix R that is fixed during MLL fitting
 
     B_tt' = σ_t · R_tt' · σ_t'          R fixed,  σ_t² learnable by MLL
 
-R is computed per BO step via cross-predictive NLL:
+R is computed per BO step via normalised cross-predictive NLL:
 
-    NLL(t1 → t2) = -log p_TFM(y_t2 | X_t2,  context=(X_t1, y_t1))
-                 ≈ Gaussian NLL using TabPFN's predicted (mean, std)
+    NLL(t1 → t2)  = -log p_TFM(y_t2 | X_t2,  context=(X_t1, y_t1))
+                  ≈ Gaussian NLL using TabPFN's predicted (mean, std)
+    NLL_ref(t2)   = marginal NLL of y_t2  [independence baseline]
+    reduction     = max(0,  NLL_ref(t2) − NLL(t1→t2))
+    s(t1 → t2)   = 1 − exp(−reduction / τ)   ∈ [0, 1)
+    ρ_t1t2        = (s(t1→t2) + s(t2→t1)) / 2
+    R[i, i]       = 1   (diagonal fixed)
 
-    s(t1 → t2)  = exp(-NLL(t1→t2) / τ)        τ: temperature
-    ρ_t1t2      = (s(t1→t2) + s(t2→t1)) / 2   symmetrised → [0, 1]
-    R[i, i]     = 1   (diagonal fixed)
+    s = 0 when t1 provides no information beyond the marginal of y_t2 (independence).
+    s → 1 as NLL → −∞ (perfect cross-prediction).
+
+For CE-based variants:
+    CE(t1 → t2)   = cross-entropy of t2 quantile labels under classifier from t1
+    delta         = clip(log(K) − CE, 0, log(K))
+    s(t1 → t2)   = (delta / log(K))^(1/τ)   ∈ [0, 1]
+
+    s = 0 when CE = log(K) (random classifier = independence).
+    s = 1 when CE = 0 (perfect classification).
 
 Public API
 ----------
@@ -126,6 +138,24 @@ def _normalize_y_01(y: np.ndarray) -> np.ndarray:
     return (y - lo) / rng if rng > 1e-12 else np.zeros_like(y)
 
 
+def _marginal_nll(y: np.ndarray) -> float:
+    """
+    Gaussian NLL of y under its own empirical mean and std.
+
+    This is the independence baseline: the NLL achievable by a predictor that
+    knows nothing about the input x — only the marginal distribution of y.
+    Used to normalize cross-predictive NLL so that s=0 when t1 provides no
+    information about t2 (NLL_cross == NLL_marginal).
+
+    Returns log(σ) + 0.5*(1 + log(2π))  =  0.5*log(2πe·σ²)
+    """
+    sigma = float(np.std(y))
+    sigma = max(sigma, 1e-6)
+    mu = float(np.mean(y))
+    nll = float(np.mean(np.log(sigma) + (y - mu) ** 2 / (2.0 * sigma ** 2) + 0.5 * _LOG2PI))
+    return nll
+
+
 def _rank_quantile_labels(y: np.ndarray, n_classes: int = 3) -> np.ndarray:
     """
     Build ordinal class labels by rank-quantile binning.
@@ -147,17 +177,22 @@ def compute_task_similarity_matrix(
     *,
     n_estimators: int = 1,
     device: str = 'cpu',
-    tau: float = 1.0,
+    tau: float = 0.5,
     return_raw_s: bool = False,
 ):
     """
     Compute the T×T task correlation matrix R from cross-predictive NLLs.
 
     For each ordered pair (t1, t2)  t1 ≠ t2:
-        NLL[t1, t2] = tabpfn_cross_pred_nll(
-                          X_t1, y_t1_norm,
-                          X_t2, y_t2_norm)
-        s[t1, t2]   = exp(-NLL[t1, t2] / τ)
+        NLL[t1, t2]   = tabpfn_cross_pred_nll(X_t1, y_t1_norm, X_t2, y_t2_norm)
+        NLL_ref[t2]   = _marginal_nll(y_t2_norm)   [independence baseline]
+        reduction     = max(0, NLL_ref[t2] - NLL[t1,t2])
+        s[t1, t2]     = 1 - exp(-reduction / τ)    ∈ [0, 1)
+
+    Zero-point:  s = 0  when t1 predicts t2 no better than the marginal of y_t2
+                         (i.e. tasks are independent → ρ = 0)
+    Upper bound: s → 1  as NLL → -∞ (perfect cross-prediction → ρ → 1)
+    τ controls the NLL-improvement scale (in nats) that maps to s ≈ 0.63.
 
     Symmetrised correlation:
         R[i, j] = (s[i,j] + s[j,i]) / 2      for i ≠ j
@@ -169,19 +204,20 @@ def compute_task_similarity_matrix(
     ----------
     decs         : list of (n_t, d_t) arrays — decision variables per task
     objs         : list of (n_t, 1) or (n_t,) arrays — objectives per task
-                   (passed as-is; normalised internally)
     n_estimators : TabPFN ensemble size (1 = fast)
     device       : TabPFN device string
-    tau          : temperature for similarity conversion
-                   small τ → sharp discrimination;  large τ → flat/uniform
+    tau          : NLL-improvement scale in nats (default 0.5)
+                   smaller τ → sharper; larger τ → flatter
 
     Returns
     -------
     R : np.ndarray (T, T)  — symmetric, diagonal-1, PSD correlation matrix
     s : np.ndarray (T, T)  — raw directed similarity scores (only if return_raw_s=True)
     """
+    tau = max(tau, 1e-8)
     T = len(decs)
     y_norm = [_normalize_y_01(o.ravel()) for o in objs]
+    nll_ref = [_marginal_nll(y_norm[t]) for t in range(T)]
 
     # T×T raw similarity scores (diagonal unused)
     s = np.zeros((T, T), dtype=np.float64)
@@ -195,7 +231,8 @@ def compute_task_similarity_matrix(
                 n_estimators=n_estimators,
                 device=device,
             )
-            s[t1, t2] = np.exp(-nll / tau)
+            reduction = max(0.0, nll_ref[t2] - nll)
+            s[t1, t2] = 1.0 - np.exp(-reduction / tau)
 
     # Symmetrise
     R = np.eye(T, dtype=np.float64)
@@ -223,22 +260,29 @@ def compute_task_similarity_matrix_directed(
     *,
     n_estimators: int = 1,
     device: str = 'cpu',
-    tau: float = 1.0,
+    tau: float = 0.5,
 ) -> np.ndarray:
     """
     Compute the directed/asymmetric T×T TFN similarity matrix S.
 
     For each ordered pair (t1, t2):
-        S[t1, t2] = exp(-NLL(t1->t2) / tau),  t1 != t2
-        S[t,  t]  = 1
+        NLL_ref[t2]  = _marginal_nll(y_t2_norm)
+        reduction    = max(0, NLL_ref[t2] - NLL(t1->t2))
+        S[t1, t2]    = 1 - exp(-reduction / τ)    ∈ [0, 1)
+        S[t,  t]     = 1
+
+    s = 0 when t1 predicts t2 no better than the marginal (independence).
+    τ is the NLL-improvement scale in nats that maps to s ≈ 0.63.
 
     Notes
     -----
-    - S is generally asymmetric because t1->t2 and t2->t1 can differ.
+    - S is generally asymmetric because NLL(t1->t2) ≠ NLL(t2->t1).
     - This matrix itself is NOT directly usable as a GP covariance matrix.
     """
+    tau = max(tau, 1e-8)
     T = len(decs)
     y_norm = [_normalize_y_01(o.ravel()) for o in objs]
+    nll_ref = [_marginal_nll(y_norm[t]) for t in range(T)]
 
     S = np.eye(T, dtype=np.float64)
     for t1 in range(T):
@@ -251,7 +295,8 @@ def compute_task_similarity_matrix_directed(
                 n_estimators=n_estimators,
                 device=device,
             )
-            S[t1, t2] = np.exp(-nll / tau)
+            reduction = max(0.0, nll_ref[t2] - nll)
+            S[t1, t2] = 1.0 - np.exp(-reduction / tau)
     return S
 
 
@@ -272,9 +317,16 @@ def compute_task_similarity_matrix_directed_classification(
     1) Convert each task objective to ordinal class labels via rank-quantile bins.
     2) For each ordered pair (t1, t2):
          CE[t1, t2] = cross-entropy of y_t2_cls predicted by classifier fit on t1
-         S[t1, t2]  = exp(-CE[t1, t2] / tau)
+         delta      = clip(log(K) - CE[t1,t2], 0, log(K))
+         S[t1, t2]  = (delta / log(K)) ** (1/τ)    ∈ [0, 1]
     3) Set diagonal to 1.
+
+    Zero-point:  S = 0 when CE = log(K) (random classifier = independence).
+    Upper bound: S = 1 when CE = 0 (perfect classification = full transfer).
+    τ controls sharpness: τ=1 is linear; τ<1 compresses toward 1; τ>1 toward 0.
     """
+    tau = max(tau, 1e-8)
+    log_k = np.log(n_classes)
     T = len(decs)
     cls = [_rank_quantile_labels(o.ravel(), n_classes=n_classes) for o in objs]
 
@@ -289,7 +341,8 @@ def compute_task_similarity_matrix_directed_classification(
                 n_estimators=n_estimators,
                 device=device,
             )
-            S[t1, t2] = np.exp(-ce / tau)
+            delta = float(np.clip(log_k - ce, 0.0, log_k))
+            S[t1, t2] = (delta / log_k) ** (1.0 / tau)
     return S
 
 

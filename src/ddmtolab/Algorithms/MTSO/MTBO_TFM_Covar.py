@@ -10,8 +10,11 @@ unreliable — MLL may converge to degenerate solutions (all-correlated or all-i
 This method replaces the IndexKernel with a data-driven task correlation matrix R
 derived from TabPFN's cross-predictive NLL:
 
-    NLL(t1 → t2) ≈ how well task t1's data predicts task t2's values (one TabPFN call)
-    ρ_t1t2       = symmetrised exp(-NLL / τ)  ∈ (0, 1]
+    NLL(t1 → t2)  ≈ how well task t1's data predicts task t2's values (one TabPFN call)
+    NLL_ref(t2)   = marginal NLL of y_t2  (independence baseline)
+    reduction     = max(0, NLL_ref(t2) - NLL(t1→t2))
+    s(t1→t2)      = 1 - exp(-reduction / τ)    ∈ [0, 1)
+    ρ_t1t2        = symmetrised s  ∈ [0, 1)    (0 = independent, 1 = identical)
 
 The MultiTaskGP kernel becomes:
     k_MT((x,t),(x',t')) = k_ARD(x, x') × [diag(σ) · R · diag(σ)]_tt'
@@ -44,8 +47,8 @@ Parameters
 ----------
 n_initial        initial LHS samples per task
 max_nfes         total function evaluations (including initial samples)
-tau              temperature for NLL → similarity conversion  (default 1.0)
-                 smaller → sharper discrimination between tasks
+tau              NLL-improvement scale in nats for s = 1−exp(−reduction/τ)  (default 0.5)
+                 τ=0.5: a 0.5-nat improvement → s≈0.63; smaller τ → sharper
 n_estimators     TabPFN ensemble size for NLL computation  (default 1)
 adam_restarts    Adam restarts for LogEI acquisition  (same as MTBO default: 5)
 adam_steps       Adam steps per restart               (same as MTBO default: 200)
@@ -183,7 +186,7 @@ class MTBO_TFM_Covar:
         problem,
         n_initial: int = None,
         max_nfes: int = None,
-        tau: float = 1.0,
+        tau: float = 0.5,
         n_estimators: int = 1,
         adam_restarts: int = 5,
         adam_steps: int = 200,

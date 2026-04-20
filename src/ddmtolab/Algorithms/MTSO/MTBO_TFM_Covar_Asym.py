@@ -2,7 +2,12 @@
 MTBO-TFM-Covar-Asym: MTBO with directed TFN task transfer scores.
 
 This variant builds the raw directed TFN matrix S where:
-    S[i, j] = exp(-NLL(i -> j) / tau)
+    NLL_ref[j]   = marginal NLL of y_j  (independence baseline)
+    reduction    = max(0, NLL_ref[j] - NLL(i -> j))
+    S[i, j]      = 1 - exp(-reduction / tau)    ∈ [0, 1)
+
+S = 0 when i predicts j no better than the marginal of y_j (independent).
+S → 1 as NLL → -∞ (perfect cross-prediction).
 
 For each target task i, a separate symmetric PSD matrix R_i is built:
     R_i[j, i] = R_i[i, j] = S[j -> i]   for j != i
@@ -149,7 +154,7 @@ class MTBO_TFM_Covar_Asym:
         problem,
         n_initial: int = None,
         max_nfes: int = None,
-        tau: float = 1.0,
+        tau: float = 0.5,
         n_estimators: int = 1,
         directed_to_corr: str = 'gram',
         adam_restarts: int = 5,
