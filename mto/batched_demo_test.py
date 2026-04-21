@@ -28,6 +28,7 @@ from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
 from ddmtolab.Algorithms.STSO.BO_TFM_ResGP import BO_TFM_ResGP
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Asym import MTBO_TFM_Covar_Asym
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls import MTBO_TFM_Covar_Cls
+from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls_Ranked import MTBO_TFM_Covar_Cls_Ranked
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_B import MTBO_TFM_Uniform_B
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_B import MTBO_TFM_Elite_B
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Sym import MTBO_TFM_MAP_Sym
@@ -51,7 +52,7 @@ CMAES_MAXITER = 50
 MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 
 ALGO_ORDER = ['BO-TFM-ResGP',
-              'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls',
+              'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls', 'MTBO-TFM-Covar-Cls-Ranked',
               'MTBO-TFM-MAP-Sym', 'MTBO-TFM-MAP-Asym']
 
 DATA_PATH = './Data_CEC17MTSO_50D'
@@ -140,6 +141,10 @@ if __name__ == '__main__':
         n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO_TFM_Covar_Cls, 'MTBO-TFM-Covar-Cls',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+    batch_exp.add_algorithm(MTBO_TFM_Covar_Cls_Ranked, 'MTBO-TFM-Covar-Cls-Ranked',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
         n_estimators=N_ESTIMATORS, disable_tqdm=True)
 

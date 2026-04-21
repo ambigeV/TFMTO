@@ -127,6 +127,65 @@ def tabpfn_cross_pred_ce(
     return float((-np.log(np.clip(p, eps, 1.0))).mean())
 
 
+def tabpfn_cross_pred_ce_ranked(
+    X_ctx: np.ndarray,
+    y_ctx_cls: np.ndarray,
+    X_qry: np.ndarray,
+    y_qry_cls: np.ndarray,
+    y_qry_raw: np.ndarray,
+    *,
+    n_estimators: int = 1,
+    device: str = 'cpu',
+    eps: float = 1e-8,
+) -> float:
+    """
+    Rank-weighted cross-entropy of query labels under a TabPFN classifier.
+
+    Each query point i is weighted by its quality rank within t2 (minimisation):
+        quality_rank[i] = n − argsort(argsort(y_qry_raw))[i]
+                        → n  for the best solution (lowest y)
+                        → 1  for the worst  solution (highest y)
+        w[i]            = quality_rank[i] / sum(quality_ranks)
+        CE_ranked       = −Σ_i  w[i] · log p(correct_class | x_i)
+
+    Zero-point is preserved: a random classifier gives P(k|x) = 1/K uniformly,
+    so CE_ranked = log(K) · Σw_i = log(K) for any normalised weight vector.
+    The existing s-formula (delta/log(K))^(1/τ) therefore maps 0→0 and 1→1
+    without modification — no scale correction needed.
+
+    Parameters
+    ----------
+    X_ctx, y_ctx_cls : context task (t1) features and quantile-bin labels
+    X_qry, y_qry_cls : query task (t2) features and quantile-bin labels
+    y_qry_raw        : raw (or min-max normalised) objective values for t2,
+                       used only for computing quality ranks
+    """
+    from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict_proba
+
+    proba = tabpfn_predict_proba(
+        X_ctx, y_ctx_cls, X_qry,
+        n_estimators=n_estimators,
+        device=device,
+    )
+
+    yq = y_qry_cls.astype(int).ravel()
+    n  = yq.shape[0]
+
+    p = np.full(n, eps, dtype=np.float64)
+    valid = (yq >= 0) & (yq < proba.shape[1])
+    if np.any(valid):
+        rows = np.arange(n)[valid]
+        p[rows] = proba[rows, yq[valid]]
+    log_losses = -np.log(np.clip(p, eps, 1.0))
+
+    # quality_rank: n = best (lowest y in minimisation), 1 = worst
+    ranks_asc     = np.argsort(np.argsort(y_qry_raw.ravel()))
+    quality_ranks = (n - ranks_asc).astype(np.float64)
+    weights       = quality_ranks / quality_ranks.sum()
+
+    return float(np.dot(weights, log_losses))
+
+
 # =============================================================================
 # 2.  Task similarity matrix
 # =============================================================================
@@ -136,6 +195,24 @@ def _normalize_y_01(y: np.ndarray) -> np.ndarray:
     lo, hi = y.min(), y.max()
     rng = hi - lo
     return (y - lo) / rng if rng > 1e-12 else np.zeros_like(y)
+
+
+def _pad_decs_to_max_dim(decs: list) -> list:
+    """Zero-pad each task's X to the maximum dimension across tasks.
+
+    Handles heterogeneous-dim problems (e.g. CEC17 P6: T1=50D, T2=25D).
+    TabPFN requires context and query to share the same feature count; padding
+    with zeros is safe because the extra columns carry no signal and TabPFN
+    treats them as irrelevant features.
+    """
+    max_dim = max(x.shape[1] for x in decs)
+    if all(x.shape[1] == max_dim for x in decs):
+        return decs
+    padded = []
+    for x in decs:
+        gap = max_dim - x.shape[1]
+        padded.append(np.hstack([x, np.zeros((x.shape[0], gap))]) if gap > 0 else x)
+    return padded
 
 
 def _marginal_nll(y: np.ndarray) -> float:
@@ -216,6 +293,7 @@ def compute_task_similarity_matrix(
     """
     tau = max(tau, 1e-8)
     T = len(decs)
+    decs = _pad_decs_to_max_dim(decs)
     y_norm = [_normalize_y_01(o.ravel()) for o in objs]
     nll_ref = [_marginal_nll(y_norm[t]) for t in range(T)]
 
@@ -281,6 +359,7 @@ def compute_task_similarity_matrix_directed(
     """
     tau = max(tau, 1e-8)
     T = len(decs)
+    decs = _pad_decs_to_max_dim(decs)
     y_norm = [_normalize_y_01(o.ravel()) for o in objs]
     nll_ref = [_marginal_nll(y_norm[t]) for t in range(T)]
 
@@ -328,6 +407,7 @@ def compute_task_similarity_matrix_directed_classification(
     tau = max(tau, 1e-8)
     log_k = np.log(n_classes)
     T = len(decs)
+    decs = _pad_decs_to_max_dim(decs)
     cls = [_rank_quantile_labels(o.ravel(), n_classes=n_classes) for o in objs]
 
     S = np.eye(T, dtype=np.float64)
@@ -343,6 +423,54 @@ def compute_task_similarity_matrix_directed_classification(
             )
             delta = float(np.clip(log_k - ce, 0.0, log_k))
             S[t1, t2] = (delta / log_k) ** (1.0 / tau)
+    return S
+
+
+def compute_task_similarity_matrix_directed_classification_ranked(
+    decs: list,
+    objs: list,
+    *,
+    n_classes: int = 2,
+    n_estimators: int = 1,
+    device: str = 'cpu',
+    tau: float = 1.0,
+) -> np.ndarray:
+    """
+    Directed T×T similarity matrix using rank-weighted CE.
+
+    Identical to compute_task_similarity_matrix_directed_classification except
+    CE is computed via tabpfn_cross_pred_ce_ranked: each query point in t2 is
+    weighted by its quality rank (best solution = highest weight).
+
+    This focuses the transfer signal on whether t1's classifier identifies
+    t2's ELITE solutions, rather than averaging over all solutions equally.
+
+    The s-formula and zero-point are unchanged:
+        delta     = clip(log(K) − CE_ranked, 0, log(K))
+        S[t1,t2]  = (delta / log(K)) ** (1/τ)
+    s = 0 at independence (CE_ranked = log(K) for any random classifier),
+    s = 1 at perfection (CE_ranked = 0).
+    """
+    tau   = max(tau, 1e-8)
+    log_k = np.log(n_classes)
+    T     = len(decs)
+    decs  = _pad_decs_to_max_dim(decs)
+    cls   = [_rank_quantile_labels(o.ravel(), n_classes=n_classes) for o in objs]
+
+    S = np.eye(T, dtype=np.float64)
+    for t1 in range(T):
+        for t2 in range(T):
+            if t1 == t2:
+                continue
+            ce = tabpfn_cross_pred_ce_ranked(
+                decs[t1], cls[t1],
+                decs[t2], cls[t2],
+                objs[t2],
+                n_estimators=n_estimators,
+                device=device,
+            )
+            delta      = float(np.clip(log_k - ce, 0.0, log_k))
+            S[t1, t2]  = (delta / log_k) ** (1.0 / tau)
     return S
 
 
