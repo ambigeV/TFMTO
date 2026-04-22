@@ -60,6 +60,7 @@ from ddmtolab.Methods.Algo_Methods.algo_utils import (
 from ddmtolab.Methods.Algo_Methods.bo_utils import mtbo_next_point
 from ddmtolab.Methods.Algo_Methods.tfm_task_covar_utils import (
     compute_task_similarity_matrix_directed_classification,
+    compute_task_similarity_matrix_directed_classification_ranked,
     make_psd,
     RhoRecorder,
 )
@@ -227,6 +228,8 @@ class MTBO_TFM_MAP_Sym:
         adam_restarts: int = 5,
         adam_steps: int = 200,
         adam_lr: float = 1e-2,
+        use_ranked: bool = False,
+        rank_alpha: float = 5.0,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'MTBO-TFM-MAP-Sym',
@@ -244,6 +247,8 @@ class MTBO_TFM_MAP_Sym:
         self.adam_restarts = adam_restarts
         self.adam_steps    = adam_steps
         self.adam_lr       = adam_lr
+        self.use_ranked    = use_ranked
+        self.rank_alpha    = rank_alpha
         self.save_data     = save_data
         self.save_path     = save_path
         self.name          = name
@@ -299,13 +304,23 @@ class MTBO_TFM_MAP_Sym:
             # ----------------------------------------------------------
             # Step 2: compute symmetric R from Cls
             # ----------------------------------------------------------
-            S_np = compute_task_similarity_matrix_directed_classification(
-                decs, objs_norm,
-                n_classes=self.n_classes,
-                n_estimators=self.n_estimators,
-                device=device_str,
-                tau=self.tau,
-            )
+            if self.use_ranked:
+                S_np = compute_task_similarity_matrix_directed_classification_ranked(
+                    decs, objs_norm,
+                    n_classes=self.n_classes,
+                    n_estimators=self.n_estimators,
+                    device=device_str,
+                    tau=self.tau,
+                    alpha=self.rank_alpha,
+                )
+            else:
+                S_np = compute_task_similarity_matrix_directed_classification(
+                    decs, objs_norm,
+                    n_classes=self.n_classes,
+                    n_estimators=self.n_estimators,
+                    device=device_str,
+                    tau=self.tau,
+                )
             R_np = make_psd((S_np + S_np.T) / 2.0)
             self.rho_recorder.record(S_np, R_np)
 

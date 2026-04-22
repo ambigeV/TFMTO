@@ -15,6 +15,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
+from ddmtolab.Problems.MTSO.cec17_mtso_10d import CEC17MTSO_10D
 # from ddmtolab.Algorithms.STSO.GA import GA
 # from ddmtolab.Algorithms.STSO.BO import BO
 # from ddmtolab.Algorithms.STSO.BOLCB import BOLCB
@@ -40,6 +41,9 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 # Configuration
 # =============================================================================
 
+# --- Dimension switch: set to 10 for 10D benchmark, 50 for 50D benchmark ---
+DIM = 50
+
 N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
@@ -55,8 +59,8 @@ ALGO_ORDER = ['BO-TFM-ResGP',
               'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls', 'MTBO-TFM-Covar-Cls-Ranked',
               'MTBO-TFM-MAP-Sym', 'MTBO-TFM-MAP-Asym']
 
-DATA_PATH = './Data_CEC17MTSO_50D'
-RESULTS_PATH = './Results_CEC17MTSO_50D'
+DATA_PATH    = f'./Data_CEC17MTSO_{DIM}D'
+RESULTS_PATH = f'./Results_CEC17MTSO_{DIM}D'
 
 # =============================================================================
 # Entry point — required on macOS/Windows (spawn-based multiprocessing)
@@ -69,7 +73,7 @@ if __name__ == '__main__':
     batch_exp = BatchExperiment(base_path=DATA_PATH, clear_folder=False)
 
     # --- Problems ---
-    benchmark = CEC17MTSO()
+    benchmark = CEC17MTSO() if DIM == 50 else CEC17MTSO_10D()
     for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
         batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
 

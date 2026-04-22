@@ -134,6 +134,7 @@ def tabpfn_cross_pred_ce_ranked(
     y_qry_cls: np.ndarray,
     y_qry_raw: np.ndarray,
     *,
+    alpha: float = 5.0,
     n_estimators: int = 1,
     device: str = 'cpu',
     eps: float = 1e-8,
@@ -141,24 +142,31 @@ def tabpfn_cross_pred_ce_ranked(
     """
     Rank-weighted cross-entropy of query labels under a TabPFN classifier.
 
-    Each query point i is weighted by its quality rank within t2 (minimisation):
-        quality_rank[i] = n − argsort(argsort(y_qry_raw))[i]
-                        → n  for the best solution (lowest y)
-                        → 1  for the worst  solution (highest y)
-        w[i]            = quality_rank[i] / sum(quality_ranks)
-        CE_ranked       = −Σ_i  w[i] · log p(correct_class | x_i)
+    Each query point i is weighted by an exponential over its normalised quality
+    rank within t2 (minimisation — lower y is better):
 
-    Zero-point is preserved: a random classifier gives P(k|x) = 1/K uniformly,
-    so CE_ranked = log(K) · Σw_i = log(K) for any normalised weight vector.
-    The existing s-formula (delta/log(K))^(1/τ) therefore maps 0→0 and 1→1
-    without modification — no scale correction needed.
+        norm_rank[i]  = argsort(argsort(y_qry_raw))[i] / (n − 1)
+                      ∈ [0, 1],  0 = worst (highest y),  1 = best (lowest y)
+        raw_w[i]      = exp(alpha · norm_rank[i])
+        w[i]          = raw_w[i] / Σ raw_w              (sums to 1)
+        CE_ranked     = −Σ_i  w[i] · log p(correct_class | x_i)
+
+    With alpha=5 the top 20% of solutions receive ~60% of total weight while
+    the remaining 80% still contribute (long-tailed, not truncated).
+    alpha=0 recovers uniform weighting (identical to plain tabpfn_cross_pred_ce).
+
+    Zero-point preserved: a random classifier gives P(k|x) = 1/K for all x,
+    so CE_ranked = log(K) · Σw_i = log(K) regardless of weights.
+    The s-formula (delta/log(K))^(1/τ) therefore maps 0→0 and 1→1 unchanged.
 
     Parameters
     ----------
     X_ctx, y_ctx_cls : context task (t1) features and quantile-bin labels
     X_qry, y_qry_cls : query task (t2) features and quantile-bin labels
     y_qry_raw        : raw (or min-max normalised) objective values for t2,
-                       used only for computing quality ranks
+                       used only for computing quality ranks (minimisation)
+    alpha            : exponential concentration parameter (default 5.0);
+                       larger → more weight on elite solutions
     """
     from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict_proba
 
@@ -178,10 +186,11 @@ def tabpfn_cross_pred_ce_ranked(
         p[rows] = proba[rows, yq[valid]]
     log_losses = -np.log(np.clip(p, eps, 1.0))
 
-    # quality_rank: n = best (lowest y in minimisation), 1 = worst
-    ranks_asc     = np.argsort(np.argsort(y_qry_raw.ravel()))
-    quality_ranks = (n - ranks_asc).astype(np.float64)
-    weights       = quality_ranks / quality_ranks.sum()
+    # norm_rank: 0 = worst (highest y), 1 = best (lowest y)
+    ranks_asc = np.argsort(np.argsort(y_qry_raw.ravel()))
+    norm_rank = ranks_asc / max(n - 1, 1)
+    raw_w     = np.exp(alpha * norm_rank)
+    weights   = raw_w / raw_w.sum()
 
     return float(np.dot(weights, log_losses))
 
@@ -434,22 +443,25 @@ def compute_task_similarity_matrix_directed_classification_ranked(
     n_estimators: int = 1,
     device: str = 'cpu',
     tau: float = 1.0,
+    alpha: float = 5.0,
 ) -> np.ndarray:
     """
     Directed T×T similarity matrix using rank-weighted CE.
 
     Identical to compute_task_similarity_matrix_directed_classification except
     CE is computed via tabpfn_cross_pred_ce_ranked: each query point in t2 is
-    weighted by its quality rank (best solution = highest weight).
-
-    This focuses the transfer signal on whether t1's classifier identifies
-    t2's ELITE solutions, rather than averaging over all solutions equally.
+    weighted by exp(alpha * norm_rank), concentrating signal on elite solutions.
 
     The s-formula and zero-point are unchanged:
         delta     = clip(log(K) − CE_ranked, 0, log(K))
         S[t1,t2]  = (delta / log(K)) ** (1/τ)
     s = 0 at independence (CE_ranked = log(K) for any random classifier),
     s = 1 at perfection (CE_ranked = 0).
+
+    Parameters
+    ----------
+    alpha : exponential concentration for rank weighting (default 5.0);
+            passed through to tabpfn_cross_pred_ce_ranked
     """
     tau   = max(tau, 1e-8)
     log_k = np.log(n_classes)
@@ -466,6 +478,7 @@ def compute_task_similarity_matrix_directed_classification_ranked(
                 decs[t1], cls[t1],
                 decs[t2], cls[t2],
                 objs[t2],
+                alpha=alpha,
                 n_estimators=n_estimators,
                 device=device,
             )
