@@ -229,7 +229,7 @@ class MTBO_TFM_MAP_Sym:
         adam_steps: int = 200,
         adam_lr: float = 1e-2,
         use_ranked: bool = False,
-        rank_alpha: float = 5.0,
+        rank_alpha: float = 2.0,
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'MTBO-TFM-MAP-Sym',

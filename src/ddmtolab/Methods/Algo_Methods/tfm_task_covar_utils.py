@@ -134,7 +134,7 @@ def tabpfn_cross_pred_ce_ranked(
     y_qry_cls: np.ndarray,
     y_qry_raw: np.ndarray,
     *,
-    alpha: float = 5.0,
+    alpha: float = 2.0,
     n_estimators: int = 1,
     device: str = 'cpu',
     eps: float = 1e-8,
@@ -142,18 +142,23 @@ def tabpfn_cross_pred_ce_ranked(
     """
     Rank-weighted cross-entropy of query labels under a TabPFN classifier.
 
-    Each query point i is weighted by an exponential over its normalised quality
-    rank within t2 (minimisation — lower y is better):
+    Each query point i is weighted by a power of its integer quality rank
+    within t2 (minimisation — lower y is better):
 
-        norm_rank[i]  = argsort(argsort(y_qry_raw))[i] / (n − 1)
-                      ∈ [0, 1],  0 = worst (highest y),  1 = best (lowest y)
-        raw_w[i]      = exp(alpha · norm_rank[i])
+        ranks_asc[i]  = argsort(argsort(y_qry_raw))[i]
+                      ∈ {0, …, n−1},  0 = worst (highest y),  n−1 = best (lowest y)
+        raw_w[i]      = (ranks_asc[i] + 1) ** alpha
         w[i]          = raw_w[i] / Σ raw_w              (sums to 1)
         CE_ranked     = −Σ_i  w[i] · log p(correct_class | x_i)
 
-    With alpha=5 the top 20% of solutions receive ~60% of total weight while
-    the remaining 80% still contribute (long-tailed, not truncated).
-    alpha=0 recovers uniform weighting (identical to plain tabpfn_cross_pred_ce).
+    alpha controls the steepness of the rank ramp:
+        alpha=1 (default) : linear — best gets weight n, worst gets 1,
+                            ratio = n  (e.g. 20 for n=20)
+        alpha=2           : quadratic — ratio = n²  (moderate concentration)
+        alpha=0           : uniform  (identical to plain tabpfn_cross_pred_ce)
+
+    This is substantially less skewed than the previous exp(alpha · norm_rank)
+    scheme, where alpha=5 gave a best/worst ratio of ~148 for n=20.
 
     Zero-point preserved: a random classifier gives P(k|x) = 1/K for all x,
     so CE_ranked = log(K) · Σw_i = log(K) regardless of weights.
@@ -165,7 +170,7 @@ def tabpfn_cross_pred_ce_ranked(
     X_qry, y_qry_cls : query task (t2) features and quantile-bin labels
     y_qry_raw        : raw (or min-max normalised) objective values for t2,
                        used only for computing quality ranks (minimisation)
-    alpha            : exponential concentration parameter (default 5.0);
+    alpha            : power of rank weight (default 1.0 = linear);
                        larger → more weight on elite solutions
     """
     from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict_proba
@@ -186,10 +191,9 @@ def tabpfn_cross_pred_ce_ranked(
         p[rows] = proba[rows, yq[valid]]
     log_losses = -np.log(np.clip(p, eps, 1.0))
 
-    # norm_rank: 0 = worst (highest y), 1 = best (lowest y)
+    # ranks_asc: 0 = worst (highest y), n−1 = best (lowest y)
     ranks_asc = np.argsort(np.argsort(y_qry_raw.ravel()))
-    norm_rank = ranks_asc / max(n - 1, 1)
-    raw_w     = np.exp(alpha * norm_rank)
+    raw_w     = (ranks_asc + 1.0) ** alpha
     weights   = raw_w / raw_w.sum()
 
     return float(np.dot(weights, log_losses))
@@ -443,7 +447,7 @@ def compute_task_similarity_matrix_directed_classification_ranked(
     n_estimators: int = 1,
     device: str = 'cpu',
     tau: float = 1.0,
-    alpha: float = 5.0,
+    alpha: float = 2.0,
 ) -> np.ndarray:
     """
     Directed T×T similarity matrix using rank-weighted CE.

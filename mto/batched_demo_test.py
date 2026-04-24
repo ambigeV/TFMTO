@@ -15,7 +15,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
-from ddmtolab.Problems.MTSO.cec17_mtso_10d import CEC17MTSO_10D
+from ddmtolab.Problems.MTSO.cec17_mtso_10d_v2 import CEC17MTSO_10D_v2
+from ddmtolab.Problems.MTSO.cec17_mtso_30d import CEC17MTSO_30D
 # from ddmtolab.Algorithms.STSO.GA import GA
 # from ddmtolab.Algorithms.STSO.BO import BO
 # from ddmtolab.Algorithms.STSO.BOLCB import BOLCB
@@ -41,7 +42,10 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 # Configuration
 # =============================================================================
 
-# --- Dimension switch: set to 10 for 10D benchmark, 50 for 50D benchmark ---
+# --- Dimension switch: 10, 30, or 50 ---
+# 10 → CEC17MTSO_10D  (reduced search space, identity rotations)
+# 30 → CEC17MTSO_30D  (first 30 dims of 50D landscape, tail fixed at go[30:])
+# 50 → CEC17MTSO      (original CEC17 benchmark, full 50D)
 DIM = 50
 
 N_RUNS = 5
@@ -73,7 +77,8 @@ if __name__ == '__main__':
     batch_exp = BatchExperiment(base_path=DATA_PATH, clear_folder=False)
 
     # --- Problems ---
-    benchmark = CEC17MTSO() if DIM == 50 else CEC17MTSO_10D()
+    _bm_cls = {10: CEC17MTSO_10D_v2, 30: CEC17MTSO_30D, 50: CEC17MTSO}
+    benchmark = _bm_cls[DIM]()
     for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
         batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
 
