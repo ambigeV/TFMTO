@@ -59,6 +59,9 @@ CMAES_POPSIZE = 40
 CMAES_MAXITER = 50
 MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 
+MAP_LAMBDA_0    = 1.0   # initial MAP regularisation weight
+MAP_LAMBDA_DECAY = 0.02  # exponential decay rate per BO step
+
 ALGO_ORDER = ['BO-TFM-ResGP',
               'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls', 'MTBO-TFM-Covar-Cls-Ranked',
               'MTBO-TFM-MAP-Sym', 'MTBO-TFM-MAP-Asym']
@@ -169,10 +172,12 @@ if __name__ == '__main__':
     # --- MAP-regularised variants (TFM Cls prior → decaying λ → MLL) ---
     batch_exp.add_algorithm(MTBO_TFM_MAP_Sym, 'MTBO-TFM-MAP-Sym',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
         n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, 'MTBO-TFM-MAP-Asym',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
         n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
     # -------------------------------------------------------------------------
