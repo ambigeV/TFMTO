@@ -59,12 +59,13 @@ CMAES_POPSIZE = 40
 CMAES_MAXITER = 50
 MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 
-MAP_LAMBDA_0    = 1.0   # initial MAP regularisation weight
-MAP_LAMBDA_DECAY = 0.02  # exponential decay rate per BO step
+# MAP ablation grid — two new experiments targeting total prior mass ~10
+MAP_CONFIGS = [
+    (0.5, 0.05),   # MAP-Asym-0.5-0.05: weaker λ₀, same decay as winner
+    (1.0, 0.10),   # MAP-Asym-1-0.1:    same λ₀ as winner, faster decay
+]
 
-ALGO_ORDER = ['BO-TFM-ResGP',
-              'MTBO-TFM-Covar-Asym', 'MTBO-TFM-Covar-Cls', 'MTBO-TFM-Covar-Cls-Ranked',
-              'MTBO-TFM-MAP-Sym', 'MTBO-TFM-MAP-Asym']
+ALGO_ORDER = [f'MAP-Asym-{l0}-{ld}' for l0, ld in MAP_CONFIGS]
 
 DATA_PATH    = f'./Data_CEC17MTSO_{DIM}D'
 RESULTS_PATH = f'./Results_CEC17MTSO_{DIM}D'
@@ -143,42 +144,29 @@ if __name__ == '__main__':
     #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
     #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
-    batch_exp.add_algorithm(BO_TFM_ResGP, 'BO-TFM-ResGP',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-        n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    # batch_exp.add_algorithm(BO_TFM_ResGP, 'BO-TFM-ResGP',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
+    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
     # --- Fixed-covar variants (TabPFN-derived R frozen during MLL) ---
-    batch_exp.add_algorithm(MTBO_TFM_Covar_Asym, 'MTBO-TFM-Covar-Asym',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    batch_exp.add_algorithm(MTBO_TFM_Covar_Cls, 'MTBO-TFM-Covar-Cls',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    batch_exp.add_algorithm(MTBO_TFM_Covar_Cls_Ranked, 'MTBO-TFM-Covar-Cls-Ranked',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # --- Mean-only acquisition variants (no LCB uncertainty term) ---
-    # batch_exp.add_algorithm(MTBO_TFM_Uniform_B, 'MTBO-TFM-Uni-B',
+    # batch_exp.add_algorithm(MTBO_TFM_Covar_Asym, 'MTBO-TFM-Covar-Asym',
     #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    #     n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
-    # batch_exp.add_algorithm(MTBO_TFM_Elite_B, 'MTBO-TFM-Elite-B',
+    # batch_exp.add_algorithm(MTBO_TFM_Covar_Cls, 'MTBO-TFM-Covar-Cls',
     #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    #     n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
+    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
-    # --- MAP-regularised variants (TFM Cls prior → decaying λ → MLL) ---
-    batch_exp.add_algorithm(MTBO_TFM_MAP_Sym, 'MTBO-TFM-MAP-Sym',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
-        n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    # batch_exp.add_algorithm(MTBO_TFM_Covar_Cls_Ranked, 'MTBO-TFM-Covar-Cls-Ranked',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
+    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
-    batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, 'MTBO-TFM-MAP-Asym',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
-        n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    # --- MAP ablation: two new configs targeting total prior mass ~10 ---
+    for l0, ld in MAP_CONFIGS:
+        batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, f'MTBO-TFM-MAP-Asym-{l0}-{ld}',
+            n_initial=N_INITIAL, max_nfes=MAX_NFES,
+            lambda_0=l0, lambda_decay=ld,
+            n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
     # -------------------------------------------------------------------------
     # Run (parallel across workers)
