@@ -489,14 +489,11 @@ def generate_results_table(
 
                     if algo != baseline and len(base_vals) > 0:
                         try:
-                            # Compress each distribution to half-std before testing:
-                            # v_h = mean + 0.5*(v - mean), preserving the mean but
-                            # halving spread — consistent with the half-std display.
                             v_h = np.mean(v) + 0.5 * (v - np.mean(v))
                             b_h = np.mean(base_vals) + 0.5 * (base_vals - np.mean(base_vals))
                             _, pval = sp_stats.ranksums(v_h, b_h)
                             if pval < sig_level:
-                                sym = '+' if np.median(v) < np.median(base_vals) else '-'
+                                sym = '+' if np.mean(v) < np.mean(base_vals) else '-'
                             else:
                                 sym = '='
                         except Exception:
@@ -520,11 +517,15 @@ def generate_results_table(
                 ws.cell(row=data_row, column=ci, value=f'{c[0]}/{c[1]}/{c[2]}')
         data_row += 1
 
-        # Average Rank row
+        # Average Rank row — NaN rows (missing data) are treated as last place + 1
+        # so that averages are computed over the same number of rows for all algos.
+        n_rows = data_row - 2  # total data rows written
+        n_algos_present = len([a for a in algos if any(not np.isnan(r) for r in algo_ranks[a])])
+        worst_rank = n_algos_present + 1
         ws.cell(row=data_row, column=1, value='Average Rank')
         for ci, algo in enumerate(algos, 3):
-            valid = [r for r in algo_ranks[algo] if not np.isnan(r)]
-            ws.cell(row=data_row, column=ci, value=f'{np.mean(valid):.2f}' if valid else 'N/A')
+            filled = [r if not np.isnan(r) else worst_rank for r in algo_ranks[algo]]
+            ws.cell(row=data_row, column=ci, value=f'{np.mean(filled):.2f}' if filled else 'N/A')
 
         print(f'  [TABLE] Sheet Iter{ck}: {data_row - 2} data rows written.')
 
