@@ -16,7 +16,7 @@ Version: 1.0
 """
 from tqdm import tqdm
 import torch
-from ddmtolab.Methods.Algo_Methods.bo_utils import bo_next_point, bo_next_point_lcb
+from ddmtolab.Methods.Algo_Methods.bo_utils import bo_next_point, bo_next_point_lcb, bo_next_point_ts
 from ddmtolab.Methods.Algo_Methods.algo_utils import *
 import warnings
 import time
@@ -81,8 +81,8 @@ class BO:
         self.n_initial = n_initial if n_initial is not None else 50
         self.max_nfes = max_nfes if max_nfes is not None else 100
         self.mode = mode.lower()
-        if self.mode not in ['ei', 'lcb']:
-            raise ValueError(f"mode must be 'ei' or 'lcb', got '{mode}'")
+        if self.mode not in ['ei', 'lcb', 'ts']:
+            raise ValueError(f"mode must be 'ei', 'lcb', or 'ts', got '{mode}'")
         self.adam_restarts = adam_restarts
         self.adam_steps    = adam_steps
         self.adam_lr       = adam_lr
@@ -134,11 +134,15 @@ class BO:
                         adam_restarts=self.adam_restarts,
                         adam_steps=self.adam_steps, adam_lr=self.adam_lr,
                     )
-                else:  # mode == 'lcb'
+                elif self.mode == 'lcb':
                     candidate_np, _ = bo_next_point_lcb(
                         dims[i], decs[i], objs[i], data_type=data_type,
                         adam_restarts=self.adam_restarts,
                         adam_steps=self.adam_steps, adam_lr=self.adam_lr,
+                    )
+                else:  # mode == 'ts'
+                    candidate_np = bo_next_point_ts(
+                        dims[i], decs[i], objs[i], data_type=data_type,
                     )
 
                 # Evaluate the candidate solution

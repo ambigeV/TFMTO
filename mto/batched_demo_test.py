@@ -18,9 +18,9 @@ from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
 from ddmtolab.Problems.MTSO.cec17_mtso_10d_v2 import CEC17MTSO_10D_v2
 from ddmtolab.Problems.MTSO.cec17_mtso_30d import CEC17MTSO_30D
 # from ddmtolab.Algorithms.STSO.GA import GA
-# from ddmtolab.Algorithms.STSO.BO import BO
+from ddmtolab.Algorithms.STSO.BO import BO
 # from ddmtolab.Algorithms.STSO.BOLCB import BOLCB
-# from ddmtolab.Algorithms.MTSO.MTBO import MTBO
+from ddmtolab.Algorithms.MTSO.MTBO import MTBO
 # from ddmtolab.Algorithms.MTSO.BO_LCB_BCKT import BO_LCB_BCKT
 # from ddmtolab.Algorithms.STSO.BO_TFM import BO_TFM
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform import MTBO_TFM_Uniform
@@ -52,20 +52,24 @@ N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
 BETA = 1.0          # for GP baselines (BOLCB, BO-LCB-BCKT)
-TFM_BETA = 2.5      # for all TabPFN-based algorithms
+TFM_BETA = 2.5      # exploration weight for LCB (ignored when TS)
+MAP_LBFGS_ITER = 200   # L-BFGS iterations for MAP fitting
 N_ESTIMATORS = 1
 N_CANDIDATES = 2000
 CMAES_POPSIZE = 40
 CMAES_MAXITER = 50
 MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
 
-# MAP ablation grid — two new experiments targeting total prior mass ~10
-MAP_CONFIGS = [
-    (0.5, 0.05),   # MAP-Asym-0.5-0.05: weaker λ₀, same decay as winner
-    (1.0, 0.10),   # MAP-Asym-1-0.1:    same λ₀ as winner, faster decay
-]
+# MAP config for active run
+MAP_LAMBDA_0     = 1.0
+MAP_LAMBDA_DECAY = 0.05
 
-ALGO_ORDER = [f'MAP-Asym-{l0}-{ld}' for l0, ld in MAP_CONFIGS]
+ALGO_ORDER = [
+    'BO-LCB', 'BO-TS',
+    'MTBO-LCB', 'MTBO-TS',
+    f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
+    f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-TS',
+]
 
 DATA_PATH    = f'./Data_CEC17MTSO_{DIM}D'
 RESULTS_PATH = f'./Results_CEC17MTSO_{DIM}D'
@@ -161,12 +165,49 @@ if __name__ == '__main__':
     #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
     #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
 
-    # --- MAP ablation: two new configs targeting total prior mass ~10 ---
-    for l0, ld in MAP_CONFIGS:
-        batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, f'MTBO-TFM-MAP-Asym-{l0}-{ld}',
-            n_initial=N_INITIAL, max_nfes=MAX_NFES,
-            lambda_0=l0, lambda_decay=ld,
-            n_estimators=N_ESTIMATORS, disable_tqdm=True)
+    # --- MAP ablation ---
+    # batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, 'MTBO-TFM-MAP-Asym-0.5-0.05',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
+    #     lambda_0=0.5, lambda_decay=0.05,
+    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+    # batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, 'MTBO-TFM-MAP-Asym-1.0-0.10',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
+    #     lambda_0=1.0, lambda_decay=0.10,
+    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
+
+    # --- Active runs: BO / MTBO / MTBO-TFM-MAP-Asym with LCB and TS ---
+    batch_exp.add_algorithm(BO, 'BO-LCB',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        mode='lcb', disable_tqdm=True)
+
+    batch_exp.add_algorithm(BO, 'BO-TS',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        mode='ts', disable_tqdm=True)
+
+    batch_exp.add_algorithm(MTBO, 'MTBO-LCB',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        acq_fn='LCB', beta=TFM_BETA, disable_tqdm=True)
+
+    batch_exp.add_algorithm(MTBO, 'MTBO-TS',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        acq_fn='TS', disable_tqdm=True)
+
+    batch_exp.add_algorithm(MTBO_TFM_MAP_Asym,
+        f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
+        n_estimators=N_ESTIMATORS,
+        acq_fn='LCB', beta=TFM_BETA,
+        lbfgs_iter=MAP_LBFGS_ITER, disable_tqdm=True)
+
+    batch_exp.add_algorithm(MTBO_TFM_MAP_Asym,
+        f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-TS',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
+        n_estimators=N_ESTIMATORS,
+        acq_fn='TS',
+        lbfgs_iter=MAP_LBFGS_ITER, disable_tqdm=True)
 
     # -------------------------------------------------------------------------
     # Run (parallel across workers)

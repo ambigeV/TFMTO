@@ -223,7 +223,7 @@ class MTBO_TFM_MAP_Asym:
         'n_objectives': 1,
         'surrogate':    'Per-target MultiTaskGP — ARD Matern-5/2 × IndexKernel (MAP)',
         'task_prior':   'Directed Cls CE → S=(clip(log K-CE,0,logK)/logK)^(1/τ) → B_prior_i per target i',
-        'acquisition':  'LogEI (Adam, same as MTBO)',
+        'acquisition':  'configurable: logEI or LCB (Adam)',
     }
 
     def __init__(
@@ -236,10 +236,12 @@ class MTBO_TFM_MAP_Asym:
         tau: float = 1.0,
         n_classes: int = 2,
         n_estimators: int = 1,
-        lbfgs_iter: int = 100,
+        lbfgs_iter: int = 200,
         adam_restarts: int = 5,
         adam_steps: int = 200,
         adam_lr: float = 1e-2,
+        acq_fn: str = 'logEI',
+        beta: float = 2.5,
         use_ranked: bool = False,
         rank_alpha: float = 2.0,
         save_data: bool = True,
@@ -259,6 +261,8 @@ class MTBO_TFM_MAP_Asym:
         self.adam_restarts = adam_restarts
         self.adam_steps    = adam_steps
         self.adam_lr       = adam_lr
+        self.acq_fn        = acq_fn
+        self.beta          = beta
         self.use_ranked    = use_ranked
         self.rank_alpha    = rank_alpha
         self.save_data     = save_data
@@ -373,6 +377,8 @@ class MTBO_TFM_MAP_Asym:
                     adam_restarts=self.adam_restarts,
                     adam_steps=self.adam_steps,
                     adam_lr=self.adam_lr,
+                    acq_fn=self.acq_fn,
+                    beta=self.beta,
                 )
 
                 obj, _ = evaluation_single(problem, candidate_np, i)

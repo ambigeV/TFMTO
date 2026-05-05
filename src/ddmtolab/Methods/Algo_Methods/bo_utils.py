@@ -344,6 +344,32 @@ def bo_next_point_lcb(
     return candidate_np, gp
 
 
+def bo_next_point_ts(
+    dim_i: int,
+    decs_i: np.ndarray,
+    objs_i: np.ndarray,
+    data_type: torch.dtype = torch.float,
+    n_candidates: int = 2000,
+) -> np.ndarray:
+    """Thompson Sampling for single-task BO: draw one posterior sample, return argmax."""
+    train_X = torch.tensor(decs_i, dtype=data_type)
+    train_Y = torch.tensor(-objs_i, dtype=data_type)
+    if train_Y.dim() == 1:
+        train_Y = train_Y.unsqueeze(-1)
+
+    gp = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+    mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
+    fit_gpytorch_mll(mll)
+
+    X_cands = torch.rand(n_candidates, dim_i, dtype=data_type)
+    with torch.no_grad():
+        posterior = gp.posterior(X_cands)
+        sample = posterior.rsample(sample_shape=torch.Size([1])).squeeze()
+        best_idx = sample.argmax()
+
+    return X_cands[best_idx].cpu().numpy().reshape(1, -1)
+
+
 def mtgp_build(
         decs: list[np.ndarray],
         objs: list[np.ndarray],
@@ -538,6 +564,9 @@ def mtbo_next_point(
     adam_restarts: int = 5,
     adam_steps: int = 200,
     adam_lr: float = 1e-2,
+    acq_fn: str = 'logEI',
+    beta: float = 2.5,
+    n_ts_candidates: int = 2000,
 ) -> np.ndarray:
     """
     Get the next sampling point using Multi-Task Bayesian Optimization.
@@ -556,37 +585,59 @@ def mtbo_next_point(
         Total number of tasks
     data_type : torch.dtype, optional
         Data type for tensors (default: torch.float)
+    acq_fn : str, optional
+        Acquisition function: 'logEI', 'LCB', or 'TS' (default: 'logEI')
+    beta : float, optional
+        Exploration weight for LCB (default: 2.5, ignored otherwise)
+    n_ts_candidates : int, optional
+        Number of random candidates for Thompson Sampling (default: 2000)
 
     Returns
     -------
     candidate_np : np.ndarray
         Next sampling point, shape: (1, dims[task_id])
     """
-    # Define search bounds [0, 1]^max_dim with fixed task index
     max_dim = max(dims)
-    lower_bound = torch.zeros(max_dim + 1, dtype=data_type)
-    upper_bound = torch.ones(max_dim + 1, dtype=data_type)
-    task_range = torch.linspace(0, 1, nt)
-    lower_bound[-1] = task_range[task_id].item()
-    upper_bound[-1] = task_range[task_id].item()
-    bounds = torch.stack([lower_bound, upper_bound], dim=0)
+    task_val = torch.linspace(0, 1, nt)[task_id].item()
+    acq_fn_lower = acq_fn.lower()
 
-    # Compute the best observed value for the current task
-    best_f = torch.tensor(-objs[task_id], dtype=data_type).squeeze().max()
+    # ------------------------------------------------------------------
+    # Thompson Sampling: draw one posterior sample, return its argmax
+    # ------------------------------------------------------------------
+    if acq_fn_lower == 'ts':
+        x_cands = torch.rand(n_ts_candidates, max_dim, dtype=data_type)
+        task_col_cands = torch.full((n_ts_candidates, 1), task_val, dtype=data_type)
+        X_cands = torch.cat([x_cands, task_col_cands], dim=1)  # (n_cands, d+1)
+        with torch.no_grad():
+            posterior = mtgp.posterior(X_cands)
+            # rsample: (1, n_cands, 1) → squeeze to (n_cands,)
+            sample = posterior.rsample(sample_shape=torch.Size([1])).squeeze()
+            best_idx = sample.argmax()
+        candidate_np = x_cands[best_idx][:dims[task_id]].cpu().numpy().reshape(1, -1)
+        return candidate_np
 
-    # Build Log Expected Improvement acquisition function
+    # ------------------------------------------------------------------
+    # Gradient-based (logEI / LCB): Adam multi-start optimisation
+    # ------------------------------------------------------------------
     posterior_transform = ScalarizedPosteriorTransform(
         weights=torch.tensor([1.0], dtype=data_type)
     )
-    logEI = LogExpectedImprovement(
-        model=mtgp,
-        best_f=best_f,
-        posterior_transform=posterior_transform,
-    )
+    if acq_fn_lower == 'lcb':
+        acquisition = UpperConfidenceBound(
+            model=mtgp,
+            beta=beta,
+            posterior_transform=posterior_transform,
+        )
+    else:  # default: logEI
+        best_f = torch.tensor(-objs[task_id], dtype=data_type).squeeze().max()
+        acquisition = LogExpectedImprovement(
+            model=mtgp,
+            best_f=best_f,
+            posterior_transform=posterior_transform,
+        )
 
     # Optimise only the decision dimensions; task index is appended as a
     # constant so its gradient is always zero and does not affect Adam.
-    task_val = torch.linspace(0, 1, nt)[task_id].item()
     task_col = torch.tensor([[task_val]], dtype=data_type)  # (1, 1)
 
     best_x_dec = None
@@ -601,14 +652,14 @@ def mtbo_next_point(
             opt.zero_grad()
             x_dec  = torch.sigmoid(theta).unsqueeze(0)              # (1, d)
             x_full = torch.cat([x_dec, task_col], dim=1).unsqueeze(0)  # (1, 1, d+1)
-            val    = logEI(x_full)
+            val    = acquisition(x_full)
             (-val).backward()
             opt.step()
 
         with torch.no_grad():
             x_dec  = torch.sigmoid(theta).unsqueeze(0)
             x_full = torch.cat([x_dec, task_col], dim=1).unsqueeze(0)
-            val_fin = logEI(x_full).item()
+            val_fin = acquisition(x_full).item()
 
         if val_fin > best_val:
             best_val   = val_fin

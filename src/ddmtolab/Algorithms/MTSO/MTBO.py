@@ -54,6 +54,7 @@ class MTBO:
 
     def __init__(self, problem, n_initial=None, max_nfes=None,
                  adam_restarts=5, adam_steps=200, adam_lr=1e-2,
+                 acq_fn='logEI', beta=2.5,
                  save_data=True, save_path='./Data', name='MTBO', disable_tqdm=True):
         """
         Initialize Multi-Task Bayesian Optimization algorithm.
@@ -81,6 +82,8 @@ class MTBO:
         self.adam_restarts = adam_restarts
         self.adam_steps    = adam_steps
         self.adam_lr       = adam_lr
+        self.acq_fn        = acq_fn
+        self.beta          = beta
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -129,6 +132,8 @@ class MTBO:
                     adam_restarts=self.adam_restarts,
                     adam_steps=self.adam_steps,
                     adam_lr=self.adam_lr,
+                    acq_fn=self.acq_fn,
+                    beta=self.beta,
                 )
 
                 obj, _ = evaluation_single(problem, candidate_np, i)
