@@ -55,6 +55,7 @@ class MTBO:
     def __init__(self, problem, n_initial=None, max_nfes=None,
                  adam_restarts=5, adam_steps=200, adam_lr=1e-2,
                  acq_fn='logEI', beta=2.5,
+                 obj_norm='minmax',
                  save_data=True, save_path='./Data', name='MTBO', disable_tqdm=True):
         """
         Initialize Multi-Task Bayesian Optimization algorithm.
@@ -84,6 +85,7 @@ class MTBO:
         self.adam_lr       = adam_lr
         self.acq_fn        = acq_fn
         self.beta          = beta
+        self.obj_norm      = obj_norm
         self.save_data = save_data
         self.save_path = save_path
         self.name = name
@@ -121,7 +123,7 @@ class MTBO:
                 break
 
             # Build multi-task Gaussian process surrogate model with normalized objectives
-            objs_normalized, _, _ = normalize(objs, axis=0, method='minmax')
+            objs_normalized, _, _ = normalize(objs, axis=0, method=self.obj_norm)
             mtgp = mtgp_build(decs, objs_normalized, dims, data_type=data_type)
 
             for i in active_tasks:

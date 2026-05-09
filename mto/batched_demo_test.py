@@ -1,22 +1,30 @@
 """
 Batched Demo: Expensive Multi-Task Single-Objective Optimization
 
-Runs all algorithms on all 9 CEC17-MTSO-50D benchmark problems for 5
-independent runs using BatchExperiment for parallel execution.
+Runs BO / MTBO / MTBO-TFM-MAP-Asym with logEI and LCB acquisition
+functions on the 9 SepArmMTSO benchmark problems (5D / 10D / 15D).
 
 Data layout (auto-managed by BatchExperiment):
-    ./Data_CEC17MTSO_50D/{algo_name}/{algo_name}_{problem_name}_{run_id}.pkl
+    ./Data_SepArmMTSO/{algo_name}/{algo_name}_{problem_name}_{run_id}.pkl
 
-Results (mean ± 0.5*std convergence curves) are saved to ./Results_CEC17MTSO_50D/.
+Results (mean ± 0.5*std convergence curves) are saved to ./Results_SepArmMTSO/.
+
+--- CEC17 runs (commented out, preserved for reference) ---
+# DIM switch: 10 → CEC17MTSO_10D_v2, 30 → CEC17MTSO_30D, 50 → CEC17MTSO
+# DATA_PATH  = f'./Data_CEC17MTSO_{DIM}D'
+# RESULTS_PATH = f'./Results_CEC17MTSO_{DIM}D'
 """
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
-from ddmtolab.Problems.MTSO.cec17_mtso_10d_v2 import CEC17MTSO_10D_v2
-from ddmtolab.Problems.MTSO.cec17_mtso_30d import CEC17MTSO_30D
+# --- CEC17 problem imports (kept for reference) ---
+# from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO
+# from ddmtolab.Problems.MTSO.cec17_mtso_10d_v2 import CEC17MTSO_10D_v2
+# from ddmtolab.Problems.MTSO.cec17_mtso_30d import CEC17MTSO_30D
+
+from ddmtolab.Problems.RWO.sep_arm_mtso import SepArmMTSO
 # from ddmtolab.Algorithms.STSO.GA import GA
 from ddmtolab.Algorithms.STSO.BO import BO
 # from ddmtolab.Algorithms.STSO.BOLCB import BOLCB
@@ -27,13 +35,13 @@ from ddmtolab.Algorithms.MTSO.MTBO import MTBO
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite import MTBO_TFM_Elite
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Distill import MTBO_TFM_Distill
 # from ddmtolab.Algorithms.STSO.BO_TFM_GPEmbed import BO_TFM_GPEmbed
-from ddmtolab.Algorithms.STSO.BO_TFM_ResGP import BO_TFM_ResGP
-from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Asym import MTBO_TFM_Covar_Asym
-from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls import MTBO_TFM_Covar_Cls
-from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls_Ranked import MTBO_TFM_Covar_Cls_Ranked
+# from ddmtolab.Algorithms.STSO.BO_TFM_ResGP import BO_TFM_ResGP
+# from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Asym import MTBO_TFM_Covar_Asym
+# from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls import MTBO_TFM_Covar_Cls
+# from ddmtolab.Algorithms.MTSO.MTBO_TFM_Covar_Cls_Ranked import MTBO_TFM_Covar_Cls_Ranked
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_B import MTBO_TFM_Uniform_B
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_B import MTBO_TFM_Elite_B
-from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Sym import MTBO_TFM_MAP_Sym
+# from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Sym import MTBO_TFM_MAP_Sym
 from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Asym import MTBO_TFM_MAP_Asym
 from ddmtolab.Methods.batch_experiment import BatchExperiment
 from ddmtolab.Methods.data_analysis import DataAnalyzer
@@ -42,37 +50,30 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 # Configuration
 # =============================================================================
 
-# --- Dimension switch: 10, 30, or 50 ---
-# 10 → CEC17MTSO_10D  (reduced search space, identity rotations)
-# 30 → CEC17MTSO_30D  (first 30 dims of 50D landscape, tail fixed at go[30:])
-# 50 → CEC17MTSO      (original CEC17 benchmark, full 50D)
-DIM = 50
-
 N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
-BETA = 1.0          # for GP baselines (BOLCB, BO-LCB-BCKT)
-TFM_BETA = 2.5      # exploration weight for LCB (ignored when TS)
+TFM_BETA = 2.5         # LCB exploration weight
 MAP_LBFGS_ITER = 200   # L-BFGS iterations for MAP fitting
 N_ESTIMATORS = 1
-N_CANDIDATES = 2000
-CMAES_POPSIZE = 40
-CMAES_MAXITER = 50
-MAX_WORKERS = 4          # parallel processes — reduce if memory is tight
+MAX_WORKERS = 4        # parallel processes — reduce if memory is tight
 
-# MAP config for active run
+# MAP config
 MAP_LAMBDA_0     = 1.0
 MAP_LAMBDA_DECAY = 0.05
 
+# Output normalization for MTBO and MAP-Asym: 'minmax' (default) or 'zscore'
+OBJ_NORM = 'minmax'
+
 ALGO_ORDER = [
-    'BO-LCB', 'BO-TS',
-    'MTBO-LCB', 'MTBO-TS',
-    f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
-    f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-TS',
+    'BO-EI', 'BO-LCB',
+    'MTBO-logEI', 'MTBO-LCB',
+    f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-logEI',
+    f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
 ]
 
-DATA_PATH    = f'./Data_CEC17MTSO_{DIM}D'
-RESULTS_PATH = f'./Results_CEC17MTSO_{DIM}D'
+DATA_PATH    = './Data_SepArmMTSO'
+RESULTS_PATH = './Results_SepArmMTSO'
 
 # =============================================================================
 # Entry point — required on macOS/Windows (spawn-based multiprocessing)
@@ -84,130 +85,63 @@ if __name__ == '__main__':
     # -------------------------------------------------------------------------
     batch_exp = BatchExperiment(base_path=DATA_PATH, clear_folder=False)
 
-    # --- Problems ---
-    _bm_cls = {10: CEC17MTSO_10D_v2, 30: CEC17MTSO_30D, 50: CEC17MTSO}
-    benchmark = _bm_cls[DIM]()
+    # --- Problems: SepArmMTSO P1–P9 (5D / 10D / 15D × HS / MS / LS) ---
+    benchmark = SepArmMTSO()
     for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
         batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
 
     # --- Algorithms ---
-    # batch_exp.add_algorithm(GA, 'GA',
-    #     n=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
-    # batch_exp.add_algorithm(BO, 'BO',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
+    # BO: standard EI and LCB (single-task baselines)
+    batch_exp.add_algorithm(BO, 'BO-EI',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES,
+        mode='ei', disable_tqdm=True)
 
-    # batch_exp.add_algorithm(BOLCB, 'BO-LCB',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=BETA, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO, 'MTBO',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(BO_LCB_BCKT, 'BO-LCB-BCKT',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(BO_TFM, 'BO-TFM',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS, n_candidates=N_CANDIDATES, disable_tqdm=True)
-
-    # --- Distill variants (warm-started, plain MLP, NLL loss) ---
-    # batch_exp.add_algorithm(MTBO_TFM_Distill, 'MTBO-TFM-Uni-Distill',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS,
-    #     transfer='uniform', encoding='scalar',
-    #     mlp_loss='nll', distill_model='mlp',
-    #     warm_start=True, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO_TFM_Distill, 'MTBO-TFM-Elite-Distill',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS,
-    #     transfer='elite', encoding='scalar',
-    #     mlp_loss='nll', distill_model='mlp',
-    #     warm_start=True, disable_tqdm=True)
-
-    # --- CMA-ES acquisition variants ---
-    # batch_exp.add_algorithm(MTBO_TFM_Uniform, 'MTBO-TFM-Uni-CMA',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-    #     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO_TFM_Elite, 'MTBO-TFM-Elite-CMA',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS, acq_optimizer='cmaes',
-    #     cmaes_popsize=CMAES_POPSIZE, cmaes_maxiter=CMAES_MAXITER, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(BO_TFM_GPEmbed, 'BO-TFM-GPEmbed',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(BO_TFM_ResGP, 'BO-TFM-ResGP',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES, beta=TFM_BETA,
-    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # --- Fixed-covar variants (TabPFN-derived R frozen during MLL) ---
-    # batch_exp.add_algorithm(MTBO_TFM_Covar_Asym, 'MTBO-TFM-Covar-Asym',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO_TFM_Covar_Cls, 'MTBO-TFM-Covar-Cls',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO_TFM_Covar_Cls_Ranked, 'MTBO-TFM-Covar-Cls-Ranked',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # --- MAP ablation ---
-    # batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, 'MTBO-TFM-MAP-Asym-0.5-0.05',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    #     lambda_0=0.5, lambda_decay=0.05,
-    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # batch_exp.add_algorithm(MTBO_TFM_MAP_Asym, 'MTBO-TFM-MAP-Asym-1.0-0.10',
-    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
-    #     lambda_0=1.0, lambda_decay=0.10,
-    #     n_estimators=N_ESTIMATORS, disable_tqdm=True)
-
-    # --- Active runs: BO / MTBO / MTBO-TFM-MAP-Asym with LCB and TS ---
     batch_exp.add_algorithm(BO, 'BO-LCB',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
         mode='lcb', disable_tqdm=True)
 
-    batch_exp.add_algorithm(BO, 'BO-TS',
+    # batch_exp.add_algorithm(BO, 'BO-TS',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
+    #     mode='ts', disable_tqdm=True)
+
+    # MTBO: logEI and LCB
+    batch_exp.add_algorithm(MTBO, 'MTBO-logEI',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        mode='ts', disable_tqdm=True)
+        acq_fn='logEI', obj_norm=OBJ_NORM, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO, 'MTBO-LCB',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        acq_fn='LCB', beta=TFM_BETA, disable_tqdm=True)
+        acq_fn='LCB', beta=TFM_BETA, obj_norm=OBJ_NORM, disable_tqdm=True)
 
-    batch_exp.add_algorithm(MTBO, 'MTBO-TS',
-        n_initial=N_INITIAL, max_nfes=MAX_NFES,
-        acq_fn='TS', disable_tqdm=True)
+    # batch_exp.add_algorithm(MTBO, 'MTBO-TS',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
+    #     acq_fn='TS', obj_norm=OBJ_NORM, disable_tqdm=True)
 
+    # MAP-Asym: logEI and LCB
     batch_exp.add_algorithm(MTBO_TFM_MAP_Asym,
-        f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
+        f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-logEI',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
         lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
         n_estimators=N_ESTIMATORS,
-        acq_fn='LCB', beta=TFM_BETA,
+        acq_fn='logEI', obj_norm=OBJ_NORM,
         lbfgs_iter=MAP_LBFGS_ITER, disable_tqdm=True)
 
     batch_exp.add_algorithm(MTBO_TFM_MAP_Asym,
-        f'MTBO-TFM-MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-TS',
+        f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
         n_initial=N_INITIAL, max_nfes=MAX_NFES,
         lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
         n_estimators=N_ESTIMATORS,
-        acq_fn='TS',
+        acq_fn='LCB', beta=TFM_BETA, obj_norm=OBJ_NORM,
         lbfgs_iter=MAP_LBFGS_ITER, disable_tqdm=True)
+
+    # batch_exp.add_algorithm(MTBO_TFM_MAP_Asym,
+    #     f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-TS',
+    #     n_initial=N_INITIAL, max_nfes=MAX_NFES,
+    #     lambda_0=MAP_LAMBDA_0, lambda_decay=MAP_LAMBDA_DECAY,
+    #     n_estimators=N_ESTIMATORS,
+    #     acq_fn='TS', obj_norm=OBJ_NORM,
+    #     lbfgs_iter=MAP_LBFGS_ITER, disable_tqdm=True)
 
     # -------------------------------------------------------------------------
     # Run (parallel across workers)

@@ -244,6 +244,7 @@ class MTBO_TFM_MAP_Asym:
         beta: float = 2.5,
         use_ranked: bool = False,
         rank_alpha: float = 2.0,
+        obj_norm: str = 'minmax',
         save_data: bool = True,
         save_path: str = './Data',
         name: str = 'MTBO-TFM-MAP-Asym',
@@ -265,6 +266,7 @@ class MTBO_TFM_MAP_Asym:
         self.beta          = beta
         self.use_ranked    = use_ranked
         self.rank_alpha    = rank_alpha
+        self.obj_norm      = obj_norm
         self.save_data     = save_data
         self.save_path     = save_path
         self.name          = name
@@ -314,7 +316,7 @@ class MTBO_TFM_MAP_Asym:
             # ----------------------------------------------------------
             # Step 1: normalise objectives
             # ----------------------------------------------------------
-            objs_norm, _, _ = normalize(objs, axis=0, method='minmax')
+            objs_norm, _, _ = normalize(objs, axis=0, method=self.obj_norm)
             objs_neg_norm   = [-o for o in objs_norm]
 
             # ----------------------------------------------------------

@@ -19,5 +19,6 @@ from ddmtolab.Problems.RWO.scp import SCP
 from ddmtolab.Problems.RWO.mo_scp import MO_SCP
 from ddmtolab.Problems.RWO.pkacp import PKACP
 from ddmtolab.Problems.RWO.pinn_hpo import PINN_HPO
+from ddmtolab.Problems.RWO.sep_arm_mtso import SepArmMTSO
 
-__all__ = ["PEPVM", "SOPM", "NN_Training", "TSP", "SCP", "MO_SCP", "PKACP", "PINN_HPO"]
+__all__ = ["PEPVM", "SOPM", "NN_Training", "TSP", "SCP", "MO_SCP", "PKACP", "PINN_HPO", "SepArmMTSO"]
