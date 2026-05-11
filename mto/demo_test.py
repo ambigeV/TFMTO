@@ -37,7 +37,7 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 N_RUNS = 5
 N_INITIAL = 20
 MAX_NFES = 100
-# BETA = 1.0          # for GP baselines (BOLCB, BO-LCB-BCKT)
+BETA = 1.0          # for GP baselines (BOLCB, BO-LCB-BCKT)
 TFM_BETA = 2.5      # for all TabPFN-based algorithms
 N_ESTIMATORS = 1
 # N_CANDIDATES = 2000
