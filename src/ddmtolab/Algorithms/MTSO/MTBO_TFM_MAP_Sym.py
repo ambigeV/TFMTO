@@ -75,7 +75,7 @@ warnings.filterwarnings('ignore')
 def _build_mtgp_data(decs, objs_neg_norm, dims, data_type=torch.double):
     nt = len(decs)
     max_dim = max(dims)
-    task_range = torch.linspace(0, 1, nt)
+    task_range = torch.arange(nt, dtype=data_type)
     X_parts, Y_parts = [], []
     for i in range(nt):
         x_i = torch.tensor(decs[i], dtype=data_type)

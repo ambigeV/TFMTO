@@ -20,15 +20,15 @@ Objective:
 
 Problems (all 3-task, equal dims = n_joints):
 
-    P1  5D  HS  — configs ±5%  of midpoint    very similar
-    P2  5D  MS  — configs ±16% of midpoint    moderately similar
-    P3  5D  LS  — configs spread [0.5, 1.0]   low similarity
-    P4  10D HS  — same config triplet, 10 joints
-    P5  10D MS
-    P6  10D LS
-    P7  15D HS  — same config triplet, 15 joints
-    P8  15D MS
-    P9  15D LS
+    P1  15D HS  — configs ±5%  of midpoint    very similar
+    P2  15D MS  — configs ±10% of midpoint    moderately similar
+    P3  15D LS  — configs ±16% of midpoint    low similarity
+    P4  20D HS  — same config triplets, 20 joints
+    P5  20D MS
+    P6  20D LS
+    P7  25D HS  — same config triplets, 25 joints
+    P8  25D MS
+    P9  25D LS
 """
 
 import math
@@ -103,22 +103,23 @@ class SepArmMTSO:
     """
     Separable-Arm Multi-Task Single-Objective Benchmark.
 
-    Three 3-task problems with decreasing inter-task similarity.
+    Nine 3-task problems spanning three dimension groups (15/20/25D) and
+    three similarity levels (HS/MS/LS: ±5%/±10%/±16% of midpoint).
     All tasks share target [0.5, 0.5]; tasks differ by arm configuration
-    (amax, lmax). Call P1/P2/P3 to get MTOP instances.
+    (amax, lmax). Call P1–P9 to get MTOP instances.
 
     Examples
     --------
     >>> bm = SepArmMTSO()
-    >>> prob = bm.P1()   # 3 tasks, dim=5,  HS
-    >>> prob = bm.P5()   # 3 tasks, dim=10, MS
-    >>> prob = bm.P9()   # 3 tasks, dim=15, LS
+    >>> prob = bm.P1()   # 3 tasks, dim=15, HS
+    >>> prob = bm.P5()   # 3 tasks, dim=20, MS
+    >>> prob = bm.P9()   # 3 tasks, dim=25, LS
     """
 
     problem_information = {
         'n_cases': 9,
         'n_tasks': '3',
-        'n_dims': '[5, 10, 15]',
+        'n_dims': '[15, 20, 25]',
         'n_objs': '1',
         'n_cons': '0',
         'type': 'real_world',
@@ -131,8 +132,8 @@ class SepArmMTSO:
     # Same triplets are reused across all three dimension groups.
     _CONFIGS = {
         'HS': [(0.75, 0.75), (0.79, 0.75), (0.75, 0.79)],   # ±5%  of midpoint
-        'MS': [(0.75, 0.75), (0.87, 0.75), (0.75, 0.87)],   # ±16% of midpoint
-        'LS': [(0.55, 0.55), (0.75, 0.75), (0.95, 0.95)],   # spread across [0.5,1.0]
+        'MS': [(0.75, 0.75), (0.83, 0.75), (0.75, 0.83)],   # ±10% of midpoint
+        'LS': [(0.75, 0.75), (0.87, 0.75), (0.75, 0.87)],   # ±16% of midpoint
     }
 
     def __init__(self):
@@ -153,49 +154,49 @@ class SepArmMTSO:
         return problem
 
     # ------------------------------------------------------------------
-    # Problems — 5D
-    # ------------------------------------------------------------------
-
-    def P1(self) -> MTOP:
-        """5D HS — configs within ±5% of midpoint: very similar tasks."""
-        return self._make_problem(5, self._CONFIGS['HS'])
-
-    def P2(self) -> MTOP:
-        """5D MS — configs within ±16% of midpoint: moderately similar tasks."""
-        return self._make_problem(5, self._CONFIGS['MS'])
-
-    def P3(self) -> MTOP:
-        """5D LS — configs spread across [0.5, 1.0]: low-similarity tasks."""
-        return self._make_problem(5, self._CONFIGS['LS'])
-
-    # ------------------------------------------------------------------
-    # Problems — 10D
-    # ------------------------------------------------------------------
-
-    def P4(self) -> MTOP:
-        """10D HS — configs within ±5% of midpoint: very similar tasks."""
-        return self._make_problem(10, self._CONFIGS['HS'])
-
-    def P5(self) -> MTOP:
-        """10D MS — configs within ±16% of midpoint: moderately similar tasks."""
-        return self._make_problem(10, self._CONFIGS['MS'])
-
-    def P6(self) -> MTOP:
-        """10D LS — configs spread across [0.5, 1.0]: low-similarity tasks."""
-        return self._make_problem(10, self._CONFIGS['LS'])
-
-    # ------------------------------------------------------------------
     # Problems — 15D
     # ------------------------------------------------------------------
 
-    def P7(self) -> MTOP:
+    def P1(self) -> MTOP:
         """15D HS — configs within ±5% of midpoint: very similar tasks."""
         return self._make_problem(15, self._CONFIGS['HS'])
 
-    def P8(self) -> MTOP:
-        """15D MS — configs within ±16% of midpoint: moderately similar tasks."""
+    def P2(self) -> MTOP:
+        """15D MS — configs within ±10% of midpoint: moderately similar tasks."""
         return self._make_problem(15, self._CONFIGS['MS'])
 
-    def P9(self) -> MTOP:
-        """15D LS — configs spread across [0.5, 1.0]: low-similarity tasks."""
+    def P3(self) -> MTOP:
+        """15D LS — configs within ±16% of midpoint: low-similarity tasks."""
         return self._make_problem(15, self._CONFIGS['LS'])
+
+    # ------------------------------------------------------------------
+    # Problems — 20D
+    # ------------------------------------------------------------------
+
+    def P4(self) -> MTOP:
+        """20D HS — configs within ±5% of midpoint: very similar tasks."""
+        return self._make_problem(20, self._CONFIGS['HS'])
+
+    def P5(self) -> MTOP:
+        """20D MS — configs within ±10% of midpoint: moderately similar tasks."""
+        return self._make_problem(20, self._CONFIGS['MS'])
+
+    def P6(self) -> MTOP:
+        """20D LS — configs within ±16% of midpoint: low-similarity tasks."""
+        return self._make_problem(20, self._CONFIGS['LS'])
+
+    # ------------------------------------------------------------------
+    # Problems — 25D
+    # ------------------------------------------------------------------
+
+    def P7(self) -> MTOP:
+        """25D HS — configs within ±5% of midpoint: very similar tasks."""
+        return self._make_problem(25, self._CONFIGS['HS'])
+
+    def P8(self) -> MTOP:
+        """25D MS — configs within ±10% of midpoint: moderately similar tasks."""
+        return self._make_problem(25, self._CONFIGS['MS'])
+
+    def P9(self) -> MTOP:
+        """25D LS — configs within ±16% of midpoint: low-similarity tasks."""
+        return self._make_problem(25, self._CONFIGS['LS'])
