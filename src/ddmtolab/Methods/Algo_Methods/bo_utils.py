@@ -403,7 +403,7 @@ def mtgp_build(
     train_Y_list = []
     train_i_list = []
 
-    task_range = torch.linspace(0, 1, nt).unsqueeze(-1)
+    task_range = torch.arange(nt, dtype=data_type).unsqueeze(-1)
 
     for i in range(nt):
         task_data = torch.tensor(decs[i], dtype=data_type)
@@ -488,7 +488,7 @@ def mtgp_predict(
         test_X = torch.cat([test_X, padding], dim=1)
 
     # Append task index as the last feature
-    task_range = torch.linspace(0, 1, nt)
+    task_range = torch.arange(nt, dtype=data_type)
     task_idx = torch.full((test_X.shape[0], 1), task_range[task_id].item(), dtype=data_type)
     test_X_with_task = torch.cat([test_X, task_idx], dim=1)
 
@@ -598,7 +598,7 @@ def mtbo_next_point(
         Next sampling point, shape: (1, dims[task_id])
     """
     max_dim = max(dims)
-    task_val = torch.linspace(0, 1, nt)[task_id].item()
+    task_val = torch.arange(nt, dtype=data_type)[task_id].item()
     acq_fn_lower = acq_fn.lower()
 
     # ------------------------------------------------------------------
