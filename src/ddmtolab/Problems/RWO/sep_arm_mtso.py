@@ -2,33 +2,40 @@
 Separable-Arm Multi-Task Single-Objective Benchmark (SepArmMTSO)
 
 3-task problems where tasks share the same target [0.5, 0.5] but differ
-in arm configuration: maximum angular range (amax) and total link length
-(lmax). Task similarity is controlled by how close the 3 (amax, lmax)
-triplets are in parameter space.
+in arm configuration: maximum angular range (amax) only; link length (lmax)
+is fixed at 0.75 across all tasks.
+
+Design rationale: with amax centred at 0.3, the optimal joint angle maps to
+x* ≈ 0.92 — deep in the corner of [0,1]^N. This makes the problem genuinely
+hard for single-task BO at low N_INITIAL, while all three tasks still share
+the same corner region, creating meaningful inter-task transfer.
 
 Decision variables (per task):
     x[0 : n_joints]  — joint angles in [0, 1]
 
 Fixed task parameters (different per task):
-    amax  — maximum angular range factor, in [0.5, 1.0]
-              (mirrors x[n_joints] ∈ [0,1] via amax = x*0.5 + 0.5)
-    lmax  — total arm length factor, in [0.5, 1.0]
-              (mirrors x[n_joints+1] ∈ [0,1] via lmax = x*0.5 + 0.5)
+    amax  — maximum angular range factor, centred at 0.3
+    lmax  — total arm length factor, fixed at 0.75 for all tasks
 
 Objective:
     f(x) = 1 − exp(−‖end_effector(x) − [0.5, 0.5]‖)  ∈ [0, 1)
 
+Optimal x* (per joint, analytically): x* = 0.5 + 1 / (8 · amax)
+    HS tasks: x* ∈ [0.897, 0.938]  — nearly identical optima
+    MS tasks: x* ∈ [0.879, 0.963]  — noticeable but positive transfer
+    LS tasks: x* ∈ [0.862, 0.990]  — spread, but all in upper corner
+
 Problems (all 3-task, equal dims = n_joints):
 
-    P1  15D HS  — configs ±5%  of midpoint    very similar
-    P2  15D MS  — configs ±10% of midpoint    moderately similar
-    P3  15D LS  — configs ±16% of midpoint    low similarity
-    P4  20D HS  — same config triplets, 20 joints
-    P5  20D MS
-    P6  20D LS
-    P7  25D HS  — same config triplets, 25 joints
-    P8  25D MS
-    P9  25D LS
+    P1   5D HS  — amax ±5%  of 0.3    very similar
+    P2   5D MS  — amax ±10% of 0.3    moderately similar
+    P3   5D LS  — amax ±15% of 0.3    low similarity
+    P4  10D HS  — same config triplets, 10 joints
+    P5  10D MS
+    P6  10D LS
+    P7  15D HS  — same config triplets, 15 joints
+    P8  15D MS
+    P9  15D LS
 """
 
 import math
@@ -103,37 +110,35 @@ class SepArmMTSO:
     """
     Separable-Arm Multi-Task Single-Objective Benchmark.
 
-    Nine 3-task problems spanning three dimension groups (15/20/25D) and
-    three similarity levels (HS/MS/LS: ±5%/±10%/±16% of midpoint).
-    All tasks share target [0.5, 0.5]; tasks differ by arm configuration
-    (amax, lmax). Call P1–P9 to get MTOP instances.
+    Nine 3-task problems spanning three dimension groups (5/10/15D) and
+    three similarity levels (HS/MS/LS: ±5%/±10%/±15% of amax=0.3).
+    All tasks share target [0.5, 0.5] and lmax=0.75; tasks differ only
+    in amax, placing x* deep in the upper corner of [0,1]^N. Call P1–P9
+    to get MTOP instances.
 
     Examples
     --------
     >>> bm = SepArmMTSO()
-    >>> prob = bm.P1()   # 3 tasks, dim=15, HS
-    >>> prob = bm.P5()   # 3 tasks, dim=20, MS
-    >>> prob = bm.P9()   # 3 tasks, dim=25, LS
+    >>> prob = bm.P1()   # 3 tasks, dim=5,  HS
+    >>> prob = bm.P5()   # 3 tasks, dim=10, MS
+    >>> prob = bm.P9()   # 3 tasks, dim=15, LS
     """
 
     problem_information = {
         'n_cases': 9,
         'n_tasks': '3',
-        'n_dims': '[15, 20, 25]',
+        'n_dims': '[5, 10, 15]',
         'n_objs': '1',
         'n_cons': '0',
         'type': 'real_world',
     }
 
-    # Task parameter triplets: list of 3 (amax, lmax) per problem.
-    # Both amax and lmax are in [0.5, 1.0], matching the original ActualArm
-    # formula: amax = x[n_dim] * 0.5 + 0.5, lmax = x[n_dim+1] * 0.5 + 0.5.
-    # Midpoint of the valid range is 0.75.
-    # Same triplets are reused across all three dimension groups.
+    # amax centred at 0.3; lmax fixed at 0.75 for all tasks.
+    # x* = 0.5 + 1/(8*amax) per joint — all tasks share the upper-corner region.
     _CONFIGS = {
-        'HS': [(0.75, 0.75), (0.79, 0.75), (0.75, 0.79)],   # ±5%  of midpoint
-        'MS': [(0.75, 0.75), (0.83, 0.75), (0.75, 0.83)],   # ±10% of midpoint
-        'LS': [(0.75, 0.75), (0.87, 0.75), (0.75, 0.87)],   # ±16% of midpoint
+        'HS': [(0.285, 0.75), (0.300, 0.75), (0.315, 0.75)],  # ±5%  → x* ∈ [0.897, 0.938]
+        'MS': [(0.270, 0.75), (0.300, 0.75), (0.330, 0.75)],  # ±10% → x* ∈ [0.879, 0.963]
+        'LS': [(0.255, 0.75), (0.300, 0.75), (0.345, 0.75)],  # ±15% → x* ∈ [0.862, 0.990]
     }
 
     def __init__(self):
@@ -154,49 +159,49 @@ class SepArmMTSO:
         return problem
 
     # ------------------------------------------------------------------
-    # Problems — 15D
+    # Problems — 5D
     # ------------------------------------------------------------------
 
     def P1(self) -> MTOP:
-        """15D HS — configs within ±5% of midpoint: very similar tasks."""
-        return self._make_problem(15, self._CONFIGS['HS'])
+        """5D HS — amax ±5% of 0.3: very similar tasks, x* ∈ [0.897, 0.938]."""
+        return self._make_problem(5, self._CONFIGS['HS'])
 
     def P2(self) -> MTOP:
-        """15D MS — configs within ±10% of midpoint: moderately similar tasks."""
-        return self._make_problem(15, self._CONFIGS['MS'])
+        """5D MS — amax ±10% of 0.3: moderately similar tasks, x* ∈ [0.879, 0.963]."""
+        return self._make_problem(5, self._CONFIGS['MS'])
 
     def P3(self) -> MTOP:
-        """15D LS — configs within ±16% of midpoint: low-similarity tasks."""
-        return self._make_problem(15, self._CONFIGS['LS'])
+        """5D LS — amax ±15% of 0.3: low-similarity tasks, x* ∈ [0.862, 0.990]."""
+        return self._make_problem(5, self._CONFIGS['LS'])
 
     # ------------------------------------------------------------------
-    # Problems — 20D
+    # Problems — 10D
     # ------------------------------------------------------------------
 
     def P4(self) -> MTOP:
-        """20D HS — configs within ±5% of midpoint: very similar tasks."""
-        return self._make_problem(20, self._CONFIGS['HS'])
+        """10D HS — amax ±5% of 0.3: very similar tasks, x* ∈ [0.897, 0.938]."""
+        return self._make_problem(10, self._CONFIGS['HS'])
 
     def P5(self) -> MTOP:
-        """20D MS — configs within ±10% of midpoint: moderately similar tasks."""
-        return self._make_problem(20, self._CONFIGS['MS'])
+        """10D MS — amax ±10% of 0.3: moderately similar tasks, x* ∈ [0.879, 0.963]."""
+        return self._make_problem(10, self._CONFIGS['MS'])
 
     def P6(self) -> MTOP:
-        """20D LS — configs within ±16% of midpoint: low-similarity tasks."""
-        return self._make_problem(20, self._CONFIGS['LS'])
+        """10D LS — amax ±15% of 0.3: low-similarity tasks, x* ∈ [0.862, 0.990]."""
+        return self._make_problem(10, self._CONFIGS['LS'])
 
     # ------------------------------------------------------------------
-    # Problems — 25D
+    # Problems — 15D
     # ------------------------------------------------------------------
 
     def P7(self) -> MTOP:
-        """25D HS — configs within ±5% of midpoint: very similar tasks."""
-        return self._make_problem(25, self._CONFIGS['HS'])
+        """15D HS — amax ±5% of 0.3: very similar tasks, x* ∈ [0.897, 0.938]."""
+        return self._make_problem(15, self._CONFIGS['HS'])
 
     def P8(self) -> MTOP:
-        """25D MS — configs within ±10% of midpoint: moderately similar tasks."""
-        return self._make_problem(25, self._CONFIGS['MS'])
+        """15D MS — amax ±10% of 0.3: moderately similar tasks, x* ∈ [0.879, 0.963]."""
+        return self._make_problem(15, self._CONFIGS['MS'])
 
     def P9(self) -> MTOP:
-        """25D LS — configs within ±16% of midpoint: low-similarity tasks."""
-        return self._make_problem(25, self._CONFIGS['LS'])
+        """15D LS — amax ±15% of 0.3: low-similarity tasks, x* ∈ [0.862, 0.990]."""
+        return self._make_problem(15, self._CONFIGS['LS'])

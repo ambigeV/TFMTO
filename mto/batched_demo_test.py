@@ -51,7 +51,7 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 # =============================================================================
 
 N_RUNS = 5
-N_INITIAL = 20
+N_INITIAL = 5
 MAX_NFES = 100
 TFM_BETA = 2.5         # LCB exploration weight
 MAP_LBFGS_ITER = 200   # L-BFGS iterations for MAP fitting
