@@ -1,8 +1,8 @@
 """
 Batched Demo: Expensive Multi-Task Single-Objective Optimization
 
-Runs BO / MTBO / MTBO-TFM-MAP-Asym with logEI and LCB acquisition
-functions on the 9 SepArmMTSO benchmark problems (5D / 10D / 15D).
+Runs the KT/EA baselines BO-LCB-BCKT / BO-LCB-CKT / SELF on the 9
+SepArmMTSO benchmark problems (5D / 10D / 15D).
 
 Data layout (auto-managed by BatchExperiment):
     ./Data_SepArmMTSO/{algo_name}/{algo_name}_{problem_name}_{run_id}.pkl
@@ -19,16 +19,16 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-# --- CEC17 problem imports ---
-from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO          # 50D
-from ddmtolab.Problems.MTSO.cec17_mtso_30d import CEC17MTSO_30D  # 30D
+# --- CEC17 problem imports (not used in the SepArm run) ---
+# from ddmtolab.Problems.MTSO.cec17_mtso import CEC17MTSO          # 50D
+# from ddmtolab.Problems.MTSO.cec17_mtso_30d import CEC17MTSO_30D  # 30D
 # from ddmtolab.Problems.MTSO.cec17_mtso_10d_v2 import CEC17MTSO_10D_v2
 
 from ddmtolab.Problems.RWO.sep_arm_mtso import SepArmMTSO
 # from ddmtolab.Algorithms.STSO.GA import GA
-from ddmtolab.Algorithms.STSO.BO import BO
+# from ddmtolab.Algorithms.STSO.BO import BO
 # from ddmtolab.Algorithms.STSO.BOLCB import BOLCB
-from ddmtolab.Algorithms.MTSO.MTBO import MTBO
+# from ddmtolab.Algorithms.MTSO.MTBO import MTBO
 # --- Knowledge-transfer / evolutionary MTSO baselines ---
 from ddmtolab.Algorithms.MTSO.BO_LCB_BCKT import BO_LCB_BCKT
 from ddmtolab.Algorithms.MTSO.BO_LCB_CKT import BO_LCB_CKT
@@ -45,7 +45,7 @@ from ddmtolab.Algorithms.MTSO.SELF import SELF
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Uniform_B import MTBO_TFM_Uniform_B
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_Elite_B import MTBO_TFM_Elite_B
 # from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Sym import MTBO_TFM_MAP_Sym
-from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Asym import MTBO_TFM_MAP_Asym
+# from ddmtolab.Algorithms.MTSO.MTBO_TFM_MAP_Asym import MTBO_TFM_MAP_Asym
 from ddmtolab.Methods.batch_experiment import BatchExperiment
 from ddmtolab.Methods.data_analysis import DataAnalyzer
 
@@ -54,41 +54,38 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 # =============================================================================
 
 N_RUNS = 5
-N_INITIAL = 5
-MAX_NFES = 100
-TFM_BETA = 2.5         # LCB exploration weight
-MAP_LBFGS_ITER = 200   # L-BFGS iterations for MAP fitting
-N_ESTIMATORS = 1
+N_INITIAL = 5          # initial LHS samples per task
+MAX_NFES = 100         # total evaluation budget (initial + BO iterations)
 MAX_WORKERS = 4        # parallel processes — reduce if memory is tight
 
-# MAP config
-MAP_LAMBDA_0     = 1.0
-MAP_LAMBDA_DECAY = 0.05
-
-# Output normalization for MTBO and MAP-Asym: 'minmax' (default) or 'zscore'
-OBJ_NORM = 'minmax'
-
-ALGO_ORDER = [
-    'BO-EI', 'BO-LCB',
-    'MTBO-logEI', 'MTBO-LCB',
-    f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-logEI',
-    f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
-]
+# --- TFM / MAP config (not used in the SepArm baseline run) ---
+# TFM_BETA = 2.5         # LCB exploration weight
+# MAP_LBFGS_ITER = 200   # L-BFGS iterations for MAP fitting
+# N_ESTIMATORS = 1
+# MAP_LAMBDA_0     = 1.0
+# MAP_LAMBDA_DECAY = 0.05
+# OBJ_NORM = 'minmax'    # output normalization: 'minmax' or 'zscore'
+# ALGO_ORDER = [
+#     'BO-EI', 'BO-LCB',
+#     'MTBO-logEI', 'MTBO-LCB',
+#     f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-logEI',
+#     f'MAP-Asym-{MAP_LAMBDA_0}-{MAP_LAMBDA_DECAY}-LCB',
+# ]
 
 DATA_PATH    = './Data_SepArmMTSO'
 RESULTS_PATH = './Results_SepArmMTSO'
 
-# --- CEC17 MTSO run config (30D + 50D, KT/EA baselines) ---
-CEC_N_INITIAL = 20      # initial sample size per task
-CEC_MAX_NFES  = 100     # total evaluation budget
-CEC_ALGO_ORDER = ['BO-LCB-BCKT', 'BO-LCB-CKT', 'SELF']
+# --- KT/EA baseline run config ---
+SEP_ALGO_ORDER = ['BO-LCB-BCKT', 'BO-LCB-CKT', 'SELF']
 
-# DIM -> (problem class, path tag): 30 -> CEC17MTSO_30D, 50 -> CEC17MTSO
-# Paths: Data/Results_CEC17MTSO_{tag}
-CEC_DIM_PROBLEMS = {
-    30: (CEC17MTSO_30D, '30D_New'),
-    50: (CEC17MTSO,     '50D'),
-}
+# --- CEC17 MTSO run config (not used in the SepArm run) ---
+# CEC_N_INITIAL = 20      # initial sample size per task
+# CEC_MAX_NFES  = 100     # total evaluation budget
+# CEC_ALGO_ORDER = ['BO-LCB-BCKT', 'BO-LCB-CKT', 'SELF']
+# CEC_DIM_PROBLEMS = {     # DIM -> (problem class, path tag)
+#     30: (CEC17MTSO_30D, '30D_New'),
+#     50: (CEC17MTSO,     '50D'),
+# }
 
 # =============================================================================
 # Entry point — required on macOS/Windows (spawn-based multiprocessing)
@@ -96,48 +93,45 @@ CEC_DIM_PROBLEMS = {
 
 if __name__ == '__main__':
     # -------------------------------------------------------------------------
-    # CEC17 MTSO run: BO-LCB-BCKT / BO-LCB-CKT / SELF over 30D and 50D
+    # SepArmMTSO run: BO-LCB-BCKT / BO-LCB-CKT / SELF
     # -------------------------------------------------------------------------
-    for dim, (problem_cls, tag) in CEC_DIM_PROBLEMS.items():
-        data_path    = f'./Data_CEC17MTSO_{tag}'
-        results_path = f'./Results_CEC17MTSO_{tag}'
-        print(f'\n========== CEC17MTSO {dim}D ==========')
+    print('\n========== SepArmMTSO ==========')
 
-        batch_exp = BatchExperiment(base_path=data_path, clear_folder=False)
+    batch_exp = BatchExperiment(base_path=DATA_PATH, clear_folder=False)
 
-        # --- Problems: CEC17MTSO P1–P9 ---
-        benchmark = problem_cls()
-        for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
-            batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
+    # --- Problems: SepArmMTSO P1–P9 (5D / 10D / 15D × HS / MS / LS) ---
+    benchmark = SepArmMTSO()
+    for prob_name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9']:
+        batch_exp.add_problem(getattr(benchmark, prob_name), prob_name)
 
-        # --- Algorithms (default settings) ---
-        batch_exp.add_algorithm(BO_LCB_BCKT, 'BO-LCB-BCKT',
-            n_initial=CEC_N_INITIAL, max_nfes=CEC_MAX_NFES, disable_tqdm=True)
+    # --- Algorithms (default settings) ---
+    batch_exp.add_algorithm(BO_LCB_BCKT, 'BO-LCB-BCKT',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
-        batch_exp.add_algorithm(BO_LCB_CKT, 'BO-LCB-CKT',
-            n_initial=CEC_N_INITIAL, max_nfes=CEC_MAX_NFES, disable_tqdm=True)
+    batch_exp.add_algorithm(BO_LCB_CKT, 'BO-LCB-CKT',
+        n_initial=N_INITIAL, max_nfes=MAX_NFES, disable_tqdm=True)
 
-        # SELF: population size `np` doubles as the per-task initial LHS count,
-        # so set it to CEC_N_INITIAL to force 20 initial samples per task.
-        batch_exp.add_algorithm(SELF, 'SELF',
-            max_nfes=CEC_MAX_NFES, np=CEC_N_INITIAL, disable_tqdm=True)
+    # SELF: population size `np` doubles as the per-task initial LHS count,
+    # so set it to N_INITIAL to match the other algorithms' initial budget.
+    batch_exp.add_algorithm(SELF, 'SELF',
+        max_nfes=MAX_NFES, np=N_INITIAL, disable_tqdm=True)
 
-        # --- Run (parallel across workers) ---
-        batch_exp.run(n_runs=N_RUNS, verbose=True, max_workers=MAX_WORKERS)
+    # --- Run (parallel across workers) ---
+    batch_exp.run(n_runs=N_RUNS, verbose=True, max_workers=MAX_WORKERS)
 
-        # --- Results Analysis ---
-        analyzer = DataAnalyzer(
-            data_path=data_path,
-            save_path=results_path,
-            algorithm_order=CEC_ALGO_ORDER,
-            figure_format='png',
-            log_scale=False,
-            show_std_band=True,
-            std_scale=0.5,
-            best_so_far=True,
-            clear_results=True,
-        )
-        analyzer.run()
+    # --- Results Analysis ---
+    analyzer = DataAnalyzer(
+        data_path=DATA_PATH,
+        save_path=RESULTS_PATH,
+        algorithm_order=SEP_ALGO_ORDER,
+        figure_format='png',
+        log_scale=False,
+        show_std_band=True,
+        std_scale=0.5,
+        best_so_far=True,
+        clear_results=True,
+    )
+    analyzer.run()
 
     # -------------------------------------------------------------------------
     # SepArmMTSO run (commented out, preserved for reuse)
