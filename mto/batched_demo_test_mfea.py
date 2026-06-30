@@ -7,8 +7,8 @@ the best N_POP become the initial population, and that same LHS is the ICL promp
 Because both pay LHS_INIT*nt up front and N_POP*nt per generation, they run the
 SAME number of generations:  (MAX_NFES*nt - LHS_INIT*nt) / (N_POP*nt).
 
-With the defaults below (MAX_NFES=500, N_POP=20, LHS_INIT=200, nt=2):
-    (500*2 - 200*2) / (20*2) = 600 / 40 = 15 generations each.
+With the defaults below (MAX_NFES=600, N_POP=20, LHS_INIT=200, nt=2):
+    (600*2 - 200*2) / (20*2) = 800 / 40 = 20 generations each.
 
 The matching MFEA-Uni-II / ICL-MFEA-Uni-II runs share the identical LHS sample
 (seeded from the problem/run suffix); the only difference between the two methods is
@@ -35,13 +35,13 @@ from ddmtolab.Methods.data_analysis import DataAnalyzer
 
 N_RUNS   = 5
 N_POP    = 20          # initial population size per task (best N_POP of the shared LHS)
-MAX_NFES = 500         # evaluation budget per task
+MAX_NFES = 600         # evaluation budget per task
 MAX_WORKERS = 4        # parallel processes — reduce if memory is tight
 
 # --- Shared-LHS init protocol (identical for both methods) ---
 # One space-filling LHS of LHS_INIT points/task, evaluated once; best N_POP → init pop;
 # full LHS → ICL prompt.  Both methods pay LHS_INIT*nt up front, so both run
-# (MAX_NFES*nt - LHS_INIT*nt) / (N_POP*nt) generations  (= 15 with these defaults).
+# (MAX_NFES*nt - LHS_INIT*nt) / (N_POP*nt) generations  (= 20 with these defaults).
 LHS_INIT        = 200
 RHO_ARCHIVE_CAP = 300
 
