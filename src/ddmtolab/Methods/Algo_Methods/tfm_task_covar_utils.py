@@ -491,6 +491,114 @@ def compute_task_similarity_matrix_directed_classification_ranked(
     return S
 
 
+def compute_task_overlap_matrix_membership_c2st(
+    decs: list,
+    objs: list,
+    *,
+    elite_frac: float = 0.5,
+    n_estimators: int = 1,
+    device: str = 'cpu',
+    tau: float = 1.0,
+    test_frac: float = 0.5,
+    random_state: int = 0,
+    eps: float = 1e-8,
+) -> np.ndarray:
+    """
+    Symmetric T×T decision-space OVERLAP matrix via a zero-shot classifier
+    two-sample test (C2ST) on elite solutions — the correct ICL prior for the
+    MFEA-II RMP.
+
+    Why this and not the fitness-class CE
+    -------------------------------------
+    MFEA-II's RMP is *not* a good/bad fitness discrimination (that is the index-
+    kernel notion, captured by
+    `compute_task_similarity_matrix_directed_classification`).  RMP is the mixing
+    coefficient of a 2-Gaussian model over the two tasks' ELITE populations *in
+    decision space* — it measures how much the promising regions OVERLAP, so that
+    cross-task crossover yields viable offspring.  The right zero-shot prior is
+    therefore a distribution-overlap estimate on elite decision vectors, not a
+    supervised fitness classifier.
+
+    Method (per unordered task pair i, j)
+    -------------------------------------
+    1) Take the top `elite_frac` of each task by objective (minimisation) → elites;
+       balance the two elite sets to equal size so the random-classifier CE
+       baseline is exactly log2.
+    2) Label the pooled elites by *task membership* (0 = i, 1 = j); features are the
+       decision vectors only (unified space, zero-padded to common dim).  Objectives
+       are used ONLY to select elites — never as features or labels.
+    3) Stratified context/query split; fit TabPFN on context, predict query
+       membership, take mean cross-entropy CE.
+         - CE → log2  (classifier confused, tasks inseparable) ⇒ elites OVERLAP
+         - CE → 0     (classifier separates perfectly)         ⇒ elites DISJOINT
+    4) overlap = clip(CE / log2, 0, 1) ** (1/τ)  ∈ [0, 1]   (INCREASING in CE)
+       S[i, j] = S[j, i] = overlap  (naturally symmetric; RMP is symmetric).
+
+    Note the sign is the OPPOSITE of the fitness-class similarity: there low CE =
+    high similarity; here high CE (confusion) = high overlap.
+
+    Parameters
+    ----------
+    elite_frac : fraction of each task's points (lowest objective) kept as elites.
+    tau        : sharpness; τ=1 linear, τ<1 compresses toward 1, τ>1 toward 0.
+    test_frac  : fraction of the balanced elites held out as the C2ST query set.
+    random_state : seed for the elite balancing / split (reproducible).
+    """
+    from ddmtolab.Methods.Algo_Methods.tfm_utils import tabpfn_predict_proba
+
+    tau   = max(tau, 1e-8)
+    log2  = float(np.log(2.0))
+    T     = len(decs)
+    decs  = _pad_decs_to_max_dim(decs)
+    rng   = np.random.default_rng(random_state)
+
+    # Elite decision vectors per task (top elite_frac by objective, minimisation).
+    elites = []
+    for t in range(T):
+        y = np.asarray(objs[t]).ravel()
+        m = y.shape[0]
+        k = max(2, int(np.ceil(elite_frac * m)))
+        idx = np.argsort(y, kind='mergesort')[:k]
+        elites.append(decs[t][idx])
+
+    S = np.eye(T, dtype=np.float64)
+    for i in range(T):
+        for j in range(i + 1, T):
+            Xi, Xj = elites[i], elites[j]
+            # Balance the two elite sets so a random classifier scores CE = log2.
+            b = min(len(Xi), len(Xj))
+            if b < 2:
+                S[i, j] = S[j, i] = 0.0
+                continue
+            Xi = Xi[rng.permutation(len(Xi))[:b]]
+            Xj = Xj[rng.permutation(len(Xj))[:b]]
+
+            # Stratified context/query split (both tasks present in each split).
+            n_qry = max(1, int(round(test_frac * b)))
+            n_qry = min(n_qry, b - 1)          # keep ≥1 context point per class
+            pi, pj = rng.permutation(b), rng.permutation(b)
+            qi, ci = pi[:n_qry], pi[n_qry:]
+            qj, cj = pj[:n_qry], pj[n_qry:]
+
+            X_ctx = np.vstack([Xi[ci], Xj[cj]])
+            y_ctx = np.concatenate([np.zeros(len(ci), int), np.ones(len(cj), int)])
+            X_qry = np.vstack([Xi[qi], Xj[qj]])
+            y_qry = np.concatenate([np.zeros(len(qi), int), np.ones(len(qj), int)])
+
+            proba = tabpfn_predict_proba(
+                X_ctx, y_ctx, X_qry,
+                n_estimators=n_estimators,
+                device=device,
+            )
+            rows = np.arange(len(y_qry))
+            p = np.clip(proba[rows, y_qry], eps, 1.0)
+            ce = float((-np.log(p)).mean())
+
+            overlap = float(np.clip(ce / log2, 0.0, 1.0)) ** (1.0 / tau)
+            S[i, j] = S[j, i] = overlap
+    return S
+
+
 # =============================================================================
 # 4.  Mapping directed S -> GP-valid correlation
 # =============================================================================

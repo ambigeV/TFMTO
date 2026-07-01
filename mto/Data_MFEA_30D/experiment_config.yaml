@@ -1,0 +1,121 @@
+created_at: 2026-07-01T19:55:39.754745
+base_path: ./Data_MFEA_30D
+clear_folder: False
+
+problems:
+  - name: P1
+    class: CEC17MTSO_30D
+    creator_name: P1
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P2
+    class: CEC17MTSO_30D
+    creator_name: P2
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P3
+    class: CEC17MTSO_30D
+    creator_name: P3
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P4
+    class: CEC17MTSO_30D
+    creator_name: P4
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P5
+    class: CEC17MTSO_30D
+    creator_name: P5
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P6
+    class: CEC17MTSO_30D
+    creator_name: P6
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P7
+    class: CEC17MTSO_30D
+    creator_name: P7
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P8
+    class: CEC17MTSO_30D
+    creator_name: P8
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+  - name: P9
+    class: CEC17MTSO_30D
+    creator_name: P9
+    module: ddmtolab.Problems.MTSO.cec17_mtso_30d
+    params: {}
+
+algorithms:
+  - name: MFEA-Uni-II
+    class: MFEA_Uni_II
+    module: ddmtolab.Algorithms.MTSO.MFEA_Uni_II
+    parameters:
+      n: 20
+      max_nfes: 1200
+      lhs_init: 200
+      disable_tqdm: True
+
+  - name: ICL-MFEA-Ovlp50-Uni-II
+    class: ICL_MFEA_Ovlp_Uni_II
+    module: ddmtolab.Algorithms.MTSO.ICL_MFEA_Ovlp_Uni_II
+    parameters:
+      n: 20
+      max_nfes: 1200
+      lambda_0: 1.0
+      lambda_decay: 0.05
+      tau: 1.0
+      elite_frac: 0.5
+      n_estimators: 1
+      device: cpu
+      lhs_init: 200
+      rho_archive_cap: 300
+      disable_tqdm: True
+
+  - name: ICL-MFEA-Ovlp30-Uni-II
+    class: ICL_MFEA_Ovlp_Uni_II
+    module: ddmtolab.Algorithms.MTSO.ICL_MFEA_Ovlp_Uni_II
+    parameters:
+      n: 20
+      max_nfes: 1200
+      lambda_0: 1.0
+      lambda_decay: 0.05
+      tau: 1.0
+      elite_frac: 0.3
+      n_estimators: 1
+      device: cpu
+      lhs_init: 200
+      rho_archive_cap: 300
+      disable_tqdm: True
+
+  - name: ICL-MFEA-Ovlp10-Uni-II
+    class: ICL_MFEA_Ovlp_Uni_II
+    module: ddmtolab.Algorithms.MTSO.ICL_MFEA_Ovlp_Uni_II
+    parameters:
+      n: 20
+      max_nfes: 1200
+      lambda_0: 1.0
+      lambda_decay: 0.05
+      tau: 1.0
+      elite_frac: 0.1
+      n_estimators: 1
+      device: cpu
+      lhs_init: 200
+      rho_archive_cap: 300
+      disable_tqdm: True
+
+run_settings:
+  n_runs: 5
+  max_workers: 4
+  start_time: 2026-07-01T19:55:39.754989
