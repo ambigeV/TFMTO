@@ -69,6 +69,19 @@ TABLE_STD_SCALE: float = 0.5
 
 MARKERS = ['o', 's', '^', 'D', 'v', 'P', 'X', '*', 'h', '<', '>', 'p', 'H', '8', '+']
 
+# Figure suptitle prefix; final title is '{TITLE_PREFIX}  —  {prob_name}'.
+# Overridable via --title. Empty string ('') removes the suptitle entirely.
+TITLE_PREFIX = 'CEC17-MTSO-10D'
+
+# Display-name overrides for legend / table headers, e.g. {'MTBO': 'MTBO-LCB'}.
+# Folder names on disk stay unchanged. Overridable via --rename OLD=NEW.
+DISPLAY_NAMES: dict[str, str] = {}
+
+
+def display_name(algo: str) -> str:
+    """Map an on-disk algorithm name to its display label."""
+    return DISPLAY_NAMES.get(algo, algo)
+
 
 def make_color_list(n: int) -> list:
     """Return n visually distinct colors using tab20 for ≤20, then hsv for more."""
@@ -220,7 +233,8 @@ def plot_problem(prob_name: str, data_root: Path, save_root: Path, algos: list):
 
     # --- figure ---
     fig, axes = plt.subplots(1, n_tasks, figsize=(5 * n_tasks, 4), squeeze=False)
-    fig.suptitle(f'CEC17-MTSO-10D  —  {prob_name}', fontsize=13, fontweight='bold')
+    if TITLE_PREFIX:
+        fig.suptitle(f'{TITLE_PREFIX}  —  {prob_name}', fontsize=13, fontweight='bold')
 
     for t in range(n_tasks):
         ax = axes[0][t]
@@ -243,7 +257,7 @@ def plot_problem(prob_name: str, data_root: Path, save_root: Path, algos: list):
             mark_every = max(1, len(x) // 10)
 
             ax.plot(x, mean,
-                    label=algo,
+                    label=display_name(algo),
                     color=color,
                     marker=marker,
                     markevery=mark_every,
@@ -436,7 +450,7 @@ def generate_results_table(
         ws = wb.create_sheet(title=f'Iter{ck}')
 
         # Write header
-        header = ['Problem', 'Task'] + algos
+        header = ['Problem', 'Task'] + [display_name(a) for a in algos]
         for c, h in enumerate(header, 1):
             ws.cell(row=1, column=c, value=h)
 
@@ -578,7 +592,34 @@ if __name__ == '__main__':
         help='Baseline algorithm for Wilcoxon +/-/= comparison. '
              'Defaults to the last algorithm in the ordered list.',
     )
+    parser.add_argument(
+        '--title',
+        metavar='TITLE',
+        default=None,
+        help=f'Figure suptitle prefix (default: "{TITLE_PREFIX}"). '
+             'Final title is "TITLE — {prob_name}". '
+             'Pass an empty string (--title "") to remove the title entirely.',
+    )
+    parser.add_argument(
+        '--rename',
+        nargs='+',
+        metavar='OLD=NEW',
+        default=None,
+        help='Rename methods for display in legends and table headers, '
+             'e.g. --rename MTBO=MTBO-LCB BO-TFM=BO-TabPFN. '
+             'Folder names on disk are unaffected.',
+    )
     args = parser.parse_args()
+
+    if args.title is not None:
+        TITLE_PREFIX = args.title
+
+    if args.rename:
+        for pair in args.rename:
+            if '=' not in pair:
+                parser.error(f'--rename expects OLD=NEW pairs, got: {pair!r}')
+            old, new = pair.split('=', 1)
+            DISPLAY_NAMES[old] = new
 
     data_root = Path(DATA_ROOT)
     save_root = Path(SAVE_ROOT)
