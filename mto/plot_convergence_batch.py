@@ -595,10 +595,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--title',
         metavar='TITLE',
+        nargs='?',
+        const='',
         default=None,
         help=f'Figure suptitle prefix (default: "{TITLE_PREFIX}"). '
              'Final title is "TITLE — {prob_name}". '
-             'Pass an empty string (--title "") to remove the title entirely.',
+             'Use bare --title (no argument) to remove the title entirely.',
     )
     parser.add_argument(
         '--rename',
